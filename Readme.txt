@@ -1,40 +1,52 @@
-Scaly Muck
-Copyright (c) 2012 The DarkDragonDX
+ScalyMUCK
+Copyright (c) 2012 Liukcairo
 
 This is just an experimental MUCK server I'm working on every once and a while. It should by no means
-be used for anything practical at the moment as I cannot guarantee it's dependability (as I will not
-thoroughly test the code right now).
+be used for anything practical at the moment as I cannot guarantee it's dependability (as a single person --me
+can't throughly test the code like that alone).
 
 Table of Contents--
-	I. Foreword
-	II. Usage
+I. Foreword
+II. Installation
 	
-	===============================
-	I. Foreword
-	===============================
+===============================
+I. Foreword
+===============================
 	
-	As stated above, the current verison of this MUCK server is simply experimental and should
-	be considered altogether unstable unless you're fond of backing up data constantly and
-	griping about bugs.
+As stated above, the current verison of this MUCK server is simply experimental and should
+be considered altogether unstable unless you're fond of backing up data constantly and
+griping about bugs.
 	
-	===============================
-	II.	Usage
-	===============================
+===============================
+II.	Installation
+===============================
 	
-	Windows: Download & Install Python from http://www.python.org/
-	You must then download and install setup tools from http://pypi.python.org/pypi/setuptools
-	and make sure C:\Pythonx\Lib\site-packages\ is set on your PATH. (The X being your specific
-	python Version)
-	After this entry is added to your PATH, you may run "easy_install pbkdf2" to automatically
-	download and install the pbkdf2 requirement.
+Windows Installation---
+
+1. Download & Install Python 2.7 from http://www.python.org/
+2. Download and install setup tools from http://pypi.python.org/pypi/setuptools
+3. C:\PythonX\Lib\site-packages\ is set on your PATH, replacing the X with your specific version of Python.
+4. Use easy_install to download and install the py-bcrypt and sqlalchemy binaries:
+	easy_install py-bcrypt
+	easy_install sqlalchemy
+5. CD to the main directory of ScalyMUCK and run "Run.bat". Note there is no daemon for Windows.
+I cannot guarantee this software will work on a Windows system at all, however.
+		
+Linux Installation---
+Most Linux based operating systems, if not all should have a Python runtime built in as it is.
+
+1. If you do not have a Python runtime for any reason, please download and install python:
+	For Debian Systems: sudo apt-get install python
+	** I do not know what it would be for other distributions.
+2. Install setuptools:
+	For Debian systems: sudo apt-get install python-setuptools
+3. Install sqlalchemy:
+	For Debian systems: sudo easy_install sqlalchemy
+4. Install py-bcrypt
+	For Debian systems: sudo easy_install py-bcrypt
+5. To run, simply CD to the main application directory and run "Run.sh"
+
+The server was programmed on a Python 2.7.3 runtime, so if you have issues running this on
+any other version, try upgrading/downgrading to this version first.
 	
-	
-	Linux: Most Linux based OS' should have a Python runtime built in as it is. With that being
-	said, to fulfill the pbkdf2 requirement you should just be able to
-	
-	The server was programmed on a Python 2.7.3 runtime, so if you have issues running this on
-	any other version, try upgrading/downgrading to this version first.
-	
-	*** Needs to be edited a helluva lot more
-	
-	Last changed: Tuesday, August 23, 2012
+Last changed: Thursday, October 25th, 2012
