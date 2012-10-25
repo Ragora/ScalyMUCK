@@ -1,0 +1,20 @@
+Version 1.0 (alpha):
+	* User Login w/ authentification by py-bcrypt
+	* Database API overlay (each class has its own methods for setting cerain properties without having to derp with sqlalchemy code directly--for simplicity of chat commands)
+	* Simple Command Interface
+		* look
+		* say
+		* adduser
+		* move
+		* dig
+		* inventory
+		* take
+		* craft
+	* Multiple administration levels
+		* Normie
+		* Admin
+		* Sadmin
+	* Server configuration loading
+
+Version 2.0 (alpha):
+	* Base for AI's
