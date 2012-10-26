@@ -1,5 +1,5 @@
-echo --- ScalyMUCK Init
-echo Copyright (c) 2012 The DarkDragonDX
+echo "--- ScalyMUCK Init"
+echo "Copyright (c) 2012 Liukcairo"
 cd application
-python ./muck_main.py
+python application/main.py
 wait

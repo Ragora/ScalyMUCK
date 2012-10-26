@@ -25,10 +25,10 @@ def engine():
 	global _database_exists
 	if (_alchemy_engine is None):
 		try:
-			with open('Data.db') as f: pass
+			with open('data/Data.db') as f: pass
 		except IOError as e:
 				_database_exists = False
-		_alchemy_engine = create_engine('sqlite:///Data.db', echo=False)
+		_alchemy_engine = create_engine('sqlite:///data/Data.db', echo=False)
 	return _alchemy_engine
 	
 def new_session():
