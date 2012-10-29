@@ -1,0 +1,47 @@
+main.py (not a class, obviously.)
+	* Entry point of the application, initialises the server class and pushes .update() to it
+
+* server.py -- Server() class that performs all of the initialisation
+
+* models.py
+	* Stores all of the models, Player, Item, Room, Exit, Bot
+	* Also stores the version of ScalyMUCK that each entry was built with for automatic conversion which is done
+	at server start. If any attributes are added/removed.
+
+* settings.py
+	* Stores any settings related functions:
+		* settings.load("filename") -- returns a Python dictionary representing the mapping of values
+
+base.py contains the following functions:
+	dump(connection) -- dumps to the specified database connection but does not close it
+	flush() -- creates its own database connection, writes the data and closes the connection
+	
+	** They are meant to be overridden by a child object
+
+* base.py -- Base class
+	* object.py -- anything that may be contained in a room
+		* killable.py -- Anything that may die
+			* player.py -- Player objects
+			* ai.py -- AI Objects
+		* item.py -- items
+		* exit.py -- Room exits
+	* room.py -- Contains Objects
+
+* server.py
+	* receive_message(sender, message) -- called when a player sends a message
+	* player_disconnect()
+	* player_connect()
+	* player_ready() -- called when a player has a successful login and is given his player object
+	* on_death(killable) 
+	* on_revive(killable) 
+	* on_pickup(container, item) -- Container may be killable or a storage unit or a room
+	* on_drop(container, item) -- Container may be a killable or a storage unit or a room
+	* on_exit(killable, room) -- Called if a killable exits a room
+	* on_enter(killable, room) -- Called if a callable enters a room
+
+* log.py -- contains a Log() class
+* commands.py
+	* Contains the definitions of all commands implemented into your server
+		* get_list() -- Returns a Python dictionary of all of the installed commands (set statically)
+
+* 

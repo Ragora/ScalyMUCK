@@ -1,2 +1,0 @@
-ServerAddress:0.0.0.0
-ServerPort:23
