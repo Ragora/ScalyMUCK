@@ -12,29 +12,35 @@ import models
 import killable
 
 class Room(base.Base):
-	def __init__(self, database_engine, name_search=None, id_search=None, info=None):
-		self.database_engine = database_engine
-		if (name_search is None and id_search is None):
-			return
-		  
-		database_session = scoped_session(sessionmaker(bind=self.database_engine)) 
-		if (name_search is not None):
-			target_room_data = database_session.query(models.Room).filter_by(name=name_search).first()
-			self.database_information = target_room_data
-		elif (info is not None):
-			self.database_information = info
+	def __init__(self, database_engine, name, info=None):
+		if (info is None):
+			database_session = scoped_session(sessionmaker(bind=database_engine))
+			room_data = models.Room(name)
+			database_session.add(room_data)
+			database_session.commit()
+			self.database_information = room_data
 		else:
-		      target_room_data = database_session.query(models.Room).filter_by(id=id_search).first()
-		      self.database_information = target_room_data
-	      
-	def set_name(self,new_name):
-		return
+			self.database_information = info
+		  
+		self.database_engine = database_engine
+		
+		def receive_event(self, database_engine, event_info):
+			return
 
-def new(name, database_engine):
-	database_session = scoped_session(sessionmaker(bind=database_engine))
-	room_db = models.Room(name)
-	database_session.add(room_db)
-	database_session.commit()
-	
-	room_instance = Room(database_engine, info=room_db)
-	return room_instance
+
+def find(database_engine, name=None, id=None):
+	if (name is None and id is None):
+		return
+		  
+	target_room = None
+	database_session = scoped_session(sessionmaker(bind=database_engine)) 
+	if (name is not None):
+		target_room_data = database_session.query(models.Room).filter_by(name=name).first()
+		if (target_room_data is not None):
+			target_room = Room(database_engine, None, info=target_room_data)
+	else:
+		target_room_data = database_session.query(models.Room).filter_by(id=id).first()
+		if (target_room_data is not None):
+			target_room = Room(database_engine, None, info=target_room_data)
+			
+	return target_room

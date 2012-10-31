@@ -14,7 +14,18 @@ class Object(base.Base):
 	def __init__(self):
 		return
 	
-	def set_location(database_engine, name=None,id=None):
-		if (name is None and id is None):
+	"""
+	    Object.set_location
+	    
+	    This is a function that is used to set the location
+	    of which this object resides at.
+	    
+	    Optional arguments:
+	    name -- If you know the name of the room, pass this in.
+	    id -- If you know the id # of the room, pass this in.
+	    room -- If you have an actual room object, pass it in.
+	"""
+	def set_location(name=None,id=None,room=None):
+		if (name is None and id is None and room is None):
 			return
 		return
