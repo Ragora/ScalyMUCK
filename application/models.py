@@ -20,6 +20,7 @@ class Player(Base):
 	display_name = Column(String)
 	description = Column(String)
 	hash = Column(String)
+	work_factor = Column(Integer)
 	location = Column(Integer, ForeignKey('rooms.id'))
 	inventory = Column(Integer, ForeignKey('rooms.id'))
 	
@@ -32,13 +33,13 @@ class Player(Base):
 	is_sadmin = Column(Integer)
 	is_owner = Column(Integer)
 
-	def __init__(self, name, password, work_factor, location, description='<Unset>', admin=0, sadmin=0, owner=0):
+	def __init__(self, name, password, work_factor, location, inventory, description='<Unset>', admin=0, sadmin=0, owner=0):
 		self.name = string.lower(name)
 		self.display_name = name
 		self.description = description
+		self.work_factor = work_factor
 		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(work_factor))
-		#self.location_id = location
-		#self.inventory = inventory
+		self.inventory = inventory
 		self.is_admin = admin
 		self.is_sadmin = sadmin
 		self.is_owner = owner
@@ -66,7 +67,8 @@ class Item(Base):
 	id = Column(Integer, primary_key=True)
 	name = Column(String)
 	description = Column(String)
-	# location = Column(Integer, ForeignKey('rooms.id'))
+	location = Column(Integer, ForeignKey('rooms.id'))
+	inventory = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self, name, description):
 		self.name = string.lower(name)
