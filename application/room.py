@@ -12,35 +12,18 @@ import models
 import killable
 
 class Room(base.Base):
-	def __init__(self, database_engine, name, info=None):
-		if (info is None):
-			database_session = scoped_session(sessionmaker(bind=database_engine))
-			room_data = models.Room(name)
-			database_session.add(room_data)
-			database_session.commit()
-			self.database_information = room_data
-		else:
-			self.database_information = info
-		  
-		self.database_engine = database_engine
+	def __init__(self, world_instance, info):
+		self.database_information = info
+		self.database_engine = world_instance.database_engine
+		self.world_instance = world_instance
 		
 		def receive_event(self, database_engine, event_info):
 			return
-
-
-def find(database_engine, name=None, id=None):
-	if (name is None and id is None):
-		return
-		  
-	target_room = None
-	database_session = scoped_session(sessionmaker(bind=database_engine)) 
-	if (name is not None):
-		target_room_data = database_session.query(models.Room).filter_by(name=name).first()
-		if (target_room_data is not None):
-			target_room = Room(database_engine, None, info=target_room_data)
-	else:
-		target_room_data = database_session.query(models.Room).filter_by(id=id).first()
-		if (target_room_data is not None):
-			target_room = Room(database_engine, None, info=target_room_data)
-			
-	return target_room
+		
+		def update(self):
+			if (self.database_information is not None):
+				instance = self.world_instance.find_room(name=self.database_information.name)
+				self.database_information.id = instance.get_id()
+				return True
+			else:
+				return False
