@@ -38,6 +38,7 @@ class Player(Base):
 		self.display_name = name
 		self.description = description
 		self.work_factor = work_factor
+		self.location = location
 		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(work_factor))
 		self.inventory = inventory
 		self.is_admin = admin

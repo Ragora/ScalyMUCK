@@ -12,6 +12,7 @@ import models
 class Base:
 	database_information = None
 	database_engine = None
+	world_instance = None
 	
 	def __init__(self):
 		return

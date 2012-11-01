@@ -11,18 +11,14 @@ import string
 from os.path import expanduser
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import scoped_session
 from miniboa import TelnetServer
 import bcrypt
 
-import models
-import player
-import room
-import item
 import settings
+import models
 import daemon
 import modman
+import world
 
 class Server(daemon.Daemon):
 	is_running = False
@@ -39,6 +35,8 @@ class Server(daemon.Daemon):
 	welcome_message_location = None
 	exit_message_location = None
 	work_factor = None
+	
+	world_instance = None
 
 	welcome_message_data = ''
 	exit_message_data = ''
@@ -86,7 +84,7 @@ class Server(daemon.Daemon):
 				f.close()
 				self.exit_message_data += '\n'
 		except IOError as e:
-			self.exit_message_data = 'Unable to load welcome message!'
+			self.exit_message_data = 'Unable to load exit message!'
 	
 	"""
 		server.initialise_server
@@ -125,6 +123,8 @@ class Server(daemon.Daemon):
 			database_exists = False
 		self.database_engine = create_engine('sqlite:///' + self.database_location, echo=False)
 		models.Base.metadata.create_all(self.database_engine)
+		self.world_instance = world.World(self.database_engine)
+		
 		if (database_exists is False):
 			self.initialise_database()
 		
@@ -171,8 +171,8 @@ class Server(daemon.Daemon):
 	      This function is called internally; it's just here to separate logic a bit.
 	"""
 	def initialise_database(self):
-		portal_room = room.Room(self.database_engine, 'Portal Room Main')
-		raptor_jesus = player.Player(self.database_engine, 'RaptorJesus', 'ChangeThisPasswordNowPlox', self.work_factor, portal_room)
+		portal_room = self.world_instance.create_room('Portal Room Main')
+		raptor_jesus = self.world_instance.create_player('RaptorJesus', 'ChangeThisPasswordNowPlox', self.work_factor, portal_room)
 		self.write_log('Database successfully initialised.')
 		return
 	
@@ -216,15 +216,14 @@ class Server(daemon.Daemon):
 					name = command_data[1].lower()
 					password = command_data[2]
 					
-					database_session = scoped_session(sessionmaker(bind=self.database_engine))  
-					target_player = database_session.query(models.Player).filter_by(name=name).first()
+					target_player = self.world_instance.find_player(name=name)
 					if (target_player is None):
 						connection.send('You have specified an invalid username/password combination.\n')
 					else:
-						player_hash = target_player.hash
+						player_hash = target_player.get_hash()
 						if (player_hash == bcrypt.hashpw(password, player_hash) == player_hash):
 							connection.send('Good login\n')
-							connection.id = target_player.id
+							connection.id = target_player.get_id()
 							for player in self.established_connection_list:
 								if (player.id == connection.id):
 									# Fixme: This message isn't dispatched as telnet_server.poll is not called before the player is deactivated
