@@ -1,4 +1,4 @@
-ScalyMUCK
+ScalyMUCK 1.0.0
 Copyright (c) 2012 Liukcairo
 
 This is just an experimental MUCK server I'm working on every once and a while. It should by no means
