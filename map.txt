@@ -20,3 +20,6 @@ Version 1.0 (alpha):
 Version 2.0 (alpha):
 	* Base for AI's
 	* Modification loading for other stuff
+	* Tags for dynamically changing items in text:
+		#TIME# -- along those lines.
+	* Find a way to run modifications in a sort of sandbox
