@@ -10,10 +10,14 @@ import log
 
 class Settings:
 	_settings_entries = { }
-	def __init__(self, target_file):	  
-		file_handle = open(target_file, 'r')
+    
+	def __init__(self, target_file):
+		try:
+			file_handle = open(target_file, 'r')
+        	except IOError:
+            		return
 
-		for line_data in file_handle:
+        	for line_data in file_handle:
 			preference_data = string.split(line_data, '=')
 			line_data = line_data.lstrip()
 

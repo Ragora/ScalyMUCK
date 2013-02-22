@@ -8,7 +8,6 @@
 
 import sys
 import string
-from os.path import expanduser
 
 from sqlalchemy import create_engine
 from miniboa import TelnetServer
@@ -50,18 +49,17 @@ class Server(daemon.Daemon):
 	version_minor = 0
 	version_revision = 0
 	
-	def __init__(self, pid):
+	def __init__(self, pid, config, data_path):
 		self.pidfile = pid
 		
-		self.home_directory = expanduser('~')
-		self.database_location = self.home_directory + '/.scalyMUCK/Database.db'
-		self.log_file_location = self.home_directory + '/.scalyMUCK/log.txt'
-		self.server_config_location = self.home_directory + '/.scalyMUCK/settings_server.cfg'
-		self.gameplay_config_location = self.home_directory + '/.scalyMUCK/settings_gameplay.cfg'
-		self.welcome_message_location = self.home_directory + '/.scalyMUCK/welcome_message.txt'
-		self.exit_message_location = self.home_directory + '/.scalyMUCK/exit_message.txt'
+		self.database_location = data_path + 'Database.db'
+		self.log_file_location = data_path + 'log.txt'
+		self.server_config_location = 'config/settings_server.cfg'
+		self.gameplay_config_location = 'config/settings_gameplay.cfg'
+		self.welcome_message_location = 'config/welcome_message.txt'
+		self.exit_message_location = 'config/exit_message.txt'
   
-		self.server_settings = settings.Settings(self.server_config_location)
+		self.server_settings = config
 		self.work_factor = int(self.server_settings.get_index('WorkFactor'))
 		
 		try:
