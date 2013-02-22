@@ -13,16 +13,21 @@ version_minor = 0
 version_revision = 0
 name = 'ScalyMUCK Commands'
 description = 'This modification implements various normal MU* commands into ScalyMUCK.'
+copyright = 'Copyright (c) 2013 Liukcairo'
 author = 'Liukcairo'
 
-def command_say(world_instance, sender, args):
-	print(database_engine)
+# Commands
+def command_say(data):
+	world_instance = data['World']
+	sender = data['Sender']
+	args = data['Arguments']
+
 	return
 
-def command_pose(world_instance, sender, args):
+def command_pose(data):
 	return
 
-def command_look(world_instance, sender, args):
+def command_look(data):
 	return
 
 """
@@ -34,14 +39,33 @@ def command_look(world_instance, sender, args):
 """
 def get_commands():
 	command_dict = {
-		'say': command_say,
-		'pose': command_pose,
-		'look': command_look
+		'say': 
+		{ 
+			'Command': command_say,
+			'Description': 'Makes you say something. Only visible to the current room you\'re in.'
+		},
+
+
+		'pose': 
+		{
+			'Command': command_pose,
+			'Desription': 'Used to show arbitrary action. Only visible to the current room you\'re in.'
+		},
+
+		'look': 
+		{
+			'Command': command_look,
+			'Description': 'Get your bearings. Look around in the local area to see what you can see.'
+		}
 	}
-	
-	command_help = {
-		'say': 'Makes you say something. Only visible to the current room you\'re in.',
-		'pose': 'Used to show arbitrary action. Only visible to the current room you\'re in.',
-		'look': 'Get your bearings. Look around in the local area to see what you can see.'
-	}
-	return [command_dict, command_help]
+	return command_dict
+
+"""
+	get_callbacks
+
+	This function is used by the modloader to retrieve
+	any custom callbacks that the mod may want to have access to.
+	Return none if there are no commands to implement.
+"""
+def get_callbacks():
+	return None
