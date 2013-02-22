@@ -18,6 +18,7 @@ import models
 import daemon
 import modman
 import world
+import log
 
 class Server(daemon.Daemon):
 	is_running = False
@@ -37,6 +38,8 @@ class Server(daemon.Daemon):
 	
 	world_instance = None
 
+	logger = None
+
 	welcome_message_data = ''
 	exit_message_data = ''
 	
@@ -54,6 +57,8 @@ class Server(daemon.Daemon):
 		
 		self.database_location = data_path + 'Database.db'
 		self.log_file_location = data_path + 'log.txt'
+		self.logger = log.Log(self.log_file_location, pid is None)
+
 		self.server_config_location = 'config/settings_server.cfg'
 		self.gameplay_config_location = 'config/settings_gameplay.cfg'
 		self.welcome_message_location = 'config/welcome_message.txt'
@@ -106,19 +111,16 @@ class Server(daemon.Daemon):
 			  'disable': False,
 			  'disabled': False
 		}
-      
-		file_handle = open(self.log_file_location, 'w')
-		file_handle.write('ScalyMUCK Copyright (c) 2012 Liukcairo\n\n')
-		file_handle.close()
 		
 		server_version_string = '%s.%s.%s' % (self.version_major, self.version_minor, self.version_revision)
-		self.write_log('Server Version: ' + server_version_string)
+		self.logger.write('Server Version: ' + server_version_string)
 		database_exists = True
 		try:
 			with open(self.database_location) as f: pass
 		except IOError as e:
-			self.write_log('This appears to be your first time running the ScalyMUCK server. We must initialise your database ...')
+			self.logger.write('This appears to be your first time running the ScalyMUCK server. We must initialise your database ...')
 			database_exists = False
+
 		self.database_engine = create_engine('sqlite:///' + self.database_location, echo=False)
 		models.Base.metadata.create_all(self.database_engine)
 		self.world_instance = world.World(self.database_engine)
@@ -135,7 +137,7 @@ class Server(daemon.Daemon):
 		
 		self.initialise_mods()
 		
-		self.write_log('\nScalyMUCK successfully initialised.')
+		self.logger.write('\nScalyMUCK successfully initialised.')
 	
 	"""
 	      server.initialise_mods
@@ -143,24 +145,30 @@ class Server(daemon.Daemon):
 	      This function is called internally; it's just here to separate logic a bit.
 	"""
 	def initialise_mods(self):
-		self.write_log('Checking for modifications ...\n')
+		self.logger.write('Checking for modifications ...\n')
 		mod_list = modman.get_mod_list()
 		for mod in mod_list:
-			self.write_log('Found modification: "' + mod + '"')
+			self.logger.write('Found modification: "' + mod + '"')
 			mod_data = modman.load_mod(mod)
 			mod_version = '%s.%s.%s' % (str(mod_data.version_major), str(mod_data.version_minor), str(mod_data.version_revision))
 			server_version = '%s.%s.%s' % (str(mod_data.server_version_major), str(mod_data.server_version_minor), str(mod_data.server_version_revision))
 			
-			self.write_log('Name: ' + mod_data.name)
-			self.write_log('Author: ' + mod_data.author)
-			self.write_log('Version: ' + mod_version)
-			self.write_log('Server Version: ' + server_version)
-			self.write_log('Total commands: ' + str(len(mod_data.commands)))
-			self.write_log(mod_data.description)
+			self.logger.write('Name: ' + mod_data.name)
+			self.logger.write('Author: ' + mod_data.author)
+			self.logger.write('Version: ' + mod_version)
+			self.logger.write('Server Version: ' + server_version)
+			self.logger.write('Total commands: ' + str(len(mod_data.commands)))
+			self.logger.write('Description: ' + mod_data.description)
+			
+			# FIXME: Make this pay attention to what mod loader version it's expecting, not server version
 			if (mod_data.server_version_major != self.version_major):
-				self.write_log('*** Failed to load modification, version mismatch error.')
+				self.logger.write('*** Failed to load modification, version mismatch error.')
+				return
 			else:
-				self.write_log('Attempting to load modification ...')
+				self.logger.write('Attempting to load modification ...')
+				for command in mod_data.commands:
+					print(command)
+			self.logger.write(' ')
 		
 	
 	"""
@@ -171,7 +179,7 @@ class Server(daemon.Daemon):
 	def initialise_database(self):
 		portal_room = self.world_instance.create_room('Portal Room Main')
 		raptor_jesus = self.world_instance.create_player('RaptorJesus', 'ChangeThisPasswordNowPlox', self.work_factor, portal_room)
-		self.write_log('Database successfully initialised.')
+		self.logger.write('Database successfully initialised.')
 		return
 	
 	"""
@@ -185,11 +193,6 @@ class Server(daemon.Daemon):
 	def is_active(self):
 		return self.is_running
 
-	def write_log(self, data):
-		file_handle = open(self.log_file_location, 'a')
-		file_handle.write(data + '\n')
-		print(data)
-  
 	def is_running(self):
 		return self.is_running
 
@@ -254,7 +257,7 @@ class Server(daemon.Daemon):
 	      a remote client connects to the server.
 	"""
 	def on_client_connect(self, client):
-		self.write_log('Received client connection from ' + client.address + ':' + str(client.port))
+		self.logger.write('Received client connection from ' + client.address + ':' + str(client.port))
 		client.send(self.welcome_message_data)
 		self.pending_connection_list.append(client)
 	 
@@ -265,7 +268,7 @@ class Server(daemon.Daemon):
 	      a remote client disconnects from the server.
 	"""
 	def on_client_disconnect(self, client):
-		self.write_log('Received client disconnection from ' + client.address + ':' + str(client.port))
+		self.logger.write('Received client disconnection from ' + client.address + ':' + str(client.port))
 		if (client in self.pending_connection_list):
 			self.pending_connection_list.remove(client)
 		elif (client in self.established_connection_list):

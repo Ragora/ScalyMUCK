@@ -21,7 +21,6 @@ class Settings:
 			preference_data = string.split(line_data, '=')
 			line_data = line_data.lstrip()
 
-			# We need to make sure we actully got a list with at 2 values, any less and the program would crash.
 			if (len(preference_data) == 2):
 				self._settings_entries[preference_data[0]] = preference_data[1]
 			elif(line_data.find('#') and line_data != ''):

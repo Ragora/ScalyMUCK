@@ -15,7 +15,6 @@ class Mod():
 	description = None
 	author = None
 	commands = None
-	command_help = None
 	
 	version_major = None
 	version_minor = None
@@ -34,7 +33,7 @@ def get_mod_list():
 			try:
 				with open('modman/' + file + '/__init__.py') as f:
 					pass
-			except IOError as e:
+			except IOError:
 					continue
 			mod_list.append(file)
 	return mod_list
@@ -55,8 +54,7 @@ def load_mod(name):
 		mod_data.server_version_minor = imported.server_version_minor
 		mod_data.server_version_revision = imported.server_version_revision
 		
-		mod_data.commands = command_listing[0]
-		mod_data.command_help = command_listing[1]
+		mod_data.commands = command_listing
 		
 		return mod_data
 	else:
