@@ -1,52 +1,33 @@
-echo "ScalyMUCK (c) 2012 Liukcairo"
-echo "ScalyMUCK Initial configuration Script"
-echo " "
+echo "ScalyMUCK auto setup script for Ubuntu"
+echo "DO NOT RUN AS ROOT"
 
-cd ~/
-if [ -d ".scalyMUCK" ]
-then
-	echo ~/.scalyMUCK/ "already exists."
-else
-	mkdir .scalyMUCK
-fi
-cd .scalyMUCK
+sudo apt-get install python
+sudo apt-get install python-pip
+sudo apt-get install python-virtualenv
+sudo apt-get install python-dev
 
-if [ -e "settings_server.cfg" ]
-then	
-	echo ~/.scalyMUCK/"settings_server.cfg already exists."
-else
-	echo "# Configuration file for ScalyMUCK Server" >> settings_server.cfg
-	echo "ServerPort=8000" >> settings_server.cfg
-	echo "ServerAddress=0.0.0.0" >> settings_server.cfg
-	echo "WorkFactor=10"  >> settings_server.cfg
-fi
+virtualenv --no-site-packages ~/MUCK
+cd ../
+mv ./ScalyMUCK ~/MUCK/ScalyMUCK
+cd ~/MUCK/bin
+. ./activate
+cd ~/MUCK/ScalyMUCK
+pip install -r ./requirements.txt
 
-if [ -e "settings_gameplay.cfg" ]
-then
-	echo ~/.scalyMUCK/"settings_server.cfg already exists."
-else
-	echo "# Configuration file for ScalyMUCK Gameplay" >> settings_gameplay.cfg
-	echo "# There are none as of now."  >> settings_gameplay.cfg
-fi
+rm run.sh
+echo "cd ../bin/" >> run.sh
+echo  ". activate" >> run.sh
+echo "cd ../ScalyMUCK/application/" >> run.sh
+echo "python ./muck.py" >> run.sh
 
-if [ -e "exit_message.txt" ]
-then
-	echo ~/.scalyMUCK/"exit_message.txt already exists."
-else
-	echo " " >> exit_message.txt
-	echo "You fall asleep in the current area." >> exit_message.txt
-fi
+rm daemon.sh
+echo "cd ../bin/" >> daemon.sh
+echo  ". activate" >> daemon.sh
+echo "cd ../ScalyMUCK/application/" >> daemon.sh
+echo "python ./muck.py start" >> daemon.sh
 
-if [ -e "welcome_message.txt" ]
-then
-	echo ~/.scalyMUCK/"welcome_message.txt already exists."
-else
-	echo "============================================================" >> welcome_message.txt
-	echo "Welcome! You're on a MUCK server running ScalyMUCK\nCopyright (c) 2012 Liukcairo" >> welcome_message.txt
-	echo "You may connect using the 'connect' command:" >> welcome_message.txt
-	echo "connect <username> <password>" >> welcome_message.txt
-	echo "============================================================" >> welcome_message.txt
-fi
+sudo chmod +x ./run.sh
+sudo chmod +x ./daemon.sh
 
-echo " "
-echo "Your data is located at:" ~/.scalyMUCK
+echo "Your install as located at: " ~/MUCK/ScalyMUCK/
+echo "Now configure your file system then use run.sh or daemon.sh."

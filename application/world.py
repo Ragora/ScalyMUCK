@@ -47,15 +47,15 @@ class World():
 		return target_room
 	
 	def create_player(self, name, password, work_factor, location):
-			database_session = scoped_session(sessionmaker(bind=self.database_engine))
-			player_inventory = self.create_room(name + "'s Inventory")	
+		database_session = scoped_session(sessionmaker(bind=self.database_engine))
+		player_inventory = self.create_room(name + "'s Inventory")	
 			
-			database_information = models.Player(name, password, work_factor, location.get_id(), player_inventory.get_id())
-			database_session.add(database_information)
-			database_session.commit()
-			player_data = database_session.query(models.Player).filter_by(name=name,hash=database_information.hash).first()
-			player_instance = player.Player(self, player_data)
-			return player_instance
+		database_information = models.Player(name, password, work_factor, location.get_id(), player_inventory.get_id())
+		database_session.add(database_information)
+		database_session.commit()
+		player_data = database_session.query(models.Player).filter_by(name=name,hash=database_information.hash).first()
+		player_instance = player.Player(self, player_data)
+		return player_instance
 	      
 	def find_player(self,id=None,name=None):
 		if (name is None and id is None):
