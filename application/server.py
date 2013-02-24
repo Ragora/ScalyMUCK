@@ -149,25 +149,26 @@ class Server(daemon.Daemon):
 		mod_list = modman.get_mod_list()
 		for mod in mod_list:
 			self.logger.write('Found modification: "' + mod + '"')
-			mod_data = modman.load_mod(mod)
-			mod_version = '%s.%s.%s' % (str(mod_data.version_major), str(mod_data.version_minor), str(mod_data.version_revision))
-			server_version = '%s.%s.%s' % (str(mod_data.server_version_major), str(mod_data.server_version_minor), str(mod_data.server_version_revision))
+			mod_data = modman.load_mod(mod, self.logger)
+			if (mod_data is not None):
+				mod_version = '%s.%s.%s' % (str(mod_data.version_major), str(mod_data.version_minor), str(mod_data.version_revision))
+				server_version = '%s.%s.%s' % (str(mod_data.server_version_major), str(mod_data.server_version_minor), str(mod_data.server_version_revision))
 			
-			self.logger.write('Name: ' + mod_data.name)
-			self.logger.write('Author: ' + mod_data.author)
-			self.logger.write('Version: ' + mod_version)
-			self.logger.write('Server Version: ' + server_version)
-			self.logger.write('Total commands: ' + str(len(mod_data.commands)))
-			self.logger.write('Description: ' + mod_data.description)
+				self.logger.write('Name: ' + mod_data.name)
+				self.logger.write('Author: ' + mod_data.author)
+				self.logger.write('Version: ' + mod_version)
+				self.logger.write('Server Version: ' + server_version)
+				self.logger.write('Total commands: ' + str(len(mod_data.commands)))
+				self.logger.write('Description: ' + mod_data.description)
 			
-			# FIXME: Make this pay attention to what mod loader version it's expecting, not server version
-			if (mod_data.server_version_major != self.version_major):
-				self.logger.write('*** Failed to load modification, version mismatch error.')
-				return
-			else:
-				self.logger.write('Attempting to load modification ...')
-				for command in mod_data.commands:
-					print(command)
+				# FIXME: Make this pay attention to what mod loader version it's expecting, not server version
+				if (mod_data.server_version_major != self.version_major):
+					self.logger.write('*** Failed to load modification, version mismatch error.')
+					return
+				else:
+					self.logger.write('Attempting to load modification ...')
+					for command in mod_data.commands:
+						print(command)
 			self.logger.write(' ')
 		
 	

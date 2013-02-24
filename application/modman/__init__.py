@@ -38,9 +38,14 @@ def get_mod_list():
 			mod_list.append(file)
 	return mod_list
 
-def load_mod(name):
+def load_mod(name, logger):
 	if (name in get_mod_list()):
-		imported =  __import__('modman.' + name, globals(), locals(), [''], -1)
+		try:
+			imported =  __import__('modman.' + name, globals(), locals(), [''], -1)
+		except SyntaxError as e:
+			logger.write('Failed to load mod: ' + name)
+			logger.write(str(e))
+			return None
 		command_listing = imported.get_commands()
 		
 		mod_data = Mod()
