@@ -18,13 +18,13 @@ rm run.sh
 echo "cd ../bin/" >> run.sh
 echo  ". activate" >> run.sh
 echo "cd ../ScalyMUCK/application/" >> run.sh
-echo "python ./muck.py" >> run.sh
+echo "python ./main.py" >> run.sh
 
 rm daemon.sh
 echo "cd ../bin/" >> daemon.sh
 echo  ". activate" >> daemon.sh
 echo "cd ../ScalyMUCK/application/" >> daemon.sh
-echo "python ./muck.py start" >> daemon.sh
+echo "python ./main.py start" >> daemon.sh
 
 sudo chmod +x ./run.sh
 sudo chmod +x ./daemon.sh
