@@ -13,12 +13,11 @@ from sqlalchemy import create_engine
 from miniboa import TelnetServer
 import bcrypt
 
-import settings
 import models
 import daemon
 import modman
-import world
-import log
+from world import World
+from log import Log
 
 class Server(daemon.Daemon):
 	is_running = False
@@ -42,6 +41,12 @@ class Server(daemon.Daemon):
 
 	welcome_message_data = ''
 	exit_message_data = ''
+
+	command_entries = { }
+	callback_entries = {
+		'onClientAuthenticated': [ ],
+		'onClientConnected': [ ]
+	}
 	
 	pending_connection_list = [ ]
 	# The difference between pending and established is that the pending clients still have yet to login while the established clients
@@ -57,7 +62,7 @@ class Server(daemon.Daemon):
 		
 		self.database_location = data_path + 'Database.db'
 		self.log_file_location = data_path + 'log.txt'
-		self.logger = log.Log(self.log_file_location, pid is None)
+		self.logger = Log(self.log_file_location, pid is None)
 
 		self.server_config_location = 'config/settings_server.cfg'
 		self.gameplay_config_location = 'config/settings_gameplay.cfg'
@@ -123,13 +128,13 @@ class Server(daemon.Daemon):
 
 		self.database_engine = create_engine('sqlite:///' + self.database_location, echo=False)
 		models.Base.metadata.create_all(self.database_engine)
-		self.world_instance = world.World(self.database_engine)
+		self.world_instance = World(self.database_engine)
 		
 		if (database_exists is False):
 			self.initialise_database()
 		
 		self.telnet_server = TelnetServer(port=int(self.server_settings.get_index('ServerPort')),
-					        address=self.server_settings.get_index('ServerAddress'),
+						address=self.server_settings.get_index('ServerAddress'),
 					        on_connect = self.on_client_connect,
 					        on_disconnect = self.on_client_disconnect,
 					        timeout = 0.05)
@@ -158,17 +163,48 @@ class Server(daemon.Daemon):
 				self.logger.write('Author: ' + mod_data.author)
 				self.logger.write('Version: ' + mod_version)
 				self.logger.write('Server Version: ' + server_version)
-				self.logger.write('Total commands: ' + str(len(mod_data.commands)))
 				self.logger.write('Description: ' + mod_data.description)
-			
+				
 				# FIXME: Make this pay attention to what mod loader version it's expecting, not server version
 				if (mod_data.server_version_major != self.version_major):
 					self.logger.write('*** Failed to load modification, version mismatch error.')
 					return
 				else:
 					self.logger.write('Attempting to load modification ...')
-					for command in mod_data.commands:
-						print(command)
+					commands = mod_data.commands
+					if (commands is not None):
+						self.logger.write('Total Commands: ' + str(len(commands)))
+						for command in commands:
+							if (commands[command].has_key('Command') is False):
+								self.logger.write('Warning: Failed to load command "' + command + '" from modification "' + mod_data.name + '"!')
+							elif (str(type(commands[command]['Command'])) != "<type 'function'>"):
+								self.logger.write('Warning: Failed to load command "' + command + '" from modification "' + mod_data.name + '"!')
+							else:
+								if (commands[command].has_key('Description') is False):
+									self.logger.write('Warning: Failed to load command description for "' + command + '" from modification "' + mod_data.name + '"!')
+									commands[command]['Description'] = '<An error has occurred in the modloader>'
+								else:
+									commands[command]['Description'] = str(commands[command]['Description'])
+									command_description = commands[command]['Description']
+							commands[command]['Mod'] = mod_data.name
+							self.command_entries[command] = commands[command]
+					else:
+						self.logger.write('Total Commands: 0')
+					
+					callbacks = mod_data.callbacks
+					if (callbacks is not None):
+						self.logger.write('Total Callbacks: ' + str(len(callbacks)))	
+						for callback in callbacks:
+							if (str(type(callbacks[callback])) != "<type 'function'>"):
+								self.logger.write('Warning: Failed to load callback "' + callback + '" from modification "' + mod_data.name + '"!')
+							elif (self.callback_entries.has_key(callback) is False):
+								self.logger.write('Warning: Callback "' + callback + '" from modification "' + mod_data.name + '" loaded, however it is not used!')
+							else:
+								self.callback_entries[callback].append(callbacks[callback])
+					else:
+						self.logger.write('Total Callbacks: 0')	
+
+
 			self.logger.write(' ')
 		
 	
@@ -222,17 +258,28 @@ class Server(daemon.Daemon):
 					if (target_player is None):
 						connection.send('You have specified an invalid username/password combination.\n')
 					else:
-						player_hash = target_player.get_hash()
+						player_hash = target_player.hash
 						if (player_hash == bcrypt.hashpw(password, player_hash) == player_hash):
 							connection.send('Good login\n')
-							connection.id = target_player.get_id()
+							connection.id = target_player.id
+							connection.player = target_player
+							target_player.connection = connection
+
+							callback_data = {
+								'Client': connection.player,
+								'Room': None,
+								'World': self.world_instance
+							}
+							for callback in self.callback_entries['onClientAuthenticated']:
+								callback(callback_data)
+
 							for player in self.established_connection_list:
 								if (player.id == connection.id):
 									# Fixme: This message isn't dispatched as telnet_server.poll is not called before the player is deactivated
 									player.send('Your connection has been replaced.\n')
 									player.deactivate()
 									self.established_connection_list.remove(player)
-									break;
+									break
 							self.pending_connection_list.remove(connection)	
 							self.established_connection_list.append(connection)
 						else:
@@ -243,8 +290,27 @@ class Server(daemon.Daemon):
 
 		# With already connected clients, we'll now deploy the command interface.
 		for connection in self.established_connection_list:
-			if (connection.cmd_ready is True):
-				data = connection.get_command()
+			input = connection.get_command()
+			if (input is not None):
+				data = string.split(input, ' ')
+				command = string.lower(data[0])
+				
+				if (self.command_entries.has_key(command)):
+					function = self.command_entries[command]['Command']
+					arguments = {
+						'Sender': connection.player,
+						'World': self.world_instance,
+						'Arguments': data[1:len(data)],
+						'Input': input[len(command):],
+					}
+					#try:
+					function(arguments)
+					#except:
+#						connection.send('An internal error has occurred when running the command. \
+#Please contact your server administrator about the modification "' + self.command_entries[command]['Mod'] +'".\n')
+				else:
+					connection.send('I do not know what it is to "' + command + '"\n')
+					
 
 	def run(self):
 	    self.initialise_server()

@@ -1,5 +1,6 @@
 ============================================================
-Welcome! You're on a MUCK server running ScalyMUCK\nCopyright (c) 2012 Liukcairo
+Welcome! You're on a MUCK server running ScalyMUCK
+Copyright (c) 2012 Liukcairo
 You may connect using the 'connect' command:
 connect <username> <password>
 ============================================================
