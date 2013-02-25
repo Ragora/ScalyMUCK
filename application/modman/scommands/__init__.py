@@ -17,26 +17,52 @@ copyright = 'Copyright (c) 2013 Liukcairo'
 author = 'Liukcairo'
 
 # Commands
-def command_say(data):
-	world_instance = data['World']
-	sender = data['Sender']
-	args = data['Arguments']
+def command_say(arguments):
+	world_instance = arguments['World']
+	sender = arguments['Sender']
+	input = arguments['Input']
+	room = sender.location
+
+	for player in room.players:
+		if (player != sender):
+			player.send(sender.name + ' says, "' + input + '"')
+
+	sender.send('You say, "' + input + '"')
+	return
+
+def command_pose(arguments):
+	return
+
+def command_look(arguments):
+	sender = arguments['Sender']
+	room = sender.location
+	
+	sender.send(room.name)
+	sender.send('Obvious Exits: ')
+	sender.send('	None')
+	sender.send('People: ')
+	for player in room.players:
+		sender.send('	' + player.display_name)
+	sender.send('Items: ')
+	#for item in room.items:
+	#	sender.send(item.name)
+	sender.send('	None')
+	sender.send('Description:')
+	sender.send(room.description)
 
 	return
 
-def command_pose(data):
+def callback_client_authenticated(arguments):
+	client = arguments['Client']
+	world = arguments['World']
+
+	command_args = {
+		'Sender': client,
+		'World': world
+	}
+	command_look(command_args)
 	return
 
-def command_look(data):
-	return
-
-"""
-      get_commands
-      
-      This function is used by modloader to retrieve any
-      custom commands that the mod may want to implement.
-      Return None if there are no commands to implement.
-"""
 def get_commands():
 	command_dict = {
 		'say': 
@@ -49,7 +75,7 @@ def get_commands():
 		'pose': 
 		{
 			'Command': command_pose,
-			'Desription': 'Used to show arbitrary action. Only visible to the current room you\'re in.'
+			'Description': 'Used to show arbitrary action. Only visible to the current room you\'re in.'
 		},
 
 		'look': 
@@ -60,12 +86,8 @@ def get_commands():
 	}
 	return command_dict
 
-"""
-	get_callbacks
-
-	This function is used by the modloader to retrieve
-	any custom callbacks that the mod may want to have access to.
-	Return none if there are no commands to implement.
-"""
 def get_callbacks():
-	return None
+	callback_dict = {
+		'onClientAuthenticated': callback_client_authenticated
+	}
+	return callback_dict

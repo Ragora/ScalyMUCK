@@ -15,6 +15,7 @@ class Mod():
 	description = None
 	author = None
 	commands = None
+	callbacks = None
 	
 	version_major = None
 	version_minor = None
@@ -42,24 +43,36 @@ def load_mod(name, logger):
 	if (name in get_mod_list()):
 		try:
 			imported =  __import__('modman.' + name, globals(), locals(), [''], -1)
-		except SyntaxError as e:
-			logger.write('Failed to load mod: ' + name)
-			logger.write(str(e))
+		except:
+			logger.write('Warning: Failed to load modification: ' + name)
 			return None
-		command_listing = imported.get_commands()
 		
 		mod_data = Mod()
-		mod_data.name = imported.name
-		mod_data.description = imported.description
-		mod_data.author = imported.author
-		mod_data.version_major = imported.version_major
-		mod_data.version_minor = imported.version_minor
-		mod_data.version_revision = imported.version_revision
-		mod_data.server_version_major = imported.server_version_major
-		mod_data.server_version_minor = imported.server_version_minor
-		mod_data.server_version_revision = imported.server_version_revision
-		
-		mod_data.commands = command_listing
+		try:
+			mod_data.name = imported.name
+			mod_data.description = imported.description
+			mod_data.author = imported.author
+			mod_data.version_major = imported.version_major
+			mod_data.version_minor = imported.version_minor
+			mod_data.version_revision = imported.version_revision
+			mod_data.server_version_major = imported.server_version_major
+			mod_data.server_version_minor = imported.server_version_minor
+			mod_data.server_version_revision = imported.server_version_revision
+		except:
+			logger.write('Warning: Failed to load modification: ' + name)
+			return
+
+		try:
+			mod_data.commands = imported.get_commands()
+		except:
+			logger.write('Warning: Failed to load command listing from modification: ' + name)
+			mod_data.commands = None
+
+		try:
+			mod_data.callbacks = imported.get_callbacks()
+		except:
+			logger.write('Warning: Failed to load callback listing from modification: ' + name)
+			mod_data.callbacks = None
 		
 		return mod_data
 	else:

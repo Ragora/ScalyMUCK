@@ -15,11 +15,17 @@ copyright = 'Copyright (c) 2013 <You>'
 author = '<You>'
 
 # Commands
-def command_example(data):
+def command_example(arguments):
+	world = arguments['World']
+	sender = arguments['Sender']
+	room = arguments['Room']
 	return
 
 # Callbacks
-def callback_message_received(data):
+def callback_message_received(arguments):
+	client = arguments['Client']
+	room = arguments['Room']
+	world = arguments['World']
 	return
 
 """
@@ -33,7 +39,7 @@ def get_commands():
 	command_dict = {
 		'example': 
 		{ 
-			'Command': command_example,
+			'Command': None,
 			'Description': 'Example implementation.'
 		},
 	}

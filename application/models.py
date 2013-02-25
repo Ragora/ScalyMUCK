@@ -21,8 +21,10 @@ class Player(Base):
 	description = Column(String)
 	hash = Column(String)
 	work_factor = Column(Integer)
-	location = Column(Integer, ForeignKey('rooms.id'))
-	inventory = Column(Integer, ForeignKey('rooms.id'))
+	
+	location_id = Column(Integer, ForeignKey('rooms.id'))
+	location = None
+	# inventory_id = Column(Integer)
 	
 	hp = Column(Integer)
 	dexterity = Column(Integer)
@@ -33,43 +35,37 @@ class Player(Base):
 	is_sadmin = Column(Integer)
 	is_owner = Column(Integer)
 
-	def __init__(self, name, password, work_factor, location, inventory, description='<Unset>', admin=0, sadmin=0, owner=0):
+	connection = None
+
+	def __init__(self, name, password, work_factor, location_id, inventory_id, description='<Unset>', admin=0, sadmin=0, owner=0):
 		self.name = string.lower(name)
 		self.display_name = name
 		self.description = description
 		self.work_factor = work_factor
-		self.location = location
+		self.location_id = location_id
 		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(work_factor))
-		self.inventory = inventory
+		self.inventory_id = inventory_id
 		self.is_admin = admin
 		self.is_sadmin = sadmin
 		self.is_owner = owner
 
 	def __repr__(self):
-		return "<User('%s','%s','%s','%u')>" % (self.name, self.description, self.hash, self.location)
-	      
-class Room(Base):
-	__tablename__ = 'rooms'
-	
-	id = Column(Integer, primary_key=True)
-	name = Column(String)
-	description = Column(String)
+		return "<User('%s','%s','%s','%u')>" % (self.name, self.description, self.hash, self.location_id)
 
-	def __init__(self, name, description='<Unset>'):
-		self.name = name
-		self.description = description
+	def send(self, message):
+		if (self.connection is not None):
+			self.connection.send(message + '\n')
+			return True
+		else:
+			return False
 
-	def __repr__(self):
-		return "<Room('%s','%s')>" % (self.name, self.description)
-	      
 class Item(Base):
 	__tablename__ = 'items'
 	
 	id = Column(Integer, primary_key=True)
 	name = Column(String)
 	description = Column(String)
-	location = Column(Integer, ForeignKey('rooms.id'))
-	inventory = Column(Integer, ForeignKey('rooms.id'))
+	location_id = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self, name, description):
 		self.name = string.lower(name)
@@ -77,3 +73,20 @@ class Item(Base):
 
 	def __repr__(self):
 		return "<Item('%s','%s')>" % (self.name, self.description)
+
+class Room(Base):
+	__tablename__ = 'rooms'
+	id = Column(Integer, primary_key=True)
+
+	name = Column(String)
+	description = Column(String)
+	items = relationship('Item')
+
+	players = relationship('Player')
+
+	def __init__(self, name, description='<Unset>'):
+		self.name = name
+		self.description = description
+
+	def __repr__(self):
+		return "<Room('%s','%s')>" % (self.name, self.description)
