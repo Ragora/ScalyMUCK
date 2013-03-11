@@ -1,15 +1,20 @@
 """
-    __init__.py
+	__init__.py
     
-    ScalyMUCK's Mod manager code, it's used
-    to import functionality from all sorts
-    of installed modifications.
+	ScalyMUCK's Mod manager code, it's used
+	to import functionality from all sorts
+	of installed modifications.
+	Copyright (c) 2013 Robert MacGregor
+
+	This software is licensed under the GNU General
+	Public License version 3. Please refer to gpl.txt 
+	for more information.
 """
 
 import os
 import string
+import types
 
-# This class is pretty useless as of now but it's intended for easy access to mod-specific AI's and items, etc
 class Mod():
 	name = None
 	description = None
@@ -77,3 +82,56 @@ def load_mod(name, logger):
 		return mod_data
 	else:
 		return None
+
+def load_mods(logger):
+	list = get_mod_list()
+	mods = { }
+	for mod in list:
+		mod_data = load_mod(mod, logger)
+		if (mod_data is None):
+			continue
+
+		mods[mod] = { 'Commands': { }, 'Callbacks': { } }
+
+		mod_version = '%s.%s.%s' % (str(mod_data.version_major), str(mod_data.version_minor), str(mod_data.version_revision))
+		logger.write('Name: ' + mod_data.name)
+		logger.write('Author: ' + mod_data.author)
+		logger.write('Version: ' + mod_version)
+		logger.write('Description: ' + mod_data.description)
+
+		logger.write('Attempting to load modification ...')
+
+		# Loading all of our user chat commands
+		mod_commands = mod_data.commands
+		if (mod_commands is not None):
+			logger.write('Total Commands: ' + str(len(mod_commands)))
+			for mod_command in mod_commands:
+				if (mod_commands[mod_command].has_key('Command') is False or type(mod_commands[mod_command]['Command']) is not types.FunctionType):
+					logger.write('Warning: Failed to load command "' + mod_command + '" from modification "' + mod_data.name + '"!')
+				else:
+					if (mod_commands[mod_command].has_key('Description') is False):
+						logger.write('Warning: Failed to load command description for "' + mod_command + '" from modification "' + mod_data.name + '"!')
+						mod_commands[mod_command]['Description'] = '<An error has occurred in the modloader>'
+					else:
+						mod_commands[mod_command]['Description'] = str(mod_commands[mod_command]['Description'])
+						mods[mod]['Commands'][mod_command] = mod_commands[mod_command]
+		else:
+			logger.write('Total Commands: 0')
+
+		# Loading all of the callbacks
+		"""
+		callbacks = mod_data.callbacks
+		if (callbacks is not None):
+			logger.write('Total Callbacks: ' + str(len(callbacks)))	
+			for callback in callbacks:
+				if (type(callbacks[callback]) is not function):
+					logger.write('Warning: Failed to load callback "' + callback + '" from modification "' + mod_data.name + '"!')
+				else:
+					self.callback_entries[callback].append(callbacks[callback])
+		else:
+			logger.write('Total Callbacks: 0')
+		"""	
+
+		logger.write(' ')
+
+	return mods

@@ -1,7 +1,12 @@
 """
-    log.py
-    Logging code for ScalyMUCK
-    Copyright (c) 2012 Liukcairo
+	log.py
+
+	Logging code for ScalyMUCK
+	Copyright (c) 2013 Robert MacGregor
+
+	This software is licensed under the GNU General
+	Public License version 3. Please refer to gpl.txt 
+	for more information.
 """
 
 class Log:
@@ -17,7 +22,7 @@ class Log:
 		try:
 		    file_handle = open(target_file, 'w')
 
-		    text = 'ScalyMUCK Copyright (c) 2013 Liukcairo\n\n'
+		    text = 'ScalyMUCK Copyright (c) 2013 Robert MacGregor\n\n'
 		    if (self._echo):
 		        print(text)
 		    file_handle.write(text)

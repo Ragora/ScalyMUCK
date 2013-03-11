@@ -1,7 +1,12 @@
 """
 	muck.py
+
 	Main file for ScalyMUCK -- you just run this file!
-	Copyright (c) 2012 Liukcairo
+	Copyright (c) 2013 Robert MacGregor
+
+	This software is licensed under the GNU General
+	Public License version 3. Please refer to gpl.txt 
+	for more information.
 """
 
 import sys
@@ -23,7 +28,7 @@ def main():
 	# TODO: Make sure this code actually works on Windows as intended.
 	home_path = os.path.expanduser('~')
 	data_path = home_path + '/.scalyMUCK/'
-	config = settings.Settings(data_path + 'settings_server.cfg')
+	config = settings.Settings('config/settings_server.cfg')
 
 	muck_server = server.Server(None, config, data_path)
 	muck_server.is_daemon = False

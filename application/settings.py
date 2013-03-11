@@ -1,15 +1,19 @@
 """
 	settings.py
-	This is the code that performs the configuration
-	loading of ScalyMUCK.
-	Copyright (c) 2012 Liukcairo
+
+	Basic settings loader.
+	Copyright (c) 2013 Robert MacGregor
+
+	This software is licensed under the GNU General
+	Public License version 3. Please refer to gpl.txt 
+	for more information.
 """
 
 import string
-import log
 
 class Settings:
 	_settings_entries = { }
+	_yes = ['1', 'true', 'y', 'yes', 'enable', 'toggle', 'enabled']		
     
 	def __init__(self, target_file):
 		try:
@@ -22,15 +26,22 @@ class Settings:
 			line_data = line_data.lstrip()
 
 			if (len(preference_data) == 2):
-				self._settings_entries[preference_data[0]] = preference_data[1]
+				data = preference_data[1]
+				self._settings_entries[preference_data[0]] = data[:len(data)]
 			elif(line_data.find('#') and line_data != ''):
-				log.write('Warning: Located malformed configuration data in ' + target_file + ': ' + line_data)
 				continue
 
 		file_handle.close()
 
-	def get_index(self, index):
+	def get_index(self, index, data_type):
 		if(index in self._settings_entries):
-			return self._settings_entries[index]
+			entries = self._settings_entries
+			if (data_type is bool):
+				if (string.lower(self._settings_entries[index]) in self._yes):
+					return True
+				else:
+					return False
+			else:
+				return data_type(entries[index])
 		else:
 			return None
