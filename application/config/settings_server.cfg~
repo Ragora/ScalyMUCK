@@ -1,5 +1,4 @@
 # Configuration file for ScalyMUCK Server
-ServerPort=2000
+ServerPort=500
 ServerAddress=0.0.0.0
 WorkFactor=10
-Debug=Yes

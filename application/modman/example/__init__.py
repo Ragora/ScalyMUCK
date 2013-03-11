@@ -39,7 +39,7 @@ def get_commands():
 	command_dict = {
 		'example': 
 		{ 
-			'Command': None,
+			'Command': command_example,
 			'Description': 'Example implementation.'
 		},
 	}

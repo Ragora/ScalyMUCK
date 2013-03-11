@@ -1,13 +1,19 @@
 """
 	server.py
+
 	This is the main ScalyMUCK server code,
 	it performs the initialisation of various
 	systems and is the binding of everything.
-	Copyright (c) 2012 Liukcairo
+	Copyright (c) 2013 Robert MacGregor
+
+	This software is licensed under the GNU General
+	Public License version 3. Please refer to gpl.txt 
+	for more information.
 """
 
 import sys
 import string
+from time import gmtime, strftime
 
 from sqlalchemy import create_engine
 from miniboa import TelnetServer
@@ -15,43 +21,28 @@ import bcrypt
 
 import models
 import daemon
-import modman
+import interface
 from world import World
 from log import Log
 
 class Server(daemon.Daemon):
 	is_running = False
 	is_daemon = False
-	server_settings = None
+	config = None
 	telnet_server = None
-	database_engine = None
 	
-	home_directory = None
-	database_location = None
-	log_file_location = None
-	server_config_location = None
-	gameplay_config_location = None
-	welcome_message_location = None
-	exit_message_location = None
 	work_factor = None
 	
 	world_instance = None
-
 	logger = None
 
 	welcome_message_data = ''
 	exit_message_data = ''
-
-	command_entries = { }
-	callback_entries = {
-		'onClientAuthenticated': [ ],
-		'onClientConnected': [ ]
-	}
 	
 	pending_connection_list = [ ]
-	# The difference between pending and established is that the pending clients still have yet to login while the established clients
-	# have already verified.
 	established_connection_list = [ ]
+
+	interface = None
 	
 	version_major = 1
 	version_minor = 0
@@ -60,20 +51,16 @@ class Server(daemon.Daemon):
 	def __init__(self, pid, config, data_path):
 		self.pidfile = pid
 		
-		self.database_location = data_path + 'Database.db'
-		self.log_file_location = data_path + 'log.txt'
-		self.logger = Log(self.log_file_location, pid is None)
+		self.data_path = data_path
+		self.logger = Log(data_path + 'log.txt', pid is None)
 
-		self.server_config_location = 'config/settings_server.cfg'
-		self.gameplay_config_location = 'config/settings_gameplay.cfg'
-		self.welcome_message_location = 'config/welcome_message.txt'
-		self.exit_message_location = 'config/exit_message.txt'
+		server_config_location = 'config/settings_server.cfg'
+		gameplay_config_location = 'config/settings_gameplay.cfg'
   
-		self.server_settings = config
-		self.work_factor = int(self.server_settings.get_index('WorkFactor'))
+		self.config = config
 		
 		try:
-			with open(self.welcome_message_location) as f:
+			with open('config/welcome_message.txt') as f:
 				for line in f:
 					if (string.find(line, '\n') == -1):
 						line = line + '\n'
@@ -84,7 +71,7 @@ class Server(daemon.Daemon):
 			self.welcome_message_data = 'Unable to load welcome message!'
 			
 		try:
-			with open(self.exit_message_location) as f:
+			with open('config/exit_message.txt') as f:
 				for line in f:
 					if (string.find(line, '\n') == -1):
 						line = line + '\n'
@@ -101,112 +88,34 @@ class Server(daemon.Daemon):
 		to start the actual MUCK server code.
 	"""
 	def initialise_server(self):
-		# This should actually have a use someday, it was intended on converting between certain string values to their proper
-		# boolean values in server configuration files as all of it is loaded as string data.
-		text_mappings = { 
-			  'yes': True,
-			  'y': True,
-			  'no': False,
-			  'n': False,
-			  '1': True,
-			  '0': False,
-			  'nope': False,
-			  'enable': True,
-			  'enabled': True,
-			  'disable': False,
-			  'disabled': False
-		}
-		
 		server_version_string = '%s.%s.%s' % (self.version_major, self.version_minor, self.version_revision)
 		self.logger.write('Server Version: ' + server_version_string)
+
 		database_exists = True
+		database_location = self.data_path + 'Database.db'
 		try:
-			with open(self.database_location) as f: pass
+			with open(database_location) as f: pass
 		except IOError as e:
 			self.logger.write('This appears to be your first time running the ScalyMUCK server. We must initialise your database ...')
 			database_exists = False
 
-		self.database_engine = create_engine('sqlite:///' + self.database_location, echo=False)
-		models.Base.metadata.create_all(self.database_engine)
-		self.world_instance = World(self.database_engine)
+		database_engine = create_engine('sqlite:///' + database_location, echo=False)
+		models.Base.metadata.create_all(database_engine)
+		self.world_instance = World(database_engine)
 		
 		if (database_exists is False):
 			self.initialise_database()
 		
-		self.telnet_server = TelnetServer(port=int(self.server_settings.get_index('ServerPort')),
-						address=self.server_settings.get_index('ServerAddress'),
+		self.telnet_server = TelnetServer(port=self.config.get_index('ServerPort', int),
+						address=self.config.get_index('ServerAddress', str),
 					        on_connect = self.on_client_connect,
 					        on_disconnect = self.on_client_disconnect,
 					        timeout = 0.05)
 		self.is_running = True
 		
-		self.initialise_mods()
-		
+		print(self.config.get_index('Debug', bool))
+		self.interface = interface.Interface(self.logger, self.config.get_index('Debug', bool))
 		self.logger.write('\nScalyMUCK successfully initialised.')
-	
-	"""
-	      server.initialise_mods
-	      
-	      This function is called internally; it's just here to separate logic a bit.
-	"""
-	def initialise_mods(self):
-		self.logger.write('Checking for modifications ...\n')
-		mod_list = modman.get_mod_list()
-		for mod in mod_list:
-			self.logger.write('Found modification: "' + mod + '"')
-			mod_data = modman.load_mod(mod, self.logger)
-			if (mod_data is not None):
-				mod_version = '%s.%s.%s' % (str(mod_data.version_major), str(mod_data.version_minor), str(mod_data.version_revision))
-				server_version = '%s.%s.%s' % (str(mod_data.server_version_major), str(mod_data.server_version_minor), str(mod_data.server_version_revision))
-			
-				self.logger.write('Name: ' + mod_data.name)
-				self.logger.write('Author: ' + mod_data.author)
-				self.logger.write('Version: ' + mod_version)
-				self.logger.write('Server Version: ' + server_version)
-				self.logger.write('Description: ' + mod_data.description)
-				
-				# FIXME: Make this pay attention to what mod loader version it's expecting, not server version
-				if (mod_data.server_version_major != self.version_major):
-					self.logger.write('*** Failed to load modification, version mismatch error.')
-					return
-				else:
-					self.logger.write('Attempting to load modification ...')
-					commands = mod_data.commands
-					if (commands is not None):
-						self.logger.write('Total Commands: ' + str(len(commands)))
-						for command in commands:
-							if (commands[command].has_key('Command') is False):
-								self.logger.write('Warning: Failed to load command "' + command + '" from modification "' + mod_data.name + '"!')
-							elif (str(type(commands[command]['Command'])) != "<type 'function'>"):
-								self.logger.write('Warning: Failed to load command "' + command + '" from modification "' + mod_data.name + '"!')
-							else:
-								if (commands[command].has_key('Description') is False):
-									self.logger.write('Warning: Failed to load command description for "' + command + '" from modification "' + mod_data.name + '"!')
-									commands[command]['Description'] = '<An error has occurred in the modloader>'
-								else:
-									commands[command]['Description'] = str(commands[command]['Description'])
-									command_description = commands[command]['Description']
-							commands[command]['Mod'] = mod_data.name
-							self.command_entries[command] = commands[command]
-					else:
-						self.logger.write('Total Commands: 0')
-					
-					callbacks = mod_data.callbacks
-					if (callbacks is not None):
-						self.logger.write('Total Callbacks: ' + str(len(callbacks)))	
-						for callback in callbacks:
-							if (str(type(callbacks[callback])) != "<type 'function'>"):
-								self.logger.write('Warning: Failed to load callback "' + callback + '" from modification "' + mod_data.name + '"!')
-							elif (self.callback_entries.has_key(callback) is False):
-								self.logger.write('Warning: Callback "' + callback + '" from modification "' + mod_data.name + '" loaded, however it is not used!')
-							else:
-								self.callback_entries[callback].append(callbacks[callback])
-					else:
-						self.logger.write('Total Callbacks: 0')	
-
-
-			self.logger.write(' ')
-		
 	
 	"""
 	      server.initialise_database
@@ -260,18 +169,17 @@ class Server(daemon.Daemon):
 					else:
 						player_hash = target_player.hash
 						if (player_hash == bcrypt.hashpw(password, player_hash) == player_hash):
-							connection.send('Good login\n')
 							connection.id = target_player.id
 							connection.player = target_player
 							target_player.connection = connection
 
-							callback_data = {
-								'Client': connection.player,
-								'Room': None,
-								'World': self.world_instance
-							}
-							for callback in self.callback_entries['onClientAuthenticated']:
-								callback(callback_data)
+							#callback_data = {
+							#	'Client': connection.player,
+							#	'Room': None,
+							#	'World': self.world_instance
+							#}
+							#for callback in self.callback_entries['onClientAuthenticated']:
+							#	callback(callback_data)
 
 							for player in self.established_connection_list:
 								if (player.id == connection.id):
@@ -291,25 +199,19 @@ class Server(daemon.Daemon):
 		# With already connected clients, we'll now deploy the command interface.
 		for connection in self.established_connection_list:
 			input = connection.get_command()
+
 			if (input is not None):
-				data = string.split(input, ' ')
-				command = string.lower(data[0])
-				
-				if (self.command_entries.has_key(command)):
-					function = self.command_entries[command]['Command']
-					arguments = {
-						'Sender': connection.player,
-						'World': self.world_instance,
-						'Arguments': data[1:len(data)],
-						'Input': input[len(command):],
-					}
-					#try:
-					function(arguments)
-					#except:
-#						connection.send('An internal error has occurred when running the command. \
-#Please contact your server administrator about the modification "' + self.command_entries[command]['Mod'] +'".\n')
-				else:
-					connection.send('I do not know what it is to "' + command + '"\n')
+				#callback_data = {
+				#	'Sender': connection.player,
+				#	'Room': None, # TODO: Correct this
+				#	'World': self.world_instance,
+				#	'Input': input
+				#}
+				#intercept_input = False
+				#for callback in self.callback_entries['onMessageSent']:
+				#	if (callback(callback_data)): # TODO: Fix this from error'ing up on a bad callback
+				#		intercept_input = True
+				self.interface.parse_command(connection.player, input)
 					
 
 	def run(self):
