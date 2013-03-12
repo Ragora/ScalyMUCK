@@ -1,4 +1,28 @@
 # Configuration file for ScalyMUCK Server
-ServerPort=500
+
+# All you'd ever really need to adjust is this server port. Make sure it's some number above 1024 as on Linux systems, 1024 and below does not work as a
+# valid port number.
+ServerPort=2000
 ServerAddress=0.0.0.0
+
+# This is used when hashing passwords to be stored in the database, it basically tells the software how many times the hashing algorithm should be applied
+# before storing the password. With that being said, the higher the value the more computations that must occur and therefore should be adjusted accordingly
+# for your specific server. This is used to prevent timing attacks.
 WorkFactor=10
+
+# Failed login block number. If set to a number above 0 (otherwise it's disabled), ScalyMUCK will block logins from an IP address that fails to login after
+# the specified number of attempts. How long these blocks last is specified by the FailedLoginTimeout entry below.
+FailedAttempts=3
+# How long in minutes an IP should be blocked after it has failed repeatedly to login. If set to zero, blocks are permeneant...
+FailedLoginTimeout=60
+# How long in seconds between logins before incrementing the "Failed login" counter. This is used to give users some grace while bots will be denied, however
+# it's not difficult to program a bot to work within this time frame as well.
+FailedLoginGrace=2
+
+# Debug mode should only be used on dev servers and not actual production servers as it purposely flips off the safe execution mechanism in ScalyMUCK that
+# allows the application to painlessly report an error in the event an error occurs within a modification rather than just explode all over the place. This
+# is useful when developing modifications as the safe execution mechanism cannot report detailed errors and therefore will make debugging of modification
+# components significantly harder.
+Debug=Yes
+
+I_DONT_KNOW_HOW_TO_SECURITY_LET_ME_RUN_AS_ROOT=No

@@ -14,15 +14,17 @@ import string
 import modman
 
 class Interface:
-	_command_entries = { }
 	_logger = None
 	_debug_mode = False
 	_world_instance = None
+	_command_entries = { }
 	_callback_entries = {
 		'onClientAuthenticated': [ ],
 		'onClientConnected': [ ],
 		'onMessageSent': [ ]
 	}
+
+	loaded_mods = [ ]
 
 	def __init__(self, logger, debug_mode):
 		mods = modman.load_mods(logger)
@@ -31,7 +33,9 @@ class Interface:
 				commands = mods[mod]['Commands']
 				for command in commands:
 					self._command_entries[command] = commands[command]
+			self.loaded_mods.append(mod)
 		self.debug_mode = debug_mode
+
 		if (debug_mode):
 			logger.write('Warning: ScalyMUCK is running in debug mode! It will not handle mod errors too nicely.')
 		return
@@ -59,7 +63,7 @@ class Interface:
 					connection.send('An internal error has occurred when running the command. Please contact your server administrator about the modification "' + self.command_entries[command]['Mod'] +'".\n')
 					self.logger.write(strftime('%a, %d %b %Y %H:%M:%S: Command "' + command + '" in mod "' + self.command_entries[command]['Mod'] + '" invoked by user ' + connection.player.display_name + ' failed.'))
 		else:
-			connection.send('I do not know what it is to "' + command + '"\n')
+			sender.send('I do not know what it is to "' + command + '.')
 
 		return
 
