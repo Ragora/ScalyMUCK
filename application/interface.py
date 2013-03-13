@@ -11,8 +11,6 @@
 
 import string
 
-import modman
-
 class Interface:
 	_logger = None
 	_debug_mode = False
