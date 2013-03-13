@@ -1,25 +1,17 @@
-Version 1.0 (alpha):
-	* User Login w/ authentification by py-bcrypt
-	* Database API overlay (each class has its own methods for setting cerain properties without having to derp with sqlalchemy code directly--for simplicity of chat commands)
-	* Simple Command Interface
-		* look
-		* say
-		* adduser
-		* move
-		* dig
-		* inventory
-		* take
-		* craft
-	* Multiple administration levels
-		* Normie
-		* Admin
-		* Sadmin
-	* Server configuration loading
-	* Modification loading base (for commands)
+Program flow:
 
-Version 2.0 (alpha):
-	* Base for AI's
-	* Modification loading for other stuff
-	* Tags for dynamically changing items in text:
-		#TIME# -- along those lines.
-	* Find a way to run modifications in a sort of sandbox
+-- Program flow horizontal
+> = Program Flow Right
+< = Program Flow Left
+| = Program Flow Vertically (refer to last directional)
+
+
+Client flow--											
+						 	     |>Parse Command--<--<--<--<--<-|
+					       |>Good Login--|>Check for incoming commands--|
+Establish Connection --|>Present Login Screen--|>Failed Login--|>
+		       |		       		       |
+		       |-<|-Increment Counter/Check--<--<--<--<|
+		       	  |>Counter was violated-->Forced Disconnect-->End
+
+Server flow:

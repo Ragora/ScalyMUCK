@@ -12,9 +12,11 @@
 import sys
 import os
 import string
+import logging
+from time import strftime
 
-import server
-import settings
+from server import Server
+from game import settings
 
 def main():
 	command = None
@@ -24,18 +26,53 @@ def main():
 			print('Usage: ' + sys.argv[0] + ' <start|stop|restart>')
 			return
 			
-
-	# TODO: Make sure this code actually works on Windows as intended.
 	home_path = os.path.expanduser('~')
 	data_path = home_path + '/.scalyMUCK/'
-	config = settings.Settings('config/settings_server.cfg')
 
-	muck_server = server.Server(None, config, data_path)
+	config = settings.Settings('config/settings_server.cfg')
+	
+	# Prepare the logs
+	formatting = logging.Formatter('%(levelname)s (%(asctime)s): %(message)s', '%d/%m/%y at %I:%M:%S %p')
+	if (config.get_index('LogConnections', bool)):
+		logger = logging.getLogger('Connections')
+		logger.setLevel(logging.INFO)
+
+		handle = logging.FileHandler(data_path+'connection_log.txt')
+		handle.setLevel(logging.DEBUG)
+
+		handle.setFormatter(formatting)
+		logger.addHandler(handle)
+		logger.info('ScalyMUCK Server Server Start')
+
+	if (config.get_index('LogMods', bool)):
+		logger = logging.getLogger('Mods')
+		logger.setLevel(logging.INFO)
+
+		handle = logging.FileHandler(data_path+'mod_log.txt')
+		handle.setLevel(logging.INFO)
+		handle.setFormatter(formatting)
+
+		logger.addHandler(handle)
+		logger.info('ScalyMUCK Server Server Start')
+
+	if (config.get_index('LogServer', bool)):
+		logger = logging.getLogger('Server')
+		logger.setLevel(logging.INFO)
+
+		handle = logging.FileHandler(data_path+'server_log.txt')
+		handle.setLevel(logging.INFO)
+		handle.setFormatter(formatting)
+
+		logger.addHandler(handle)
+		logger.info('ScalyMUCK Server Server Start')
+
+	muck_server = Server(None, config, data_path)
 	muck_server.is_daemon = False
 
-	muck_server.initialise_server()
+	# TODO: Can probably write to be a tad better
 	while (muck_server.is_active()):
 		muck_server.update()
+	logging.shutdown()
 
 if __name__ == '__main__':
 	main()
