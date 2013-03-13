@@ -79,6 +79,7 @@ class Server(daemon.Daemon):
 		models.Base.metadata.create_all(database_engine)
 		self.world = world.World(database_engine)
 		
+		work_factor = config.get_index('WorkFactor', int)
 		if (database_exists is False):
 			portal_room = self.world.create_room('Portal Room Main')
 			raptor_jesus = self.world.create_player('RaptorJesus', 'ChangeThisPasswordNowPlox', work_factor, portal_room)
@@ -90,7 +91,7 @@ class Server(daemon.Daemon):
 					        on_disconnect = self.on_client_disconnect,
 					        timeout = 0.05)
 	
-		# self.interface = interface.Interface(self.logger, self.config.get_index('Debug', bool))
+		self.interface = interface.Interface(config)
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
 	
