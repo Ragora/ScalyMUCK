@@ -85,25 +85,20 @@ class Player(Base):
 
 	def set_location(self, location):
 		if (self.world is None):
-			return
+			returnarget_room.add_exit(name, link_room, sender)
 
 		if (type(location) is Room):
 			self.location = location
 			self.location_id = location.id
 			self.world.session.add(self)
 			self.world.session.commit()
+			return
 		elif(type(location) is int):
 			location = self.world.session.query(Room).filter_by(id=location).first()
 			if (location is not None):
 				self.set_location(location)
-
-	def set_password(self, password):
-		if (self.world is None):
 			return
-
-		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(self.work_factor))
-		self.world.session.add(self)
-		self.world.session.commit()	
+		return
 
 class Item(Base):
 	__tablename__ = 'items'
@@ -115,7 +110,7 @@ class Item(Base):
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self, name, description, owner=0):
-		self.name = name
+		self.name = string.lower(name)
 		self.description = description
 		if (type(owner) is int):
 			self.owner_id = owner
@@ -124,20 +119,6 @@ class Item(Base):
 
 	def __repr__(self):
 		return "<Item('%s','%s')>" % (self.name, self.description)
-
-	def set_location(self, location):
-		if (self.world is None):
-			return
-
-		if (type(location) is Room):
-			self.location = location
-			self.location_id = location.id
-			self.world.session.add(self)
-			self.world.session.commit()
-		elif(type(location) is int):
-			location = self.world.session.query(Room).filter_by(id=location).first()
-			if (location is not None):
-				self.set_location(location)
 
 class Room(Base):
 	__tablename__ = 'rooms'
@@ -170,10 +151,12 @@ class Room(Base):
 			target_room = self.world.session.query.query(Room).filter_by(id=target_room).first()
 			if (target_room is not None):
 				self.add_exit(name, target_room)
+			return
 		elif (type(target_room) is Room):
 			exit = Exit(name, target_room, owner)
 			self.exits.append(exit)
 			self.world.session.add(self)
 			self.world.session.add(exit)
 			self.world.session.commit()
+			return
 		return

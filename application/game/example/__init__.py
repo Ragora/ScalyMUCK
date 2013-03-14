@@ -28,6 +28,10 @@ def callback_message_received(arguments):
 	world = arguments['World']
 	return
 
+
+def initialize(config):
+	return
+
 """
       get_commands
       
