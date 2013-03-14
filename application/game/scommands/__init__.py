@@ -1,10 +1,18 @@
 """
-      ScalyMUCK Normal Commands
-      This mod code is simply ScalyMUCK's
-      default user commands.
+	ScalyMUCK Normal Commands
+	This mod code is simply ScalyMUCK's
+	default user commands.
+
+	Copyright (c) 2013 Robert MacGregor
+
+	This software is licensed under the GNU General
+	Public License version 3. Please refer to gpl.txt 
+	for more information.
 """
 
 import string
+
+import edit
 
 server_version_major = 1
 server_version_minor = 0
@@ -153,22 +161,87 @@ def command_edit(arguments):
 	lower = string.lower(input)
 	if (lower == 'here'):
 		target = sender.location
+		if (target.owner_id != sender.id and sender.is_owner is False):
+			sender.send('You do not own that.')
+			return
+
 	elif (lower == 'self'):
 		target = sender
 
-
 	if (target is not None):
 		sender.is_editing = True
-		sender.send('Entered editor mode.')
+		sender.edit_target = target
+		arguments['Menu'] = 'Main'
+		edit.display_menu(arguments)
+		arguments['Menu'] = 'EditMain'
+		edit.display_menu(arguments)
 	else:
 		sender.send('I do not see that.')
 
 	return
 
+def command_inventory(arguments):
+	sender = arguments['Sender']
+
+	sender.send('Items:')
+	if (len(sender.inventory.items) != 0):
+		for item in sender.inventory.items:
+			sender.send('	' + item.name)
+	else:
+		sender.send('	None')
+
+	# Pocket dimension anybody?
+	if (len(sender.inventory.players) != 0):
+		sender.send('People: ')
+		for player in sender.inventory.players:
+			sender.send('	' + player.display_name)
+	return
+
+def command_take(arguments):
+	sender = arguments['Sender']
+	input = arguments['Input']
+
+	if (input == ''):
+		sender.send('Usage: take <object name>')
+		return
+
+	for item in sender.location.items:
+		if (item.name == input):
+			sender.send('Taken.')
+			return
+
+	sender.send('I do not see that.')
+
+def command_passwd(arguments):
+	sender = arguments['Sender']
+	input = arguments['Input']
+
+	if (input == ''):
+		sender.send('Usage: passwd <password>')
+		return
+
+	sender.set_password(input)
+	sender.send('Your password has been changed. Remember it well.')
+
+def command_craft(arguments):
+	sender = arguments['Sender']
+	input = arguments['Input']
+
+	if (input == ''):
+		sender.send('Usage: craft <new item name>')
+		return
+
+	world = arguments['World']
+
+	item = world.create_item(input, '<Unset>', sender, sender.inventory)
+	sender.send('Item crafted.')
+
+
 # Callbacks
 def callback_client_authenticated(arguments):
-	client = arguments['Client']
+	client = arguments['Sender']
 	client.is_editing = False
+	client.edit_target = None
 
 	world = arguments['World']
 
@@ -180,16 +253,13 @@ def callback_client_authenticated(arguments):
 	return
 
 def callback_message_sent(arguments):
-	input = arguments['Input']
 	sender = arguments['Sender']
-	world = arguments['World']
-
 	if (sender.is_editing):
-		data = string.split(input, ' ')
-		command = data[0]
-
-		sender.send('Editor: Unknown command')
+		edit.receive_input(arguments)
 		return True
+
+	input = arguments['Input']
+	world = arguments['World']
 
 	# TODO: Make this not suck
 	if (input[0:2] == ': '):
@@ -227,6 +297,11 @@ def callback_message_sent(arguments):
 		return True
 
 	return False
+
+# Function calls
+def initialize(config):
+	print(config.get_index('Test', str))
+	return
 
 def get_commands():
 	command_dict = {
@@ -271,6 +346,30 @@ def get_commands():
 		{
 			'Command': command_edit,
 			'Description': 'Edit your possessions.'
+		},
+
+		'inventory':
+		{
+			'Command': command_inventory,
+			'Description': 'View your inventory.'
+		},
+
+		'take':
+		{
+			'Command': command_take,
+			'Description': 'Take an item from the current room.'
+		},
+
+		'passwd':
+		{
+			'Command': command_passwd,
+			'Description': 'Changes your password.'
+		},
+
+		'craft':
+		{
+			'Command': command_craft,
+			'Description': 'Creates a new item.'
 		}
 	}
 	return command_dict

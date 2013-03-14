@@ -39,7 +39,6 @@ def command_adduser(arguments):
 	# TODO: Make this take server prefs into consideration, and also let this have a default location ...
 	player = world.create_player(name, password, 10, sender.location)
 	sender.send('User "' + name + '" created.')
-	return
 
 def command_froguser(arguments):
 	sender = arguments['Sender']
@@ -58,6 +57,8 @@ def command_froguser(arguments):
 		sender.send('User "' + name + '" frogged.')
 	else:
 		sender.send('User "' + name + '" does not exist anywhere.')
+
+def initialize(config):
 	return
 
 def get_commands():

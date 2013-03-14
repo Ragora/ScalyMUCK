@@ -19,7 +19,7 @@ from sqlalchemy import create_engine
 from miniboa import TelnetServer
 import bcrypt
 
-import models
+import game.models
 import daemon
 import interface
 from game import world
@@ -51,14 +51,16 @@ class Server(daemon.Daemon):
 		except IOError as e:
 			self.welcome_message_data = 'Unable to load welcome message!'
 			self.logger.warning('Unable to load welcome message!')
+			self.logger.warning(str(e))
 		try:
 			with open('config/exit_message.txt') as f:
 				self.exit_message_data = f.read() + '\n'
 		except IOError as e:
 			self.exit_message_data = 'Unable to load exit message!'
 			self.logger.warning('Unable to load exit message!')
+			self.logger.warning(str(e))
 
-		database_location = data_path + config.get_index('TargetDatabase',str)
+		database_location = data_path + config.get_index('TargetDatabase', str)
 		database_exists = True
 		try:
 			with open(database_location) as f: pass
@@ -72,11 +74,11 @@ class Server(daemon.Daemon):
 		else:
 			database = config.get_index('DatabaseName', str)
 			user = config.get_index('DatabaseUser', str)
-			password = config.get_index('DatabasePassword')
+			password = config.get_index('DatabasePassword', str)
 			database_engine = create_engine(database_type + '://' + user + ':' + password + '@' + database_location + '/' + database, echo=False)
+			database_engine.connect()
 
-		database_engine.connect()
-		models.Base.metadata.create_all(database_engine)
+		game.models.Base.metadata.create_all(database_engine)
 		self.world = world.World(database_engine)
 		
 		work_factor = config.get_index('WorkFactor', int)
@@ -91,16 +93,10 @@ class Server(daemon.Daemon):
 					        on_disconnect = self.on_client_disconnect,
 					        timeout = 0.05)
 	
-		self.interface = interface.Interface(config)
+		self.interface = interface.Interface(config, self.world)
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
 	
-	def is_active(self):
-		return self.is_running
-
-	def is_running(self):
-		return self.is_running
-
 	def update(self):
 		self.telnet_server.poll()
 		
@@ -126,6 +122,10 @@ class Server(daemon.Daemon):
 							target_player.connection = connection
 
 							self.connection_logger.info('Client ' + connection.address + ':' + str(connection.port) + ' signed in as user ' + target_player.display_name + '.')
+							self.interface.execute_callback('onClientAuthenticated', target_player, '')
+							for player in target_player.location.players:
+								if (player is not target_player):
+									player.send(target_player.display_name + ' has connected.')
 
 							for player in self.established_connection_list:
 								if (player.id == connection.id):
@@ -138,7 +138,7 @@ class Server(daemon.Daemon):
 							self.established_connection_list.append(connection)
 						else:
 							connection.send('You have specified an invalid username/password combination.\n')
-				elif (len(command_data) >= 3 and command_data[0].lower() != 'connect'):
+				elif (len(command_data) >= 3 and string.lower(command_data[0]) != 'connect'):
 					connection.send('You must use the "connect" command:\n')
 					connection.send('connect <username> <password>\n')
 
@@ -152,6 +152,12 @@ class Server(daemon.Daemon):
 	    while (self.is_running()):
 		self.update()
 
+	def is_active(self):
+		return self.is_running
+
+	def is_running(self):
+		return self.is_running
+
 	def on_client_connect(self, client):
 		self.connection_logger.info('Received client connection from ' + client.address + ':' + str(client.port))
 		client.send(self.welcome_message_data)
@@ -162,4 +168,7 @@ class Server(daemon.Daemon):
 		if (client in self.pending_connection_list):
 			self.pending_connection_list.remove(client)
 		elif (client in self.established_connection_list):
+			for player in client.player.location.players:
+				if (player is not client.player):
+					player.send(client.player.display_name + ' has disconnected.')
 			self.established_connection_list.remove(client)
