@@ -36,6 +36,12 @@ class Exit(Base):
 	def __repr__(self):
 		return "<Exit('%s','%u'>" % (self.name, self.target_id)
 
+	def set_name(self, name):
+		self.name = name
+		self.world.session.add(self)
+		self.world.session.commit()
+		
+
 class Player(Base):
 	__tablename__ = 'players'
 	
@@ -84,9 +90,6 @@ class Player(Base):
 			return False
 
 	def set_location(self, location):
-		if (self.world is None):
-			returnarget_room.add_exit(name, link_room, sender)
-
 		if (type(location) is Room):
 			self.location = location
 			self.location_id = location.id
@@ -100,6 +103,22 @@ class Player(Base):
 			return
 		return
 
+	def set_name(self, name):
+		self.name = string.lower(name)
+		self.display_name = name
+		self.world.session.add(self)
+		self.world.session.commit()
+
+	def delete(self):
+		if (self.connection is not None):
+			self.connection.socket_send()
+			self.connection.deactivate()
+			self.connection.sock.close()
+		self.world.cached_players.remove(self)
+		self.world.session.delete(self)
+		self.world.session.commit()
+		
+
 class Item(Base):
 	__tablename__ = 'items'
 	
@@ -110,7 +129,7 @@ class Item(Base):
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self, name, description, owner=0):
-		self.name = string.lower(name)
+		self.name = name
 		self.description = description
 		if (type(owner) is int):
 			self.owner_id = owner
@@ -119,6 +138,24 @@ class Item(Base):
 
 	def __repr__(self):
 		return "<Item('%s','%s')>" % (self.name, self.description)
+
+	def set_name(self, name):
+		self.name = name
+		self.world.session.add(self)
+		self.world.session.commit()
+
+	def set_location(self, location):
+		if (type(location) is Room):
+			self.location = location
+			self.location_id = location.id
+			self.world.session.add(self)
+			self.world.session.commit()
+		elif(type(location) is int):
+			location = self.world.session.query(Room).filter_by(id=location).first()
+			if (location is not None):
+				self.set_location(location)
+
+		
 
 class Room(Base):
 	__tablename__ = 'rooms'
@@ -144,9 +181,6 @@ class Room(Base):
 		return "<Room('%s','%s')>" % (self.name, self.description)
 
 	def add_exit(self, name, target_room, owner=0):
-		if (self.world is None):
-			return
-
 		if (type(target_room) is int):
 			target_room = self.world.session.query.query(Room).filter_by(id=target_room).first()
 			if (target_room is not None):
@@ -160,3 +194,14 @@ class Room(Base):
 			self.world.session.commit()
 			return
 		return
+
+	def set_name(self, name):
+		self.name = name
+		self.world.session.add(self)
+		self.world.session.commit()
+
+	def broadcast(self, message, *exceptions):
+		for player in self.players:
+			if (player not in exceptions):
+				player.send(message)
+		

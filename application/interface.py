@@ -44,6 +44,7 @@ class Interface:
 		else:
 			mod_config = settings.Settings('config/' + mod + '.cfg')
 			module.initialize(mod_config)
+			module.world = self.world
 			mod_commands = module.get_commands()
 			if (mod_commands is not None):
 				for command in mod_commands:
@@ -68,14 +69,8 @@ class Interface:
 
 		if (self.commands.has_key(command) and intercept_input is False):
 			function = self.commands[command]['Command']
-			arguments = {
-				'Sender': sender,
-				'World': self.world,
-				'Arguments': data[1:len(data)],
-				'Input': input[len(command)+1:],
-			}
 			try:
-				function(arguments)
+				function(sender=sender, arguments=data[1:len(data)], input=input[len(command)+1:])
 			except exception.ModApplicationError as e:
 				line_one = 'An error has occurred within the modification "' + self.commands[command]['Mod'] + ' while executing the command.'
 				line_two = 'Error Condition: '
@@ -101,15 +96,10 @@ class Interface:
 	def execute_callback(self, callback, client, input):
 		intercept = False
 		if (callback in self.callbacks):
-			data = {
-				'Sender': client,
-				'World': self.world,
-				'Input': input
-			}
 			for entry in self.callbacks[callback]:
 				function = entry['Command']
 				try:
-					if (intercept is False and function(data)):
+					if (intercept is False and function(sender=client, world=self.world, input=input)):
 						intercept = True
 				except exception.ModApplicationError as e:
 					line_one = 'An error has occurred within the modification "' + self.callbacks[callback]['Mod'] + ' while executing callback "' + callback + '".'
