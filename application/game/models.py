@@ -41,7 +41,6 @@ class Exit(Base):
 		self.world.session.add(self)
 		self.world.session.commit()
 		
-
 class Player(Base):
 	__tablename__ = 'players'
 	
@@ -96,7 +95,7 @@ class Player(Base):
 			self.world.session.add(self)
 			self.world.session.commit()
 			return
-		elif(type(location) is int):
+		elif (type(location) is int):
 			location = self.world.session.query(Room).filter_by(id=location).first()
 			if (location is not None):
 				self.set_location(location)
@@ -109,6 +108,14 @@ class Player(Base):
 		self.world.session.add(self)
 		self.world.session.commit()
 
+	def set_password(self, password):
+		if (self.world is None):
+			return
+
+		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(self.work_factor))
+		self.world.session.add(self)
+		self.world.session.commit()
+
 	def delete(self):
 		if (self.connection is not None):
 			self.connection.socket_send()
@@ -117,7 +124,7 @@ class Player(Base):
 		self.world.cached_players.remove(self)
 		self.world.session.delete(self)
 		self.world.session.commit()
-		
+	
 
 class Item(Base):
 	__tablename__ = 'items'
@@ -150,12 +157,10 @@ class Item(Base):
 			self.location_id = location.id
 			self.world.session.add(self)
 			self.world.session.commit()
-		elif(type(location) is int):
+		elif (type(location) is int):
 			location = self.world.session.query(Room).filter_by(id=location).first()
 			if (location is not None):
 				self.set_location(location)
-
-		
 
 class Room(Base):
 	__tablename__ = 'rooms'
@@ -185,15 +190,12 @@ class Room(Base):
 			target_room = self.world.session.query.query(Room).filter_by(id=target_room).first()
 			if (target_room is not None):
 				self.add_exit(name, target_room)
-			return
 		elif (type(target_room) is Room):
 			exit = Exit(name, target_room, owner)
 			self.exits.append(exit)
 			self.world.session.add(self)
 			self.world.session.add(exit)
 			self.world.session.commit()
-			return
-		return
 
 	def set_name(self, name):
 		self.name = name

@@ -42,7 +42,8 @@ def command_say(**kwargs):
 	return
 
 def command_pose(**kwargs):
-	sender.location.broadcast(kwargs['sender'].display_name + ' ' + kwargs['input'])
+	sender = kwargs['sender']
+	sender.location.broadcast(sender.display_name + ' ' + kwargs['input'])
 	return
 
 def command_look(**kwargs):
