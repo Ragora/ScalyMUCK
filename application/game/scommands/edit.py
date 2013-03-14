@@ -12,9 +12,11 @@ import string
 
 import game.models as models
 
-def display_menu(arguments):
+_edit_options = [ (0, 'Exit the Editor'), (1, 'Change Name') ]
+def display_menu(client, menu):
 	menu = arguments['Menu']
 	sender = arguments['Sender']
+	sender.edit_menu = menu
 
 	target = sender.edit_target
 	if (menu == 'Main'):
@@ -29,15 +31,39 @@ def display_menu(arguments):
 			sender.send('Object Name: ' + target.name)
 
 		sender.send('Object Type: ' + str(type(target)))
+		sender.send('Options----')
+		sender.send('0.) Exit the Editor')
+		sender.send('1.) Change Name')
+		sender.send('2.) Change Description')
 	return
 
-def receive_input(arguments):
-	sender = arguments['Sender']
-	world = arguments['World']
-	input = arguments['Input']
+def receive_input(sender, input):
 
 	data = string.split(input, ' ')
 	command = data[0]
 
-	sender.send('Editor: Unknown command')
+	if (sender.edit_menu == 'EditMain'):
+		if (input == ''):
+			arguments['Menu'] = 'EditMain'
+			display_menu(arguments)
+		elif (input == '0'):
+			sender.send('Editor: Left the editor.')
+			sender.is_editing = False
+		elif (input == '1'):
+			sender.edit_menu = 'EditName'
+			sender.send('Editor: Next thing you type will become the new name. If you wish to cancel, simply leave the input blank and hit enter.')
+		else:
+			sender.send('Editor: Unknown command')
+	elif (sender.edit_menu == 'EditName'):
+		if (input == ''):
+			arguments['Menu'] = 'EditMain'
+			sender.send('You canceled the name edit.')
+			display_menu(arguments)
+		else:
+			print(sender.edit_target)
+			sender.edit_target.set_name(input)
+			sender.send('Object renamed.')
+			arguments['Menu'] = 'EditMain'
+			display_menu(arguments)
+			
 	return

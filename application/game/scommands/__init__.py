@@ -26,34 +26,27 @@ description = 'This modification implements various normal MU* commands into Sca
 copyright = 'Copyright (c) 2013 Liukcairo'
 author = 'Liukcairo'
 
+world=None
+
 # Commands
-def command_say(arguments):
-	sender = arguments['Sender']
-	input = arguments['Input']
-	room = sender.location
+def command_say(**kwargs):
+	sender = kwargs['sender']
+	input = kwargs['input']
 
 	if (input == ''):
 		sender.send('Usage: say <message>')
 		return
 
-	for player in room.players:
-		if (player != sender):
-			player.send(sender.display_name + ' says, "' + input + '"')
-
+	sender.location.broadcast(sender.display_name + ' says, "' + input + '"', sender)
 	sender.send('You say, "' + input + '"')
 	return
 
-def command_pose(arguments):
-	sender = arguments['Sender']
-	input = arguments['Input']
-	room = sender.location
-
-	for player in room.players:
-		player.send(sender.display_name + ' ' + input)
+def command_pose(**kwargs):
+	sender.location.broadcast(kwargs['sender'].display_name + ' ' + kwargs['input'])
 	return
 
-def command_look(arguments):
-	sender = arguments['Sender']
+def command_look(**kwargs):
+	sender = kwargs['sender']
 	room = sender.location
 	
 	sender.send('<' + room.name + '>')
@@ -71,7 +64,7 @@ def command_look(arguments):
 
 	if (len(room.items) != 0):
 		for item in room.items:
-			sender.send(item.name)
+			sender.send('	' + item.name)
 	else:
 		sender.send('	None')
 
@@ -79,56 +72,46 @@ def command_look(arguments):
 	sender.send(room.description)
 	return
 
-def command_dig(arguments):
-	sender = arguments['Sender']
-	args = arguments['Arguments']
-	world = arguments['World']
-	input = arguments['Input']
+def command_dig(**kwargs):
+	input = kwargs['input']
 
 	if (input == ''):
 		sender.send('Usage: dig <Room Name>')
 		return
 
+	sender = kwargs['sender']
+	args = kwargs['arguments']
+
 	room = world.create_room(input, '<Unset>', sender)
 	sender.send('Room created. ID: ' + str(room.id))
 	return
 
-def command_teleport(arguments):
-	sender = arguments['Sender']
-	args = arguments['Arguments']
-	world = arguments['World']
-	room = sender.location
-
+def command_teleport(**kwargs):
+	args = kwargs['arguments']
 	if (len(args) < 1):
 		sender.send('Usage: teleport <Room ID|User Name>')
 		return
 
+	sender = kwargs['sender']
+
 	input = args[0]
 	target_room = world.find_room(id=input)
 	if (target_room is not None):
-		for player in room.players:
-			if (player != sender):
-				player.send(sender.display_name + ' fades into a mist and vanishes ...')
+		sender.location.broadcast(sender.display_name + ' fades into a mist and vanishes ...', sender)
 		sender.send('The world around you slowly fades away ...')
-		sender.set_location(target_room)
-		for player in target_room.players:
-			if (player != sender):
-				player.send('A myst appears and forms into ' + sender.display_name + '.')
 
-		command_args = {
-			'Sender': sender,
-			'World': world
-		}
-		command_look(command_args)
+		sender.set_location(target_room)
+		sender.location.broadcast('A mist appears and forms into ' + sender.display_name + '.', sender)
+
+		command_look(sender=sender, world=world)
 		return
 
 	sender.send('Unknown room.')
 	return
 
-def command_move(arguments):
-	sender = arguments['Sender']
-	world = arguments['World']
-	input = arguments['Input']
+def command_move(**kwargs):
+	sender = kwargs['sender']
+	input = kwargs['input']
 
 	if (input == ''):
 		sender.send('Usage: move <name of exit>')
@@ -137,21 +120,18 @@ def command_move(arguments):
 	for exit in sender.location.exits:
 		if (string.lower(exit.name) == string.lower(input)):
 			sender.send('You move out.')
+			sender.location.broadcast(sender.display_name + ' exits the room.', sender)
 			sender.set_location(exit.target_id)
-			command_args = {
-				'Sender': sender,
-				'World': world
-			}
-			command_look(command_args)
+			sender.location.broadcast(sender.display_name + ' enters the room.', sender)
+			command_look(sender=sender, world=kwargs['world'])
 			return
 
 	sender.send('I do not see that.')
 	return
 
-def command_edit(arguments):
-	sender = arguments['Sender']
-	world = arguments['World']
-	input = arguments['Input']
+def command_edit(**kwargs):
+	sender = kwargs['sender']
+	input = kwargs['input']
 
 	if (input == ''):
 		sender.send('Usage: edit <object name>')
@@ -180,8 +160,8 @@ def command_edit(arguments):
 
 	return
 
-def command_inventory(arguments):
-	sender = arguments['Sender']
+def command_inventory(**kwargs):
+	sender = kwargs['sender']
 
 	sender.send('Items:')
 	if (len(sender.inventory.items) != 0):
@@ -197,9 +177,9 @@ def command_inventory(arguments):
 			sender.send('	' + player.display_name)
 	return
 
-def command_take(arguments):
-	sender = arguments['Sender']
-	input = arguments['Input']
+def command_take(**kwargs):
+	sender = kwargs['sender']
+	input = kwargs['input']
 
 	if (input == ''):
 		sender.send('Usage: take <object name>')
@@ -208,13 +188,14 @@ def command_take(arguments):
 	for item in sender.location.items:
 		if (item.name == input):
 			sender.send('Taken.')
+			item.set_location(sender.inventory)
 			return
 
 	sender.send('I do not see that.')
 
-def command_passwd(arguments):
-	sender = arguments['Sender']
-	input = arguments['Input']
+def command_passwd(**kwargs):
+	sender = kwargs['sender']
+	input = kwargs['input']
 
 	if (input == ''):
 		sender.send('Usage: passwd <password>')
@@ -223,84 +204,70 @@ def command_passwd(arguments):
 	sender.set_password(input)
 	sender.send('Your password has been changed. Remember it well.')
 
-def command_craft(arguments):
-	sender = arguments['Sender']
-	input = arguments['Input']
+def command_craft(**kwargs):
+	sender = kwargs['sender']
+	input = kwargs['input']
 
 	if (input == ''):
 		sender.send('Usage: craft <new item name>')
 		return
 
-	world = arguments['World']
-
 	item = world.create_item(input, '<Unset>', sender, sender.inventory)
 	sender.send('Item crafted.')
 
+def command_drop(**kwargs):
+	sender = kwargs['sender']
+	input = kwargs['input']
+
+	if (input == ''):
+		sender.send('Usage: drop <item name>')
+		return
+
+	for item in sender.inventory.items:
+		if (item.name == input):
+			sender.send('You dropped that item.')
+			sender.location.broadcast(sender.display_name + ' drops a/an ' + item.name + '.', sender)
+			item.set_location(sender.location)
+			return
+	sender.send('I see no such item.')
 
 # Callbacks
-def callback_client_authenticated(arguments):
-	client = arguments['Sender']
+def callback_client_authenticated(**kwargs):
+	client = kwargs['sender']
 	client.is_editing = False
 	client.edit_target = None
+	client.edit_menu = 'EditMain'
 
-	world = arguments['World']
-
-	command_args = {
-		'Sender': client,
-		'World': world
-	}
-	command_look(command_args)
+	command_look(sender=client)
 	return
 
-def callback_message_sent(arguments):
-	sender = arguments['Sender']
+def callback_message_sent(**kwargs):
+	sender = kwargs['sender']
 	if (sender.is_editing):
-		edit.receive_input(arguments)
+		edit.receive_input(sender, arguments['input'])
 		return True
 
-	input = arguments['Input']
-	world = arguments['World']
+	input = kwargs['input']
 
 	# TODO: Make this not suck
 	if (input[0:2] == ': '):
-		command_args = {
-			'Sender': sender,
-			'World': world,
-			'Input': input[2:]
-		}
-		command_pose(command_args)
+		command_pose(sender=sender, input=input[2:])
 		return True
 	elif (input[0] == ':'):		
-		command_args = {
-			'Sender': sender,
-			'World': world,
-			'Input': input[1:]
-		}
-		command_pose(command_args)
+		command_pose(sender=sender, input=input[1:])
 		return True
 
 	if (input[0:2] == '" '):
-		command_args = {
-			'Sender': sender,
-			'World': world,
-			'Input': input[2:]
-		}
-		command_say(command_args)
+		command_say(sender=sender, input=input[2:])
 		return True
 	elif (input[0] == '"'):
-		command_args = {
-			'Sender': sender,
-			'World': world,
-			'Input': input[1:]
-		}
-		command_say(command_args)
+		command_say(sender=sender, input=input[1:])
 		return True
 
 	return False
 
 # Function calls
 def initialize(config):
-	print(config.get_index('Test', str))
 	return
 
 def get_commands():
@@ -370,6 +337,12 @@ def get_commands():
 		{
 			'Command': command_craft,
 			'Description': 'Creates a new item.'
+		},
+
+		'drop':
+		{
+			'Command': command_drop,
+			'Description': 'Drops an item from your inventory.'
 		}
 	}
 	return command_dict

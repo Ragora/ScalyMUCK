@@ -40,7 +40,7 @@ class World():
 	      
 	def find_room(self, id=None, name=None):
 		if (name is None and id is None):
-			return
+			return None
 
 		for room in self.cached_rooms:
 			if (room.id == id or room.name == name):
@@ -116,6 +116,8 @@ class World():
 		target_item = self.session.query(Item).filter_by(id=id).first()
 		if (target_item is not None):
 			target_item.location = self.session.query(Room).filter_by(id=target_item.location_id).first()
+			target_item.world = self
+			return target_item
 
 	def create_item(self, name, description, owner, location):
 		item = Item(name, description, owner)
@@ -126,6 +128,7 @@ class World():
 			item.location = location
 			item.location_id = location.id
 
+		item.world = self
 		self.session.add(item)
 		self.session.commit()
 
