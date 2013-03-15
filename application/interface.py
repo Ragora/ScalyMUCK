@@ -40,6 +40,7 @@ class Interface:
 			self.logger.warning(str(e))
 		else:
 			mod_config = settings.Settings('config/' + mod + '.cfg')
+			module.world = self.world
 			module.initialize(mod_config)
 
 			mod_commands = module.get_commands()
@@ -61,7 +62,7 @@ class Interface:
 		if (intercept_input is False and command in self.commands):
 			try:
 				function = self.commands[command]['Command']
-				function(sender=sender, input=input, arguments=data[1:len(data)])
+				function(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
 				line_one = 'An error has occurred while executing the command.'
 				line_two = 'Error Condition: '

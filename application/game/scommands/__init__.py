@@ -248,20 +248,21 @@ def callback_message_sent(trigger, sender, input):
 		edit.receive_input(sender, input)
 		return True
 
-	# TODO: Make this not suck
-	if (input[0:2] == ': '):
-		command_pose(sender=sender, input=input[2:])
-		return True
-	elif (input[0] == ':'):		
-		command_pose(sender=sender, input=input[1:])
-		return True
+	if (len(input) != 0):
+		# TODO: Make this not suck
+		if (input[0:2] == ': '):
+			command_pose(sender=sender, input=input[2:])
+			return True
+		elif (input[0] == ':'):		
+			command_pose(sender=sender, input=input[1:])
+			return True
 
-	if (input[0:2] == '" '):
-		command_say(sender=sender, input=input[2:])
-		return True
-	elif (input[0] == '"'):
-		command_say(sender=sender, input=input[1:])
-		return True
+		if (input[0:2] == '" '):
+			command_say(sender=sender, input=input[2:])
+			return True
+		elif (input[0] == '"'):
+			command_say(sender=sender, input=input[1:])
+			return True
 
 	return False
 
