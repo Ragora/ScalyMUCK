@@ -12,6 +12,8 @@
 
 import string
 
+from blinker import signal
+
 import edit
 
 server_version_major = 1
@@ -233,22 +235,18 @@ def command_drop(**kwargs):
 	sender.send('I see no such item.')
 
 # Callbacks
-def callback_client_authenticated(**kwargs):
-	client = kwargs['sender']
-	client.is_editing = False
-	client.edit_target = None
-	client.edit_menu = 'EditMain'
+def callback_client_authenticated(trigger, sender):
+	sender.is_editing = False
+	sender.edit_target = None
+	sender.edit_menu = 'EditMain'
 
-	command_look(sender=client)
+	command_look(sender=sender)
 	return
 
-def callback_message_sent(**kwargs):
-	sender = kwargs['sender']
+def callback_message_sent(trigger, sender, input):
 	if (sender.is_editing):
-		edit.receive_input(sender, arguments['input'])
+		edit.receive_input(sender, input)
 		return True
-
-	input = kwargs['input']
 
 	# TODO: Make this not suck
 	if (input[0:2] == ': '):
@@ -269,6 +267,8 @@ def callback_message_sent(**kwargs):
 
 # Function calls
 def initialize(config):
+	signal('post_client_authenticated').connect(callback_client_authenticated)
+	signal('pre_message_sent').connect(callback_message_sent)
 	return
 
 def get_commands():
@@ -347,10 +347,3 @@ def get_commands():
 		}
 	}
 	return command_dict
-
-def get_callbacks():
-	callback_dict = {
-		'onClientAuthenticated': callback_client_authenticated,
-		'onMessageSent': callback_message_sent
-	}
-	return callback_dict
