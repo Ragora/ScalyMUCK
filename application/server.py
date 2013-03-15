@@ -15,12 +15,13 @@ import sys
 import string
 import logging
 
-from sqlalchemy import create_engine
-from miniboa import TelnetServer
 import bcrypt
+from blinker import signal
+from miniboa import TelnetServer
+from sqlalchemy import create_engine
 
-import game.models
 import daemon
+import game.models
 import interface
 from game import world
 
@@ -38,6 +39,10 @@ class Server(daemon.Daemon):
 	
 	pending_connection_list = [ ]
 	established_connection_list = [ ]
+
+	connect_signal = signal('post_client_connect')
+	disconnect_signal = signal('pre_client_disconnect')
+	authenticated_signal = signal('post_client_authenticated')
 
 	def __init__(self, pid, config, data_path):
 		# self.pidfile = pid
@@ -122,7 +127,7 @@ class Server(daemon.Daemon):
 							target_player.connection = connection
 
 							self.connection_logger.info('Client ' + connection.address + ':' + str(connection.port) + ' signed in as user ' + target_player.display_name + '.')
-							self.interface.execute_callback('onClientAuthenticated', target_player, '')
+							self.authenticated_signal.send(None, sender=target_player)
 							for player in target_player.location.players:
 								if (player is not target_player):
 									player.send(target_player.display_name + ' has connected.')
@@ -162,8 +167,10 @@ class Server(daemon.Daemon):
 		self.connection_logger.info('Received client connection from ' + client.address + ':' + str(client.port))
 		client.send(self.welcome_message_data)
 		self.pending_connection_list.append(client)
+		self.connect_signal.send(sender=client)
 	 
 	def on_client_disconnect(self, client):
+		self.disconnect_signal.send(sender=client)
 		self.connection_logger.info('Received client disconnection from ' + client.address + ':' + str(client.port))
 		if (client in self.pending_connection_list):
 			self.pending_connection_list.remove(client)

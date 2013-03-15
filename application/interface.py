@@ -12,20 +12,17 @@
 import string
 import logging
 
+from blinker import signal
+
 from game import exception, settings
 
 class Interface:
 	logger = None
-	debug_mode = False
 	world = None
 	commands = { }
-	callbacks = {
-		'onClientAuthenticated': [ ],
-		'onClientConnected': [ ],
-		'onMessageSent': [ ]
-	}
-
-	loaded_mods = [ ]
+	
+	pre_message = signal('pre_message_sent')
+	post_message = signal('post_message_sent')
 
 	def __init__(self, config, world):
 		self.logger = logging.getLogger('Mods')
@@ -44,35 +41,29 @@ class Interface:
 		else:
 			mod_config = settings.Settings('config/' + mod + '.cfg')
 			module.initialize(mod_config)
-			module.world = self.world
-			mod_commands = module.get_commands()
-			if (mod_commands is not None):
-				for command in mod_commands:
-					self.commands[command] = mod_commands[command]
-					self.commands[command]['Mod'] = mod
 
-			mod_callbacks = module.get_callbacks()
-			if (mod_callbacks is not None):
-				for callback in mod_callbacks:
-					if (callback in self.callbacks):
-						entry = { 'Command': mod_callbacks[callback], 'Mod': mod }
-						self.callbacks[callback].append(entry)
-					else:
-						self.logger.warning('Loaded callback "%s" from modification "%s" but it is not used.', callback, mod)
-		
+			mod_commands = module.get_commands()
+			for mod_command in mod_commands:
+				self.commands[mod_command] = mod_commands[mod_command]
+				self.commands[mod_command]['Mod'] = mod
 
 	def parse_command(self, sender, input):
-		intercept_input = self.execute_callback('onMessageSent', sender, input)
+		returns = self.pre_message.send(None, sender=sender, input=input)
+		intercept_input = False
+		for set in returns:
+			if (set[1] is True):
+				intercept_input = True
+				break
 
 		data = string.split(input, ' ')
 		command = string.lower(data[0])
 
-		if (self.commands.has_key(command) and intercept_input is False):
-			function = self.commands[command]['Command']
+		if (intercept_input is False and command in self.commands):
 			try:
-				function(sender=sender, arguments=data[1:len(data)], input=input[len(command)+1:])
+				function = self.commands[command]['Command']
+				function(sender=sender, input=input, arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
-				line_one = 'An error has occurred within the modification "' + self.commands[command]['Mod'] + ' while executing the command.'
+				line_one = 'An error has occurred while executing the command.'
 				line_two = 'Error Condition: '
 				line_three = str(e)
 
@@ -91,28 +82,6 @@ class Interface:
 			except UnicodeDecodeError as e:
 				sender.send('I do not know what it is to do that.')
 
-		return
-
-	def execute_callback(self, callback, client, input):
-		intercept = False
-		if (callback in self.callbacks):
-			for entry in self.callbacks[callback]:
-				function = entry['Command']
-				try:
-					if (intercept is False and function(sender=client, world=self.world, input=input)):
-						intercept = True
-				except exception.ModApplicationError as e:
-					line_one = 'An error has occurred within the modification "' + self.callbacks[callback]['Mod'] + ' while executing callback "' + callback + '".'
-					line_two = 'Error Condition: '
-					line_three = str(e)
-
-					self.logger.error(line_one)
-					self.logger.error(line_two)
-					self.logger.error(line_three)
-					sender.send(line_one)
-					sender.send(line_two)
-					sender.send(line_three)
-					sender.send('Please report this incident to your server administrator immediately.')
-		return intercept
+		self.post_message.send(None, sender=sender, input=input)
 
 	
