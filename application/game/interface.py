@@ -19,6 +19,7 @@ from game import exception, settings
 class Interface:
 	logger = None
 	world = None
+	mods = [ ]
 	commands = { }
 	
 	pre_message = signal('pre_message_sent')
@@ -30,23 +31,25 @@ class Interface:
 
 		mod_list = string.split(config.get_index('LoadedMods', str), ';')
 		for mod in mod_list:
-			self.load_mod(mod)
+			self.load_mod(mod, config)
 		return
 
-	def load_mod(self, mod):
+	def load_mod(self, mod, config):
 		try:
 			module = __import__('game.' + mod, globals(), locals(), [''], -1)
 		except ImportError as e:
 			self.logger.warning(str(e))
 		else:
-			mod_config = settings.Settings('config/' + mod + '.cfg')
+			config.load('config/' + mod + '.cfg')
 			module.world = self.world
-			module.initialize(mod_config)
+			module.interface = self
+			module.initialize(config)
+			self.mods.append(module)
 
 			mod_commands = module.get_commands()
 			for mod_command in mod_commands:
 				self.commands[mod_command] = mod_commands[mod_command]
-				self.commands[mod_command]['Mod'] = mod
+				self.commands[mod_command]['mod'] = mod
 
 	def parse_command(self, sender, input):
 		returns = self.pre_message.send(None, sender=sender, input=input)
@@ -61,7 +64,7 @@ class Interface:
 
 		if (intercept_input is False and command in self.commands):
 			try:
-				function = self.commands[command]['Command']
+				function = self.commands[command]['command']
 				function(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
 				line_one = 'An error has occurred while executing the command.'
@@ -76,7 +79,7 @@ class Interface:
 				sender.send(line_three)
 				sender.send('Please report this incident to your server administrator immediately.')
 
-		elif (intercept_input is False):
+		elif (intercept_input is False and command != ''):
 			# This is done because apparently when in the terminal, you can send keycodes and blow up the server
 			try:
 				sender.send('I do not know what it is to "' + command + '".')

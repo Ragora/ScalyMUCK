@@ -16,6 +16,9 @@ class Settings:
 	_yes = ['1', 'true', 'y', 'yes', 'enable', 'toggle', 'enabled']		
     
 	def __init__(self, target_file):
+		self.load(target_file)
+
+	def load(self, target_file):
 		try:
 			file_handle = open(target_file, 'r')
         	except IOError:

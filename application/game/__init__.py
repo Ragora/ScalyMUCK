@@ -8,11 +8,6 @@
 	for more information.
 """
 
-import bot
 import exception
-import item
-import room
 import settings
 import world
-
-
