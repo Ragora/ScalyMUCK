@@ -14,8 +14,6 @@ import string
 
 from blinker import signal
 
-import edit
-
 server_version_major = 1
 server_version_minor = 0
 server_version_revision = 0
@@ -28,7 +26,10 @@ description = 'This modification implements various normal MU* commands into Sca
 copyright = 'Copyright (c) 2013 Liukcairo'
 author = 'Liukcairo'
 
-world=None
+world = None
+interface = None
+
+work_factor = 10
 
 # Commands
 def command_say(**kwargs):
@@ -75,43 +76,6 @@ def command_look(**kwargs):
 	sender.send(room.description)
 	return
 
-def command_dig(**kwargs):
-	input = kwargs['input']
-
-	if (input == ''):
-		sender.send('Usage: dig <Room Name>')
-		return
-
-	sender = kwargs['sender']
-	args = kwargs['arguments']
-
-	room = world.create_room(input, '<Unset>', sender)
-	sender.send('Room created. ID: ' + str(room.id))
-	return
-
-def command_teleport(**kwargs):
-	args = kwargs['arguments']
-	if (len(args) < 1):
-		sender.send('Usage: teleport <Room ID|User Name>')
-		return
-
-	sender = kwargs['sender']
-
-	input = args[0]
-	target_room = world.find_room(id=input)
-	if (target_room is not None):
-		sender.location.broadcast(sender.display_name + ' fades into a mist and vanishes ...', sender)
-		sender.send('The world around you slowly fades away ...')
-
-		sender.set_location(target_room)
-		sender.location.broadcast('A mist appears and forms into ' + sender.display_name + '.', sender)
-
-		command_look(sender=sender, world=world)
-		return
-
-	sender.send('Unknown room.')
-	return
-
 def command_move(**kwargs):
 	sender = kwargs['sender']
 	input = kwargs['input']
@@ -130,37 +94,6 @@ def command_move(**kwargs):
 			return
 
 	sender.send('I do not see that.')
-	return
-
-def command_edit(**kwargs):
-	sender = kwargs['sender']
-	input = kwargs['input']
-
-	if (input == ''):
-		sender.send('Usage: edit <object name>')
-		return
-
-	target = None
-	lower = string.lower(input)
-	if (lower == 'here'):
-		target = sender.location
-		if (target.owner_id != sender.id and sender.is_owner is False):
-			sender.send('You do not own that.')
-			return
-
-	elif (lower == 'self'):
-		target = sender
-
-	if (target is not None):
-		sender.is_editing = True
-		sender.edit_target = target
-		arguments['Menu'] = 'Main'
-		edit.display_menu(arguments)
-		arguments['Menu'] = 'EditMain'
-		edit.display_menu(arguments)
-	else:
-		sender.send('I do not see that.')
-
 	return
 
 def command_inventory(**kwargs):
@@ -207,17 +140,6 @@ def command_passwd(**kwargs):
 	sender.set_password(input)
 	sender.send('Your password has been changed. Remember it well.')
 
-def command_craft(**kwargs):
-	sender = kwargs['sender']
-	input = kwargs['input']
-
-	if (input == ''):
-		sender.send('Usage: craft <new item name>')
-		return
-
-	item = world.create_item(input, '<Unset>', sender, sender.inventory)
-	sender.send('Item crafted.')
-
 def command_drop(**kwargs):
 	sender = kwargs['sender']
 	input = kwargs['input']
@@ -234,20 +156,162 @@ def command_drop(**kwargs):
 			return
 	sender.send('I see no such item.')
 
+def command_help(**kwargs):
+	sender = kwargs['sender']
+	input = string.lower(kwargs['input'])
+
+	if (input not in interface.commands):
+		sender.send('For more information, type: help <command>')
+		sender.send('Command listing: ')
+		out = ''
+		for command in interface.commands:
+			out += command + ', '
+		# Cheap trick to strip off the last comma (and space) but eh!
+		sender.send(out[:len(out)-2]) 
+		return
+	else:
+		sender.send('From: ' + interface.commands[input]['mod'])
+		sender.send('Usage: ' + interface.commands[input]['usage'])
+		sender.send(interface.commands[input]['description'])
+
+def command_quit(**kwargs):
+	sender = kwargs['sender']
+	sender.disconnect()
+
+def command_froguser(**kwargs):
+	sender = kwargs['sender']
+	if (sender.is_sadmin is False):
+		sender.send('You are not magical enough.')
+		return
+
+	args = kwargs['arguments']
+	if (len(args) < 1):
+		sender.send('Usage: frog <name>')
+		return
+
+	name = args[0]
+	target = world.find_player(name=string.lower(name))
+	if (target is not None):
+		if (target is sender):
+			sender.send('That is yourself!')
+			return
+		elif (target.is_sadmin ==1 or target.is_owner == 1):
+			sender.send('You cannot do that, they are too powerful.')
+			return
+
+		item = world.create_item(target.display_name, target.description, sender, sender.inventory)
+		sender.send('User "' + target.display_name + '" frogged. Check your inventory.')
+		target.send(sender.display_name + ' has turned you into a small plastic figurine, never to move again and discreetly places you in their inventory.')
+		sender.location.broadcast(sender.display_name + ' has turned ' + target.display_name + ' into a small plastic figurine, never to move again.', sender, target)
+		target.delete()
+	else:
+		sender.send('User "' + name + '" does not exist anywhere.')
+
+def command_adduser(**kwargs):
+	sender = kwargs['sender']
+	if (sender.is_sadmin is False):
+		sender.send('You are not magical enough.')
+		return
+
+	args = kwargs['arguments']
+	if (len(args) < 2):
+		sender.send('Usage: adduser <name> <password>')
+		return
+
+	name = args[0]
+	password = args[1]
+
+	if (world.find_player(name=string.lower(name)) is not None):
+		sender.send('User already exists.')
+		return
+
+	# TODO: Make this take server prefs into consideration, and also let this have a default location ...
+	player = world.create_player(name, password, work_factor, sender.location)
+	sender.send('User "' + name + '" created.')
+
+def command_admin(**kwargs):
+	sender = kwargs['sender']
+	if (sender.is_admin is False):
+		sender.send('You are not magical enough.')
+		return
+
+	args = kwargs['arguments']
+	if (len(args) < 1):
+		sender.send('Usage: admin <name>')
+		return
+
+	name = args[0]
+
+	target = world.find_player(name=string.lower(name))
+	if (target is not None):
+		if (target is sender):
+			sender.send('That is yourself!')
+			return
+		elif (sender.check_admin_trump(target) is False):
+			sender.send('You cannot do that. They are too strong.')
+			target.send(sender.display_name + ' tried to take your administrator privileges away.')
+			return
+
+		target.set_is_admin(target.is_admin is False)
+		if (target.is_admin == 0):
+			sender.send(target.display_name + ' is no longer an administrator.')
+			target.send(sender.display_name + ' took your adminship.')
+		else:
+			sender.send(target.display_name + ' is now an administrator.')
+			target.send(sender.display_name + ' gave you adminship rights.')
+		return
+	sender.send('Unknown user.')
+
+def command_sadmin(**kwargs):
+	sender = kwargs['sender']
+	if (sender.is_sadmin is False):
+		sender.send('You are not magical enough.')
+		return
+
+	args = kwargs['arguments']
+	if (len(args) < 1):
+		sender.send('Usage: sadmin <name>')
+		return
+
+	name = args[0]
+
+	target = world.find_player(name=string.lower(name))
+	if (target is not None):
+		if (target is sender):
+			sender.send('That is yourself!')
+			return
+		elif (sender.check_admin_trump(target) is False):
+			sender.send('You cannot do that. They are too strong.')
+			target.send(sender.display_name + ' tried to take your super administrator privileges away.')
+			return
+
+		target.set_is_super_admin(target.is_sadmin is False)
+		if (target.is_sadmin is False):
+			sender.send(target.display_name + ' is no longer a super administrator.')
+			target.send(sender.display_name + ' took your super adminship.')
+		else:
+			sender.send(target.display_name + ' is now a super administrator.')
+			target.send(sender.display_name + ' gave you super adminship rights.')
+		return
+	sender.send('Unknown user.')
+
+def command_chown(**kwargs):
+	sender = kwargs['sender']
+	args = kwargs['arguments']
+
+	if (len(args) < 2):
+		sender.send('Usage: chown <item name> <new owner>')
+		return
+
+	item_name = args[0]
+	owner_name = args[1]
+
 # Callbacks
 def callback_client_authenticated(trigger, sender):
-	sender.is_editing = False
-	sender.edit_target = None
-	sender.edit_menu = 'EditMain'
-
 	command_look(sender=sender)
 	return
 
 def callback_message_sent(trigger, sender, input):
-	if (sender.is_editing):
-		edit.receive_input(sender, input)
-		return True
-
 	if (len(input) != 0):
 		# TODO: Make this not suck
 		if (input[0:2] == ': '):
@@ -270,81 +334,129 @@ def callback_message_sent(trigger, sender, input):
 def initialize(config):
 	signal('post_client_authenticated').connect(callback_client_authenticated)
 	signal('pre_message_sent').connect(callback_message_sent)
+	work_factor = config.get_index('WorkFactor', int)
 	return
 
 def get_commands():
 	command_dict = {
 		'say': 
 		{ 
-			'Command': command_say,
-			'Description': 'Makes you say something. Only visible to the current room you\'re in.'
+			'command': command_say,
+			'description': 'Makes you say something. Only visible to the current room you\'re in.',
+			'usage': 'say <arbitrary text> | "<arbitrary text>',
+			'aliases': [ 'speak' ]
 		},
-
 
 		'pose': 
 		{
-			'Command': command_pose,
-			'Description': 'Used to show arbitrary action. Only visible to the current room you\'re in.'
+			'command': command_pose,
+			'description': 'Used to show arbitrary action. Only visible to the current room you\'re in.',
+			'usage': 'pose <arbitrary pose> | :<arbitrary pose>'
+			'aliases': [ ]
 		},
 
 		'look': 
 		{
-			'Command': command_look,
-			'Description': 'Get your bearings. Look around in the local area to see what you can see.'
+			'command': command_look,
+			'description': 'Get your bearings. Look around in the local area to see what you can see.',
+			'usage': 'look [room name | item name | player name]'
+			'aliases': [ ]
 		},
 		
-		'dig':
-		{
-			'Command': command_dig,
-			'Description': 'Creates a room elsewhere and hands you the ID number.'
-		},
-
-		'teleport':
-		{
-			'Command': command_teleport,
-			'Description': 'Teleports you elsewhere.'
-		},
-
 		'move':
 		{
-			'Command': command_move,
-			'Description': 'Moves to a new location.'
-		},
-
-		'edit':
-		{
-			'Command': command_edit,
-			'Description': 'Edit your possessions.'
+			'command': command_move,
+			'description': 'Moves to a new location.',
+			'usage': 'move <exit name>'
+			'aliases': [ 'go' ]
 		},
 
 		'inventory':
 		{
-			'Command': command_inventory,
-			'Description': 'View your inventory.'
+			'command': command_inventory,
+			'description': 'View your inventory.',
+			'usage': 'inventory'
+			'aliases': [ ]
 		},
 
 		'take':
 		{
-			'Command': command_take,
-			'Description': 'Take an item from the current room.'
+			'command': command_take,
+			'description': 'Take an item from the current room.',
+			'usage': 'take <item>'
+			'aliases': [ ]
 		},
 
 		'passwd':
 		{
-			'Command': command_passwd,
-			'Description': 'Changes your password.'
-		},
-
-		'craft':
-		{
-			'Command': command_craft,
-			'Description': 'Creates a new item.'
+			'command': command_passwd,
+			'description': 'Changes your password.',
+			'usage': 'passwd <new password>'
+			'aliases': [ ]
 		},
 
 		'drop':
 		{
-			'Command': command_drop,
-			'Description': 'Drops an item from your inventory.'
+			'command': command_drop,
+			'description': 'Drops an item from your inventory.',
+			'usage': 'drop <item name>'
+			'aliases': [ ]
+		},
+
+		'help':
+		{
+			'command': command_help,
+			'description': 'Displays the help text.',
+			'usage': 'help [command name]'
+			'aliases': [ ]
+		},
+
+		'quit':
+		{
+			'command': command_quit,
+			'description': 'Drops your connection from the server.',
+			'usage': 'quit'
+			'aliases': [ 'leave' ]
+		},
+
+		'frog':
+		{
+			'command': command_froguser,
+			'description': 'Super Admin only: Deletes a user from the world -- making them an item in your inventory to with as you please.',
+			'usage': 'frog <player name>'
+			'aliases': [ ]
+		},
+
+		'adduser':
+		{
+			'command': command_adduser,
+			'description': 'Creates a new player in the world.',
+			'usage': 'adduser <name> <password>'
+			'aliases': [ ]
+		},
+
+		'admin':
+		{
+			'command': command_admin,
+			'description': 'Admin only: Toggles the admin status of a specified player.',
+			'usage': 'admin <name>'
+			'aliases': [ ]
+		},
+
+		'sadmin':
+		{
+			'command': command_sadmin,
+			'description': 'Super Admin only: Toggles the super admin status of a specified player.',
+			'usage': 'sadmin <name>'
+			'aliases': [ ]
+		},
+
+		'chown':
+		{
+			'command': command_chown,
+			'description': 'Transfers ownership of an item in your inventory or in the room to a specified player providied you are the original owner.',
+			'usage': 'chown <item name> <new owner name>'
+			'aliases': [ ]
 		}
 	}
 	return command_dict

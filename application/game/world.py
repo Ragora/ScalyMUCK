@@ -105,6 +105,13 @@ class World():
 				return target_player
 		return None
 
+	def get_players(self):
+		list = [ ]
+		self.session.query(Player).filter_by()
+		for player in self.session.query(Player).filter_by():
+			list.append(self.find_player(id=player.id))
+		return list
+
 	def find_item(self, id):
 		if (id is None):
 			return None

@@ -22,8 +22,7 @@ from sqlalchemy import create_engine
 
 import daemon
 import game.models
-import interface
-from game import world
+from game import interface, world
 
 class Server(daemon.Daemon):
 	is_running = False
@@ -33,6 +32,7 @@ class Server(daemon.Daemon):
 	connection_logger = None
 	world = None
 	interface = None
+	work_factor = 10
 
 	welcome_message_data = ''
 	exit_message_data = ''
@@ -83,13 +83,18 @@ class Server(daemon.Daemon):
 			database_engine = create_engine(database_type + '://' + user + ':' + password + '@' + database_location + '/' + database, echo=False)
 			database_engine.connect()
 
-		game.models.Base.metadata.create_all(database_engine)
 		self.world = world.World(database_engine)
+		self.interface = interface.Interface(config, self.world)
+
+		game.models.Base.metadata.create_all(database_engine)
 		
-		work_factor = config.get_index('WorkFactor', int)
+		self.work_factor = config.get_index('WorkFactor', int)
 		if (database_exists is False):
 			portal_room = self.world.create_room('Portal Room Main')
-			raptor_jesus = self.world.create_player('RaptorJesus', 'ChangeThisPasswordNowPlox', work_factor, portal_room)
+			raptor_jesus = self.world.create_player('RaptorJesus', 'ChangeThisPasswordNowPlox', self.work_factor, portal_room)
+			raptor_jesus.set_is_admin(True, commit=False)
+			raptor_jesus.is_owner = True
+			raptor_jesus.set_is_super_admin(True)
 			self.logger.info('The database has been successfully initialised.')
 		
 		self.telnet_server = TelnetServer(port=config.get_index('ServerPort', int),
@@ -98,7 +103,6 @@ class Server(daemon.Daemon):
 					        on_disconnect = self.on_client_disconnect,
 					        timeout = 0.05)
 	
-		self.interface = interface.Interface(config, self.world)
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
 	
@@ -125,6 +129,12 @@ class Server(daemon.Daemon):
 							connection.id = target_player.id
 							connection.player = target_player
 							target_player.connection = connection
+
+							# Check to see if we need to update their hash
+							if (target_player.work_factor != self.work_factor):
+								target_player.work_factor = self.work_factor
+								target_player.set_password(password)
+								self.logger.warning(target_player.display_name + ' had their account hash updated.')
 
 							self.connection_logger.info('Client ' + connection.address + ':' + str(connection.port) + ' signed in as user ' + target_player.display_name + '.')
 							self.authenticated_signal.send(None, sender=target_player)

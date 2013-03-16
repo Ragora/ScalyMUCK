@@ -15,7 +15,7 @@ from blinker import signal
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import Table, Column, Integer, String, MetaData, ForeignKey
+from sqlalchemy import Table, Column, Integer, String, Boolean, MetaData, ForeignKey
 import bcrypt
 
 pre_item_pickup = signal('pre_item_pickup')
@@ -72,13 +72,14 @@ class Player(Base):
 	strength = Column(Integer)
 	money = Column(Integer)
 
-	is_admin = Column(Integer)
-	is_sadmin = Column(Integer)
-	is_owner = Column(Integer)
+	is_admin = Column(Boolean)
+	is_sadmin = Column(Boolean)
+	is_owner = Column(Boolean)
 
 	connection = None
+	world = None
 
-	def __init__(self, name, password, work_factor, location_id, inventory_id, description='<Unset>', admin=0, sadmin=0, owner=0):
+	def __init__(self, name, password, work_factor, location_id, inventory_id, description='<Unset>', admin=False, sadmin=False, owner=False):
 		self.name = string.lower(name)
 		self.display_name = name
 		self.description = description
@@ -100,44 +101,68 @@ class Player(Base):
 		else:
 			return False
 
-	def set_location(self, location):
+	def set_location(self, location, commit=True):
 		if (type(location) is Room):
 			self.location = location
 			self.location_id = location.id
-			self.world.session.add(self)
-			self.world.session.commit()
+			if (commit): self.commit()
 			return
 		elif (type(location) is int):
 			location = self.world.session.query(Room).filter_by(id=location).first()
 			if (location is not None):
-				self.set_location(location)
+				self.set_location(location, commit=commit)
 			return
 		return
 
-	def set_name(self, name):
+	def set_name(self, name, commit=True):
 		self.name = string.lower(name)
 		self.display_name = name
-		self.world.session.add(self)
-		self.world.session.commit()
+		if (commit): self.commit()
 
-	def set_password(self, password):
+	def set_password(self, password, commit=True):
 		if (self.world is None):
 			return
 
 		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(self.work_factor))
-		self.world.session.add(self)
-		self.world.session.commit()
+		if (commit): self.commit()
 
 	def delete(self):
+		self.disconnect()
+		self.world.cached_players.remove(self)
+		self.world.session.delete(self)
+		self.world.session.commit()
+
+	def disconnect(self):
 		if (self.connection is not None):
 			self.connection.socket_send()
 			self.connection.deactivate()
 			self.connection.sock.close()
-		self.world.cached_players.remove(self)
-		self.world.session.delete(self)
+
+	def set_is_admin(self, status, commit=True):
+		self.is_admin = status
+		if (self.is_sadmin is True and status is False):
+			self.is_sadmin = False
+		if (commit): self.commit()
+
+	def set_is_super_admin(self, status, commit=True):
+		self.is_sadmin = status
+		if (self.is_admin is False and status is True):
+			self.is_admin = True
+		if (commit): self.commit()
+
+	def check_admin_trump(self, target):
+		if (self.is_admin is True and target.is_admin is False):
+			return True
+		elif (self.is_sadmin is True and target.is_sadmin is False):
+			return True
+		elif (self.is_owner is True and target.is_owner is False):
+			return True
+		return False
+
+	def commit(self):
+		self.world.session.add(self)
 		self.world.session.commit()
 	
-
 class Item(Base):
 	__tablename__ = 'items'
 	
@@ -158,21 +183,23 @@ class Item(Base):
 	def __repr__(self):
 		return "<Item('%s','%s')>" % (self.name, self.description)
 
-	def set_name(self, name):
+	def set_name(self, name, commit=True):
 		self.name = name
-		self.world.session.add(self)
-		self.world.session.commit()
+		if (commit):
+			self.world.session.add(self)
+			self.world.session.commit()
 
-	def set_location(self, location):
+	def set_location(self, location, commit=True):
 		if (type(location) is Room):
 			self.location = location
 			self.location_id = location.id
-			self.world.session.add(self)
-			self.world.session.commit()
+			if (commit):
+				self.world.session.add(self)
+				self.world.session.commit()
 		elif (type(location) is int):
 			location = self.world.session.query(Room).filter_by(id=location).first()
 			if (location is not None):
-				self.set_location(location)
+				self.set_location(location, commit=commit)
 
 class Room(Base):
 	__tablename__ = 'rooms'
@@ -197,25 +224,29 @@ class Room(Base):
 	def __repr__(self):
 		return "<Room('%s','%s')>" % (self.name, self.description)
 
-	def add_exit(self, name, target_room, owner=0):
+	def add_exit(self, name, target_room, owner=0, commit=True):
 		if (type(target_room) is int):
 			target_room = self.world.session.query.query(Room).filter_by(id=target_room).first()
 			if (target_room is not None):
-				self.add_exit(name, target_room)
+				self.add_exit(name, target_room, commit=commit)
 		elif (type(target_room) is Room):
 			exit = Exit(name, target_room, owner)
 			self.exits.append(exit)
-			self.world.session.add(self)
-			self.world.session.add(exit)
-			self.world.session.commit()
+			if (commit):
+				self.world.session.add(self)
+				self.world.session.add(exit)
+				self.world.session.commit()
 
-	def set_name(self, name):
+	def set_name(self, name, commit=True):
 		self.name = name
-		self.world.session.add(self)
-		self.world.session.commit()
+		if (commit): self.commit()
 
 	def broadcast(self, message, *exceptions):
 		for player in self.players:
 			if (player not in exceptions):
 				player.send(message)
+
+	def commit(self):
+		self.world.session.add(self)
+		self.world.session.commit()
 		
