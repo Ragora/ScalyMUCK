@@ -351,7 +351,7 @@ def get_commands():
 		{
 			'command': command_pose,
 			'description': 'Used to show arbitrary action. Only visible to the current room you\'re in.',
-			'usage': 'pose <arbitrary pose> | :<arbitrary pose>'
+			'usage': 'pose <arbitrary pose> | :<arbitrary pose>',
 			'aliases': [ ]
 		},
 
@@ -359,7 +359,7 @@ def get_commands():
 		{
 			'command': command_look,
 			'description': 'Get your bearings. Look around in the local area to see what you can see.',
-			'usage': 'look [room name | item name | player name]'
+			'usage': 'look [room name | item name | player name]',
 			'aliases': [ ]
 		},
 		
@@ -367,7 +367,7 @@ def get_commands():
 		{
 			'command': command_move,
 			'description': 'Moves to a new location.',
-			'usage': 'move <exit name>'
+			'usage': 'move <exit name>',
 			'aliases': [ 'go' ]
 		},
 
@@ -375,7 +375,7 @@ def get_commands():
 		{
 			'command': command_inventory,
 			'description': 'View your inventory.',
-			'usage': 'inventory'
+			'usage': 'inventory',
 			'aliases': [ ]
 		},
 
@@ -383,7 +383,7 @@ def get_commands():
 		{
 			'command': command_take,
 			'description': 'Take an item from the current room.',
-			'usage': 'take <item>'
+			'usage': 'take <item>',
 			'aliases': [ ]
 		},
 
@@ -391,7 +391,7 @@ def get_commands():
 		{
 			'command': command_passwd,
 			'description': 'Changes your password.',
-			'usage': 'passwd <new password>'
+			'usage': 'passwd <new password>',
 			'aliases': [ ]
 		},
 
@@ -399,7 +399,7 @@ def get_commands():
 		{
 			'command': command_drop,
 			'description': 'Drops an item from your inventory.',
-			'usage': 'drop <item name>'
+			'usage': 'drop <item name>',
 			'aliases': [ ]
 		},
 
@@ -407,7 +407,7 @@ def get_commands():
 		{
 			'command': command_help,
 			'description': 'Displays the help text.',
-			'usage': 'help [command name]'
+			'usage': 'help [command name]',
 			'aliases': [ ]
 		},
 
@@ -415,7 +415,7 @@ def get_commands():
 		{
 			'command': command_quit,
 			'description': 'Drops your connection from the server.',
-			'usage': 'quit'
+			'usage': 'quit',
 			'aliases': [ 'leave' ]
 		},
 
@@ -423,7 +423,7 @@ def get_commands():
 		{
 			'command': command_froguser,
 			'description': 'Super Admin only: Deletes a user from the world -- making them an item in your inventory to with as you please.',
-			'usage': 'frog <player name>'
+			'usage': 'frog <player name>',
 			'aliases': [ ]
 		},
 
@@ -431,7 +431,7 @@ def get_commands():
 		{
 			'command': command_adduser,
 			'description': 'Creates a new player in the world.',
-			'usage': 'adduser <name> <password>'
+			'usage': 'adduser <name> <password>',
 			'aliases': [ ]
 		},
 
@@ -439,7 +439,7 @@ def get_commands():
 		{
 			'command': command_admin,
 			'description': 'Admin only: Toggles the admin status of a specified player.',
-			'usage': 'admin <name>'
+			'usage': 'admin <name>',
 			'aliases': [ ]
 		},
 
@@ -447,7 +447,7 @@ def get_commands():
 		{
 			'command': command_sadmin,
 			'description': 'Super Admin only: Toggles the super admin status of a specified player.',
-			'usage': 'sadmin <name>'
+			'usage': 'sadmin <name>',
 			'aliases': [ ]
 		},
 
@@ -455,7 +455,7 @@ def get_commands():
 		{
 			'command': command_chown,
 			'description': 'Transfers ownership of an item in your inventory or in the room to a specified player providied you are the original owner.',
-			'usage': 'chown <item name> <new owner name>'
+			'usage': 'chown <item name> <new owner name>',
 			'aliases': [ ]
 		}
 	}
