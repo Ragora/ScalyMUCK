@@ -31,6 +31,18 @@ interface = None
 
 work_factor = 10
 
+pre_user_say = signal('pre_user_say')
+post_user_say = signal('post_user_say')
+pre_user_pose = signal('pre_user_pose')
+post_user_pose = signal('post_user_pose')
+pre_item_pickup = signal('pre_item_pickup')
+post_item_pickup = signal('post_item_pickup')
+pre_item_drop = signal('pre_item_drop')
+post_item_drop = signal('post_item_drop')
+post_user_create = signal('post_user_create')
+pre_exit_room = signal('pre_exit_room')
+post_exit_room = signal('post_exit_room')
+
 # Commands
 def command_say(**kwargs):
 	sender = kwargs['sender']
@@ -40,13 +52,26 @@ def command_say(**kwargs):
 		sender.send('Usage: say <message>')
 		return
 
+	results = pre_user_say.send(None, sender=sender, input=input)
+	for result in results:
+		if (result[1] is True):
+			return
+
 	sender.location.broadcast(sender.display_name + ' says, "' + input + '"', sender)
 	sender.send('You say, "' + input + '"')
+	post_user_say.send(None, sender=sender, input=input)
 	return
 
 def command_pose(**kwargs):
 	sender = kwargs['sender']
+	input = kwargs['input']
+	results = pre_user_pose.send(None, sender=sender, input=input)
+	for result in results:
+		if (result[1] is True):
+			return
+
 	sender.location.broadcast(sender.display_name + ' ' + kwargs['input'])
+	post_user_pose.send(None, sender=sender, input=input)
 	return
 
 def command_look(**kwargs):
@@ -86,11 +111,17 @@ def command_move(**kwargs):
 
 	for exit in sender.location.exits:
 		if (string.lower(exit.name) == string.lower(input)):
+			results = pre_exit_room.send(None, sender=sender, target=exit.target)
+			for result in results:
+				if (result[1] is True):
+					return
+
 			sender.send('You move out.')
 			sender.location.broadcast(sender.display_name + ' exits the room.', sender)
 			sender.set_location(exit.target_id)
 			sender.location.broadcast(sender.display_name + ' enters the room.', sender)
 			command_look(sender=sender, world=kwargs['world'])
+			post_exit_room.send(None, sender=sender, target=sender.location)
 			return
 
 	sender.send('I do not see that.')
@@ -123,8 +154,15 @@ def command_take(**kwargs):
 
 	for item in sender.location.items:
 		if (item.name == input):
+			results = pre_item_take.send(None, sender=sender, item=item)
+			for result in results:
+				if (result[1] is True):
+					return
+
 			sender.send('Taken.')
+
 			item.set_location(sender.inventory)
+			post_item_take.send(None, sender=sender, item=item)
 			return
 
 	sender.send('I do not see that.')
@@ -150,9 +188,15 @@ def command_drop(**kwargs):
 
 	for item in sender.inventory.items:
 		if (item.name == input):
+			results = pre_item_drop(sender=sender, item=item)
+			for result in results:
+				if (result[1] is True):
+					return
+
 			sender.send('You dropped that item.')
 			sender.location.broadcast(sender.display_name + ' drops a/an ' + item.name + '.', sender)
 			item.set_location(sender.location)
+			post_item_drop.send(sender=sender, item=item)
 			return
 	sender.send('I see no such item.')
 
@@ -228,6 +272,7 @@ def command_adduser(**kwargs):
 	# TODO: Make this take server prefs into consideration, and also let this have a default location ...
 	player = world.create_player(name, password, work_factor, sender.location)
 	sender.send('User "' + name + '" created.')
+	post_user_create.send(None, creator=sender, created=player)
 
 def command_admin(**kwargs):
 	sender = kwargs['sender']

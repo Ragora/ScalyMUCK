@@ -18,15 +18,6 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Table, Column, Integer, String, Boolean, MetaData, ForeignKey
 import bcrypt
 
-pre_item_pickup = signal('pre_item_pickup')
-post_item_pickup = signal('post_item_pickup')
-pre_item_drop = signal('pre_item_drop')
-post_item_drop = signal('post_item_drop')
-pre_enter_room = signal('pre_enter_room')
-post_enter_room = signal('post_enter_room')
-pre_item_use = signal('pre_item_use')
-post_item_use = signal('post_item_use')
-
 Base = declarative_base()
 class Exit(Base):
 	__tablename__ = 'exits'

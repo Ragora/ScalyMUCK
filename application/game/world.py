@@ -61,6 +61,11 @@ class World():
 				for exit in target_room.exits:
 					if (self.exit_loaded(exit.id) is False):
 						self.cached_exits.append(exit)
+						if (self.room_loaded(exit.target_id)):
+							exit.target = self.find_room(id=exit.target_id)
+						else:
+							exit.target = self.session.query.query(Room).filter_by(id=exit.target_id).first()
+							self.cached_rooms.append(exit.target)
 				return target_room 
 		else:
 			target_room = self.session.query(Room).filter_by(id=id).first()
