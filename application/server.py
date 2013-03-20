@@ -189,3 +189,4 @@ class Server(daemon.Daemon):
 				if (player is not client.player):
 					player.send(client.player.display_name + ' has disconnected.')
 			self.established_connection_list.remove(client)
+			client.player.connection = None

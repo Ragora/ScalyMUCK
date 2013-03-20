@@ -4,8 +4,7 @@
 	Game world code for ScalyMUCK
 	Copyright (c) 2013 Robert MacGregor
 
-	TODO: WILL CAUSE DESYNC -- THIS NEEDS CHANGES
-	AS OF NOW.
+	TODO: Organize this code perhaps? Ugh...
 
 	This software is licensed under the GNU General
 	Public License version 3. Please refer to gpl.txt 
