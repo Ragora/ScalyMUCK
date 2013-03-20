@@ -71,7 +71,13 @@ def main():
 
 	# TODO: Can probably write to be a tad better
 	while (muck_server.is_active()):
-		muck_server.update()
+		try:
+			muck_server.update()
+		except KeyboardInterrupt as e:
+			print(' ')
+			print('Killing ScalyMUCK server ...')
+			muck_server.shutdown()
+			
 	logging.shutdown()
 
 if __name__ == '__main__':
