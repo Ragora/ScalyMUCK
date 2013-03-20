@@ -33,6 +33,7 @@ class Server(daemon.Daemon):
 	world = None
 	interface = None
 	work_factor = 10
+	update_ms = 1000
 
 	welcome_message_data = ''
 	exit_message_data = ''
@@ -43,6 +44,7 @@ class Server(daemon.Daemon):
 	connect_signal = signal('post_client_connect')
 	disconnect_signal = signal('pre_client_disconnect')
 	authenticated_signal = signal('post_client_authenticated')
+	update_signal = signal('world_tick')
 
 	def __init__(self, pid, config, data_path):
 		# self.pidfile = pid
@@ -87,7 +89,7 @@ class Server(daemon.Daemon):
 		self.interface = interface.Interface(config, self.world)
 
 		game.models.Base.metadata.create_all(database_engine)
-		
+	
 		self.work_factor = config.get_index('WorkFactor', int)
 		if (database_exists is False):
 			portal_room = self.world.create_room('Portal Room Main')
@@ -162,7 +164,14 @@ class Server(daemon.Daemon):
 			input = connection.get_command()
 			if (input is not None):
 				self.interface.parse_command(connection.player, input)
-					
+
+			
+	def shutdown(self):
+		self.is_running = False
+		for connection in self.established_connection_list:
+			connection.send('The server has been shutdown adruptly by the server owner.\n')
+			connection.socket_send()
+		
 	def run(self):
 	    while (self.is_running()):
 		self.update()
