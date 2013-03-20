@@ -24,6 +24,7 @@ class World():
 	cached_players = [ ]
 	cached_items = [ ]
 	cached_rooms = [ ]
+	cached_exits = [ ]
 	def __init__(self, engine):
 		self.engine = engine
 		self.session = scoped_session(sessionmaker(bind=self.engine))
@@ -51,12 +52,32 @@ class World():
 			if (target_room is not None):
 				target_room.world = self
 				self.cached_rooms.append(target_room)
+				
+				for item in target_room.items:
+					if (self.item_loaded(item.id) is False):
+						self.cached_items.append(item)
+				for player in target_room.players:
+					if (self.player_loaded(player.id) is False):
+						self.cached_players.append(player)
+				for exit in target_room.exits:
+					if (self.exit_loaded(exit.id) is False):
+						self.cached_exits.append(exit)
 				return target_room 
 		else:
 			target_room = self.session.query(Room).filter_by(id=id).first()
 			if (target_room is not None):
 				target_room.world = self
 				self.cached_rooms.append(target_room)
+
+				for item in target_room.items:
+					if (self.item_loaded(item.id) is False):
+						self.cached_items.append(item)
+				for player in target_room.players:
+					if (self.player_loaded(player.id) is False):
+						self.cached_players.append(player)
+				for exit in target_room.exits:
+					if (self.exit_loaded(exit.id) is False):
+						self.cached_exits.append(exit)
 				return target_room
 		return None
 	
@@ -77,6 +98,7 @@ class World():
 		player.location = location
 		player.inventory = player_inventory
 		self.cached_players.append(player)
+		self.cached_rooms.append(player_inventory)
 		return player
 	      
 	def find_player(self,id=None,name=None,display_name=None):
@@ -92,16 +114,34 @@ class World():
 			if (target_player is not None):
 				target_player.world = self
 				self.cached_players.append(target_player)
-				target_player.location = self.session.query(Room).filter_by(id=target_player.location_id).first()
-				target_player.inventory = self.session.query(Room).filter_by(id=target_player.inventory_id).first()
+				if (self.room_loaded(target_player.location_id) is False):
+					target_player.location = self.session.query(Room).filter_by(id=target_player.location_id).first()
+					self.cached_rooms.append(target_player.location)
+				else:
+					target_player.location = self.find_room(id=target_player.location_id)
+
+				if (self.room_loaded(target_player.inventory_id) is False):
+					target_player.inventory = self.session.query(Room).filter_by(id=target_player.inventory_id).first()
+					self.cached_rooms.append(target_player.inventory)
+				else:
+					target_player.inventory = self.find_room(id=target_player.inventory_id)
 				return target_player
 		else:
 			target_player = self.session.query(Player).filter_by(id=id).first()
 			if (target_player is not None):
 				target_player.world = self
 				self.cached_players.append(target_player)
-				target_player.location = self.session.query(Room).filter_by(id=target_player.location_id).first()
-				target_player.inventory = self.session.query(Room).filter_by(id=target_player.inventory_id).first()
+				if (self.room_loaded(target_player.location_id) is False):
+					target_player.location = self.session.query(Room).filter_by(id=target_player.location_id).first()
+					self.cached_rooms.append(target_player.location)
+				else:
+					target_player.location = self.find_room(id=target_player.location_id)
+
+				if (self.room_loaded(target_player.inventory_id) is False):
+					target_player.inventory = self.session.query(Room).filter_by(id=target_player.inventory_id).first()
+					self.cached_rooms.append(target_player.inventory)
+				else:
+					target_player.inventory = self.find_room(id=target_player.inventory_id)
 				return target_player
 		return None
 
@@ -141,3 +181,27 @@ class World():
 
 		self.cached_items.append(item)
 		return item
+
+	def item_loaded(self, id):
+		for item in self.cached_items:
+			if (item.id == id):
+				return True
+		return False
+
+	def player_loaded(self, id):
+		for player in self.cached_players:
+			if (player.id == id):
+				return True
+		return False
+
+	def room_loaded(self, id):
+		for room in self.cached_rooms:
+			if (room.id == id):
+				return True
+		return False
+
+	def exit_loaded(self, id):
+		for exit in self.cached_exits:
+			if (exit.id == id):
+				return True
+		return False
