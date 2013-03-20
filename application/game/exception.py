@@ -12,3 +12,9 @@
 class ModApplicationError(Exception):
 	""" Generic """
 
+class WorldArgumentError(ModApplicationError):
+	""" Raised when using the world API and an invalid
+	argument is specified. 
+
+	"""
+
