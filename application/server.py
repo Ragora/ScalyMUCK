@@ -33,7 +33,6 @@ class Server(daemon.Daemon):
 	world = None
 	interface = None
 	work_factor = 10
-	update_ms = 1000
 
 	welcome_message_data = ''
 	exit_message_data = ''
@@ -41,16 +40,22 @@ class Server(daemon.Daemon):
 	pending_connection_list = [ ]
 	established_connection_list = [ ]
 
-	connect_signal = signal('post_client_connect')
-	disconnect_signal = signal('pre_client_disconnect')
-	authenticated_signal = signal('post_client_authenticated')
-	update_signal = signal('world_tick')
+	post_client_connect = signal('post_client_connect')
+	pre_client_disconnect = signal('pre_client_disconnect')
+	post_client_authenticated = signal('post_client_authenticated')
+	world_tick = signal('world_tick')
 
 	def __init__(self, pid, config, data_path):
 		# self.pidfile = pid
 		
 		self.connection_logger = logging.getLogger('Connections')
 		self.logger = logging.getLogger('Server')
+
+		database_location = data_path + config.get_index('TargetDatabase', str)
+		database_type = string.lower(config.get_index('DatabaseType', str))
+		database = config.get_index('DatabaseName', str)
+		user = config.get_index('DatabaseUser', str)
+		password = config.get_index('DatabasePassword', str)
   		
 		try:
 			with open('config/welcome_message.txt') as f:
@@ -67,7 +72,6 @@ class Server(daemon.Daemon):
 			self.logger.warning('Unable to load exit message!')
 			self.logger.warning(str(e))
 
-		database_location = data_path + config.get_index('TargetDatabase', str)
 		database_exists = True
 		try:
 			with open(database_location) as f: pass
@@ -75,13 +79,9 @@ class Server(daemon.Daemon):
 			self.logger.info('This appears to be your first time running the ScalyMUCK server. We must initialise your database ...')
 			database_exists = False
 
-		database_type = string.lower(config.get_index('DatabaseType', str))
 		if (database_type == 'sqlite'):
 			database_engine = create_engine('sqlite:////' + database_location, echo=False)
 		else:
-			database = config.get_index('DatabaseName', str)
-			user = config.get_index('DatabaseUser', str)
-			password = config.get_index('DatabasePassword', str)
 			database_engine = create_engine(database_type + '://' + user + ':' + password + '@' + database_location + '/' + database, echo=False)
 			database_engine.connect()
 
@@ -92,11 +92,11 @@ class Server(daemon.Daemon):
 	
 		self.work_factor = config.get_index('WorkFactor', int)
 		if (database_exists is False):
-			portal_room = self.world.create_room('Portal Room Main')
-			raptor_jesus = self.world.create_player('RaptorJesus', 'ChangeThisPasswordNowPlox', self.work_factor, portal_room)
-			raptor_jesus.set_is_admin(True, commit=False)
-			raptor_jesus.is_owner = True
-			raptor_jesus.set_is_super_admin(True)
+			room = self.world.create_room('Portal Room Main')
+			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room)
+			user.set_is_admin(True, commit=False)
+			user.is_owner = True
+			user.set_is_super_admin(True)
 			self.logger.info('The database has been successfully initialised.')
 		
 		self.telnet_server = TelnetServer(port=config.get_index('ServerPort', int),

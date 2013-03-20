@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 
 from models import Room, Player, Item
+import exception
 
 class World():
 	engine = None
@@ -24,6 +25,7 @@ class World():
 	cached_items = [ ]
 	cached_rooms = [ ]
 	cached_exits = [ ]
+
 	def __init__(self, engine):
 		self.engine = engine
 		self.session = scoped_session(sessionmaker(bind=self.engine))
@@ -40,7 +42,7 @@ class World():
 	      
 	def find_room(self, id=None, name=None):
 		if (name is None and id is None):
-			return None
+			raise exception.WorldArgumentError('Neither an id nor a name was specified to find_room. (or None was passed in)')
 
 		for room in self.cached_rooms:
 			if (room.id == id or room.name == name):
@@ -85,10 +87,15 @@ class World():
 				return target_room
 		return None
 	
-	def create_player(self, name, password, work_factor, location):
-		player_inventory = self.create_room(name + "'s Inventory")	
-			
-		player = Player(name, password, work_factor, location.id, 0)
+	def create_player(self, name=None, password=None, workfactor=None, location=None):
+		if (name is None or password is None or workfactor is None or location is None):
+			raise exception.WorldArgumentError('All of the arguments to create_player are mandatory! (or None was passed in)')
+
+		if (type(location) is int):
+			location = self.find_room(id=location)
+
+		player_inventory = self.create_room(name + "'s Inventory")				
+		player = Player(name, password, workfactor, location.id, 0)
 		player.world = self
 		player.inventory_id = player_inventory.id
 		self.session.add(player)
