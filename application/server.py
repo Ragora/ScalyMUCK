@@ -19,6 +19,7 @@ import bcrypt
 from blinker import signal
 from miniboa import TelnetServer
 from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
 
 import daemon
 import game.models
@@ -51,8 +52,11 @@ class Server(daemon.Daemon):
 		self.connection_logger = logging.getLogger('Connections')
 		self.logger = logging.getLogger('Server')
 
-		database_location = data_path + config.get_index('TargetDatabase', str)
 		database_type = string.lower(config.get_index('DatabaseType', str))
+		if (database_type == 'sqlite'):
+			database_location = data_path + config.get_index('TargetDatabase', str)
+		else:
+			database_location = config.get_index('TargetDatabase', str)
 		database = config.get_index('DatabaseName', str)
 		user = config.get_index('DatabaseUser', str)
 		password = config.get_index('DatabasePassword', str)
@@ -73,17 +77,25 @@ class Server(daemon.Daemon):
 			self.logger.warning(str(e))
 
 		database_exists = True
-		try:
-			with open(database_location) as f: pass
-		except IOError as e:
-			self.logger.info('This appears to be your first time running the ScalyMUCK server. We must initialise your database ...')
-			database_exists = False
-
 		if (database_type == 'sqlite'):
+			try:
+				with open(database_location) as f: pass
+			except IOError as e:
+				self.logger.info('This appears to be your first time running the ScalyMUCK server. We must initialise your database ...')
+				database_exists = False
+
 			database_engine = create_engine('sqlite:////' + database_location, echo=False)
 		else:
-			database_engine = create_engine(database_type + '://' + user + ':' + password + '@' + database_location + '/' + database, echo=False)
-			database_engine.connect()
+			url = database_type + '://' + user + ':' + password + '@' + database_location + '/' + database
+			try:
+				database_engine = create_engine(url, echo=False)
+				database_engine.connect()
+			except OperationalError as e:
+				self.logger.error(str(e))
+				self.logger.error('URL: ' + url)
+				print(url)
+				self.is_running = False
+				return
 
 		self.world = world.World(database_engine)
 		self.interface = interface.Interface(config, self.world)
@@ -139,7 +151,7 @@ class Server(daemon.Daemon):
 								self.logger.warning(target_player.display_name + ' had their account hash updated.')
 
 							self.connection_logger.info('Client ' + connection.address + ':' + str(connection.port) + ' signed in as user ' + target_player.display_name + '.')
-							self.authenticated_signal.send(None, sender=target_player)
+							self.post_client_authenticated.send(None, sender=target_player)
 							for player in target_player.location.players:
 								if (player is not target_player):
 									player.send(target_player.display_name + ' has connected.')
@@ -186,10 +198,10 @@ class Server(daemon.Daemon):
 		self.connection_logger.info('Received client connection from ' + client.address + ':' + str(client.port))
 		client.send(self.welcome_message_data)
 		self.pending_connection_list.append(client)
-		self.connect_signal.send(sender=client)
+		self.post_client_connect.send(sender=client)
 	 
 	def on_client_disconnect(self, client):
-		self.disconnect_signal.send(sender=client)
+		self.pre_client_disconnect.send(sender=client)
 		self.connection_logger.info('Received client disconnection from ' + client.address + ':' + str(client.port))
 		if (client in self.pending_connection_list):
 			self.pending_connection_list.remove(client)
