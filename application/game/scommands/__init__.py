@@ -12,6 +12,8 @@
 
 import string
 
+import game.models
+
 from blinker import signal
 
 server_version_major = 1
@@ -31,6 +33,8 @@ interface = None
 
 work_factor = 10
 
+pre_user_look = signal('pre_user_look')
+post_user_look = signal('post_user_look')
 pre_user_say = signal('pre_user_say')
 post_user_say = signal('post_user_say')
 pre_user_pose = signal('pre_user_pose')
@@ -76,29 +80,50 @@ def command_pose(**kwargs):
 
 def command_look(**kwargs):
 	sender = kwargs['sender']
-	room = sender.location
-	
-	sender.send('<' + room.name + '>')
-	sender.send('Obvious Exits: ')
-	if (len(room.exits) != 0):
-		for exit in room.exits:
-			sender.send('	' + exit.name)
-	else:
-		sender.send('	None')
+	input = kwargs['input']
+	target = sender.location
+	name = sender.location.name
 
-	sender.send('People: ')
-	for player in room.players:
-		sender.send('	' + player.display_name)
-	sender.send('Items: ')
+	pre_user_look.send(sender=sender, input=input)
 
-	if (len(room.items) != 0):
-		for item in room.items:
-			sender.send('	' + item.name)
-	else:
-		sender.send('	None')
+	if (input != ''):
+		target = sender.location.find_player(name=input)
+		if (target is not None):
+			name = target.display_name
+			target.send('++++++++ ' + sender.display_name + ' is looking at you!')
+		else:
+			target = sender.location.find_item(name=input)
+			if (target is not None):
+				name = target.name
+			else:
+				sender.send('I do not see that.')
+				return
+
+	sender.send('<' + name + '>')
+
+	if (type(target) is game.models.Room):
+		sender.send('Obvious Exits: ')
+		if (len(target.exits) != 0):
+			for exit in target.exits:
+				sender.send('	' + exit.name)
+		else:
+			sender.send('	None')
+
+		sender.send('People: ')
+		for player in target.players:
+			sender.send('	' + player.display_name)
+		sender.send('Items: ')
+
+		if (len(target.items) != 0):
+			for item in target.items:
+				sender.send('	' + item.name)
+		else:
+			sender.send('	None')
 
 	sender.send('Description:')
-	sender.send(room.description)
+	sender.send(target.description)
+
+	post_user_look.send(sender=sender, input=input, target=target)
 	return
 
 def command_move(**kwargs):
@@ -353,7 +378,7 @@ def command_chown(**kwargs):
 
 # Callbacks
 def callback_client_authenticated(trigger, sender):
-	command_look(sender=sender)
+	command_look(sender=sender, input='')
 	return
 
 def callback_message_sent(trigger, sender, input):

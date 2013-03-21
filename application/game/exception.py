@@ -18,3 +18,6 @@ class WorldArgumentError(ModApplicationError):
 
 	"""
 
+class ModelArgumentError(ModApplicationError):
+	""" Raised when a model function is used improperly.
+	"""

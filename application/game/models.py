@@ -12,11 +12,12 @@
 import string
 
 from blinker import signal
-
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import Table, Column, Integer, String, Boolean, MetaData, ForeignKey
 import bcrypt
+
+import exception
 
 Base = declarative_base()
 class Exit(Base):
@@ -240,4 +241,30 @@ class Room(Base):
 	def commit(self):
 		self.world.session.add(self)
 		self.world.session.commit()
+
+	def find_player(self, id=None, name=None):
+		if (id is None and name is None):
+			raise exception.ModelArgumentError('No arguments specified (or were None)')
+
+		if (name is not None):
+			name = string.lower(name)
+			for player in self.players:
+				if (name in player.name):
+					return player
+		elif (id is not None):
+			return self.world.find_player(id=id)
+		return None
+
+	def find_item(self, id=None, name=None):
+		if (id is None and name is None):
+			raise exception.ModelArgumentError('No arguments specified (or were None)')
+
+		if (name is not None):
+			name = string.lower(name)
+			for item in self.items:
+				if (name in item.name):
+					return item
+		elif (id is not None):
+			return self.world.find_item(id=id)
+		return None
 		
