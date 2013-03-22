@@ -46,7 +46,11 @@ class Server(daemon.Daemon):
 	post_client_authenticated = signal('post_client_authenticated')
 	world_tick = signal('world_tick')
 
-	def __init__(self, pid, config, data_path):
+	""" The server class is created and managed by the main.py script.
+
+	
+	"""
+	def __init__(self, config=None, path=None):
 		# self.pidfile = pid
 		
 		self.connection_logger = logging.getLogger('Connections')
@@ -54,7 +58,7 @@ class Server(daemon.Daemon):
 
 		database_type = string.lower(config.get_index('DatabaseType', str))
 		if (database_type == 'sqlite'):
-			database_location = data_path + config.get_index('TargetDatabase', str)
+			database_location = path + config.get_index('TargetDatabase', str)
 		else:
 			database_location = config.get_index('TargetDatabase', str)
 		database = config.get_index('DatabaseName', str)
@@ -98,7 +102,7 @@ class Server(daemon.Daemon):
 				return
 
 		self.world = world.World(database_engine)
-		self.interface = interface.Interface(config, self.world)
+		self.interface = interface.Interface(config=config, world=self.world)
 
 		game.models.Base.metadata.create_all(database_engine)
 	
@@ -175,7 +179,7 @@ class Server(daemon.Daemon):
 		for connection in self.established_connection_list:
 			input = connection.get_command()
 			if (input is not None):
-				self.interface.parse_command(connection.player, input)
+				self.interface.parse_command(sender=connection.player, input=input)
 
 			
 	def shutdown(self):
