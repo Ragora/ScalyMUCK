@@ -66,7 +66,7 @@ def main():
 		logger.addHandler(handle)
 		logger.info('ScalyMUCK Server Server Start')
 
-	muck_server = Server(None, config, data_path)
+	muck_server = Server(config=config, path=data_path)
 	muck_server.is_daemon = False
 
 	# TODO: Can probably write to be a tad better

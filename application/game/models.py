@@ -20,6 +20,10 @@ import bcrypt
 import exception
 
 Base = declarative_base()
+""" Exits are what the players use to exit and move into other rooms in the ScalyMUCK
+world. They may only have one target room ID which is used to assign .target to them
+when they are loaded or creates by the game.World instance.
+"""
 class Exit(Base):
 	__tablename__ = 'exits'
 
@@ -28,7 +32,11 @@ class Exit(Base):
 	target_id = Column(Integer, ForeignKey('rooms.id'))
 	owner_id = Column(Integer, ForeignKey('players.id'))
 
-	def __init__(self, name, target_id, owner=0):
+	""" The Exit is not constructed manually by any of the modifications, this should be
+	performed by calling the create_player function on the game.World instance provided
+	to every modification.
+	"""
+	def __init__(self, name, target_id=None, owner=0):
 		self.name=name
 		self.target_id = target_id
 		if (type(owner) is int):
@@ -44,6 +52,10 @@ class Exit(Base):
 		self.world.session.add(self)
 		self.world.session.commit()
 		
+""" Players are well, the players that actually move and interact in the world. They
+store their password hash and various other generic data that can be used across 
+just about anything.
+"""
 class Player(Base):
 	__tablename__ = 'players'
 	
@@ -58,12 +70,6 @@ class Player(Base):
 	location = None
 	inventory_id = Column(Integer)
 	
-	hp = Column(Integer)
-	dexterity = Column(Integer)
-	intelligence = Column(Integer)
-	strength = Column(Integer)
-	money = Column(Integer)
-
 	is_admin = Column(Boolean)
 	is_sadmin = Column(Boolean)
 	is_owner = Column(Boolean)
@@ -71,6 +77,10 @@ class Player(Base):
 	connection = None
 	world = None
 
+	""" The Player is not constructed manually by any of the modifications, this should be
+	performed by calling the create_player function on the game.World instance provided
+	to every modification.
+	"""
 	def __init__(self, name, password, work_factor, location_id, inventory_id, description='<Unset>', admin=False, sadmin=False, owner=False):
 		self.name = string.lower(name)
 		self.display_name = name
@@ -86,6 +96,10 @@ class Player(Base):
 	def __repr__(self):
 		return "<User('%s','%s','%s','%u')>" % (self.name, self.description, self.hash, self.location_id)
 
+	""" This sends a message to the relevant connection if there happens to be one established
+	for this player object. If there is no active connection for this player, then the message
+	is simply dropped.
+	"""
 	def send(self, message):
 		if (self.connection is not None):
 			self.connection.send(message + '\n')
@@ -118,12 +132,22 @@ class Player(Base):
 		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(self.work_factor))
 		if (commit): self.commit()
 
+	""" This deletes the user from the game world and drops their connection if there 
+	happens to be one established. As of now, the user's property will suddenly start
+	pointing to a bad owner or perhaps even someone else if SQLAlchemy assigns someone
+	their old ID.
+	"""
 	def delete(self):
 		self.disconnect()
 		self.world.cached_players.remove(self)
 		self.world.session.delete(self)
 		self.world.session.commit()
 
+	""" This drops the user's connection from the game, flushing any messages that
+	were destined for them before actually booting them out of the server. This triggers
+	the default disconnect message to be displayed by the ScalyMUCK core to whomever else
+	may be in the room with the user at the time of their disconnect.
+	"""
 	def disconnect(self):
 		if (self.connection is not None):
 			self.connection.socket_send()
@@ -154,6 +178,19 @@ class Player(Base):
 	def commit(self):
 		self.world.session.add(self)
 		self.world.session.commit()
+
+""" Bots are basically just the AI's of the game. They're not items, but they're not players
+either. They have the special property of being interchangable 
+"""
+class Bot(Base):
+	__tablename__ = 'bots'
+
+	""" The Bot is not constructed manually by any of the modifications, this should be
+	performed by calling the create_player function on the game.World instance provided
+	to every modification.
+	"""
+	def __init__(self):
+		return
 	
 class Item(Base):
 	__tablename__ = 'items'
@@ -164,6 +201,10 @@ class Item(Base):
 	description = Column(String)
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
+	""" The Item is not constructed manually by any of the modifications, this should be
+	performed by calling the create_player function on the game.World instance provided
+	to every modification.
+	"""
 	def __init__(self, name, description, owner=0):
 		self.name = name
 		self.description = description
@@ -204,6 +245,10 @@ class Room(Base):
 	exits = relationship('Exit')
 	owner_id = Column(Integer)
 
+	""" The Room is not constructed manually by any of the modifications, this should be
+	performed by calling the create_player function on the game.World instance provided
+	to every modification.
+	"""
 	def __init__(self, name, description='<Unset>', owner=0):
 		self.name = name
 		self.description = description

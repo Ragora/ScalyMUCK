@@ -25,6 +25,11 @@ import daemon
 import game.models
 from game import interface, world
 
+""" Server class that is initialized by the main.py script to act as the MUCK server.
+It performs all of the core functions of the MUCK server, which is mainly accepting
+connections and performing the login sequence before giving them access to the
+server and its world.
+"""
 class Server(daemon.Daemon):
 	is_running = False
 	is_daemon = False
@@ -48,7 +53,9 @@ class Server(daemon.Daemon):
 
 	""" The server class is created and managed by the main.py script.
 
-	
+	When created, the server automatically initiates a Telnet server provided
+	by Miniboa which immediately listens for incoming connections and will query
+	them for login details upon connection.
 	"""
 	def __init__(self, config=None, path=None):
 		# self.pidfile = pid
@@ -124,6 +131,13 @@ class Server(daemon.Daemon):
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
 	
+	""" The update command is called by the main.py script file.
+
+	The update command does as it says, it causes the server to go through and
+	poll for data from any of the clients and processes this data differently
+	based on whether or not that they had actually logged in. When this function
+	finishes calling, a single world tick has passed.
+	"""
 	def update(self):
 		self.telnet_server.poll()
 		
@@ -181,7 +195,12 @@ class Server(daemon.Daemon):
 			if (input is not None):
 				self.interface.parse_command(sender=connection.player, input=input)
 
-			
+		self.world_tick.send(None)
+
+	""" This command shuts down the ScalyMUCK server and gracefully disconnects all connected clients
+	by sending a message before their disconnection which currently reads: "The server has been shutdown
+	adruptly by the server owner." This message cannot be changed.
+	"""	
 	def shutdown(self):
 		self.is_running = False
 		for connection in self.established_connection_list:
@@ -198,12 +217,16 @@ class Server(daemon.Daemon):
 	def is_running(self):
 		return self.is_running
 
+	""" This is merely a callback for Miniboa to refer to when receiving a client connection from somewhere.
+	"""
 	def on_client_connect(self, client):
 		self.connection_logger.info('Received client connection from ' + client.address + ':' + str(client.port))
 		client.send(self.welcome_message_data)
 		self.pending_connection_list.append(client)
 		self.post_client_connect.send(sender=client)
-	 
+
+	""" This is merely a callback for Miniboa to refer to when receiving a client disconnection.
+	"""
 	def on_client_disconnect(self, client):
 		self.pre_client_disconnect.send(sender=client)
 		self.connection_logger.info('Received client disconnection from ' + client.address + ':' + str(client.port))
