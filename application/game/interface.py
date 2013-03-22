@@ -16,6 +16,10 @@ from blinker import signal
 
 from game import exception, settings
 
+""" The interface class is exactly how it sounds; it's what the users interact
+with directly when connected to the ScalyMUCK server, with an exception being 
+the login screen for simplicity and security.
+"""
 class Interface:
 	logger = None
 	world = None
@@ -25,33 +29,59 @@ class Interface:
 	pre_message = signal('pre_message_sent')
 	post_message = signal('post_message_sent')
 
-	def __init__(self, config, world):
+	""" The interface class is created internallu by the ScalyMUCK server.
+
+	The server passes in an active instance of game.Settings and game.World
+	for the interface to talk to when loading mods as the configuration is 
+	used to load relevant config files for the mods and is passed in while
+	the instance of game.World is assigned to each module so that they may
+	access the game world.
+	"""
+	def __init__(self, config=None, world=None):
 		self.logger = logging.getLogger('Mods')
 		self.world = world
 
-		mod_list = string.split(config.get_index('LoadedMods', str), ';')
-		for mod in mod_list:
-			self.load_mod(mod, config)
+		mods = string.split(config.get_index('LoadedMods', str), ';')
+		for mod in mods:
+			self.load_mod(name=mod, config=config)
 		return
 
-	def load_mod(self, mod, config):
+	""" Loads the specified modification from the "game" folder.
+
+	Modifications are loaded from the application/game folder of ScalyMUCK,
+	they are basically just normal Python modules that are imported and have
+	a special function call to load the commands. See the URL below for information:
+	http://dx.no-ip.org/doku/doku.php/projects:scalymuck:modapi:examplemod
+
+	The config argument is meant to be an instance of game.Settings so that the interface
+	can load the modification's configuration file and pass in the loading data to the mod's
+	initialize function.
+	"""
+	def load_mod(self, name=None, config=None):
 		try:
-			module = __import__('game.' + mod, globals(), locals(), [''], -1)
+			module = __import__('game.' + name, globals(), locals(), [''], -1)
 		except ImportError as e:
 			self.logger.warning(str(e))
 		else:
-			config.load('config/' + mod + '.cfg')
+			if (config is not None):
+				config.load('config/' + name + '.cfg')
+
 			module.world = self.world
 			module.interface = self
 			module.initialize(config)
 			self.mods.append(module)
 
-			mod_commands = module.get_commands()
-			for mod_command in mod_commands:
-				self.commands[mod_command] = mod_commands[mod_command]
-				self.commands[mod_command]['mod'] = mod
+			commands = module.get_commands()
+			self.commands.update(commands)
 
-	def parse_command(self, sender, input):
+	""" Called internally by the ScalyMUCK server.
+
+	When a user sends a string of data to the server for processing and have passed
+	the initial authentification stage, that string of data is passed in here by the
+	server for processing. This function is what actually performs the command lookups
+	in the loaded command database.
+	"""
+	def parse_command(self, sender=None, input=None):
 		returns = self.pre_message.send(None, sender=sender, input=input)
 		intercept_input = False
 		for set in returns:
