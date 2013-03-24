@@ -20,10 +20,10 @@ import bcrypt
 import exception
 
 Base = declarative_base()
+
 """ Exits are what the players use to exit and move into other rooms in the ScalyMUCK
 world. They may only have one target room ID which is used to assign .target to them
-when they are loaded or creates by the game.World instance.
-"""
+when they are loaded or creates by the game.World instance. """
 class Exit(Base):
 	__tablename__ = 'exits'
 
@@ -34,8 +34,7 @@ class Exit(Base):
 
 	""" The Exit is not constructed manually by any of the modifications, this should be
 	performed by calling the create_player function on the game.World instance provided
-	to every modification.
-	"""
+	to every modification. """
 	def __init__(self, name, target_id=None, owner=0):
 		self.name=name
 		self.target_id = target_id
@@ -47,15 +46,19 @@ class Exit(Base):
 	def __repr__(self):
 		return "<Exit('%s','%u'>" % (self.name, self.target_id)
 
-	def set_name(self, name):
+	""" This sets the name of the exit that is both displayed to the user and used to
+	process user requests in regard to exit objects. The commit parameter is used if you don't
+	want to dump changes to the database yet; if you're changing multiple properties at once, it
+	doesn't hit the database as often then. """
+	def set_name(self, name, commit=True):
 		self.name = name
-		self.world.session.add(self)
-		self.world.session.commit()
+		if (commit is True):
+			self.world.session.add(self)
+			self.world.session.commit()
 		
 """ Players are well, the players that actually move and interact in the world. They
 store their password hash and various other generic data that can be used across 
-just about anything.
-"""
+just about anything. """
 class Player(Base):
 	__tablename__ = 'players'
 	
@@ -79,8 +82,7 @@ class Player(Base):
 
 	""" The Player is not constructed manually by any of the modifications, this should be
 	performed by calling the create_player function on the game.World instance provided
-	to every modification.
-	"""
+	to every modification. """
 	def __init__(self, name, password, work_factor, location_id, inventory_id, description='<Unset>', admin=False, sadmin=False, owner=False):
 		self.name = string.lower(name)
 		self.display_name = name
@@ -98,8 +100,7 @@ class Player(Base):
 
 	""" This sends a message to the relevant connection if there happens to be one established
 	for this player object. If there is no active connection for this player, then the message
-	is simply dropped.
-	"""
+	is simply dropped. """
 	def send(self, message):
 		if (self.connection is not None):
 			self.connection.send(message + '\n')
@@ -107,6 +108,9 @@ class Player(Base):
 		else:
 			return False
 
+	""" This sets the location of the player object without any prior notification to the person
+	being moved nor anyone in the original room or the target room. That is the calling modification's
+	job to provide any relevant messages. """
 	def set_location(self, location, commit=True):
 		if (type(location) is Room):
 			self.location = location
@@ -135,8 +139,7 @@ class Player(Base):
 	""" This deletes the user from the game world and drops their connection if there 
 	happens to be one established. As of now, the user's property will suddenly start
 	pointing to a bad owner or perhaps even someone else if SQLAlchemy assigns someone
-	their old ID.
-	"""
+	their old ID. """
 	def delete(self):
 		self.disconnect()
 		self.world.cached_players.remove(self)
@@ -146,20 +149,30 @@ class Player(Base):
 	""" This drops the user's connection from the game, flushing any messages that
 	were destined for them before actually booting them out of the server. This triggers
 	the default disconnect message to be displayed by the ScalyMUCK core to whomever else
-	may be in the room with the user at the time of their disconnect.
-	"""
+	may be in the room with the user at the time of their disconnect. """
 	def disconnect(self):
 		if (self.connection is not None):
 			self.connection.socket_send()
 			self.connection.deactivate()
 			self.connection.sock.close()
 
+	""" This sets the state as to whether or not the calling player instance is an administrator
+	of the server or not. This may mean different things to different mods but -generally- it
+	should just provide basic administrator privileges. The commit parameter is used if you don't
+	want to dump changes to the database yet; if you're changing multiple properties at once, it
+	doesn't hit the database as often then. """
 	def set_is_admin(self, status, commit=True):
 		self.is_admin = status
 		if (self.is_sadmin is True and status is False):
 			self.is_sadmin = False
 		if (commit): self.commit()
 
+	""" This sets the state as to whether or not the calling player instance is a super administrator
+	of the server or not. This may mean different things to different mods but -generally- it
+	should provide administrator functionalities more akin to what the owner may have, things that
+	may break the server if used improperly. The commit parameter is used if you don't want to dump 
+	changes to the database yet; if you're changing multiple properties at once, it doesn't hit the database as 
+	often then. """
 	def set_is_super_admin(self, status, commit=True):
 		self.is_sadmin = status
 		if (self.is_admin is False and status is True):
@@ -180,18 +193,27 @@ class Player(Base):
 		self.world.session.commit()
 
 """ Bots are basically just the AI's of the game. They're not items, but they're not players
-either. They have the special property of being interchangable 
-"""
+either. They have the special property of being interchangable with player object instances
+for the most part except when it comes to certain functions -- such as having a password
+hash. """
 class Bot(Base):
 	__tablename__ = 'bots'
 
+	id = Column(Integer, primary_key=True)
+	name = Column(String)
+	display_name = Column(String)
+	location_id = Column(Integer, ForeignKey('rooms.id'))
+
 	""" The Bot is not constructed manually by any of the modifications, this should be
 	performed by calling the create_player function on the game.World instance provided
-	to every modification.
-	"""
+	to every modification. """
 	def __init__(self):
 		return
-	
+
+""" Items are really a generic object in ScalyMUCK, they're not players nor rooms nor exits but
+serve multiple purposes. They can quite literally be an item, stored in the player's inventory
+to be used later (like a potion) or they may be used to decorate rooms with specific objects
+such as furniture or they may even be used to represent dead bodies. """	
 class Item(Base):
 	__tablename__ = 'items'
 	
@@ -203,8 +225,7 @@ class Item(Base):
 
 	""" The Item is not constructed manually by any of the modifications, this should be
 	performed by calling the create_player function on the game.World instance provided
-	to every modification.
-	"""
+	to every modification. """
 	def __init__(self, name, description, owner=0):
 		self.name = name
 		self.description = description
@@ -213,10 +234,22 @@ class Item(Base):
 		else:
 			self.owner_id = owner.id
 
+	""" Produces a representation of the item, as to be expected. """
 	def __repr__(self):
 		return "<Item('%s','%s')>" % (self.name, self.description)
 
 	def set_name(self, name, commit=True):
+		""" Sets the name of the calling item of this function.
+
+		Sets the name of this item that is both used in displaying to users and for processing
+		relevant requests in regards to this item instance. 
+
+		Keyword arguments:
+			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false.
+
+		"""
+
 		self.name = name
 		if (commit):
 			self.world.session.add(self)
@@ -242,6 +275,7 @@ class Room(Base):
 	description = Column(String)
 	items = relationship('Item')
 	players = relationship('Player')
+	bots = relationship('Bot')
 	exits = relationship('Exit')
 	owner_id = Column(Integer)
 
