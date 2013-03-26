@@ -1,9 +1,17 @@
 """
 	settings.py
 
-	Basic settings loader.
-	Copyright (c) 2013 Robert MacGregor
+	Basic settings loader that provides easy to use functionality to load from simple
+	configuration files that are formatted as such:
+	
+	Option=Yes
+	Number=20
+	String=Whatever
 
+	When loading the above data, you would specify the datatype that it should be loaded as:
+	some_number = config.get_index('Number', int)
+
+	Copyright (c) 2013 Robert MacGregor
 	This software is licensed under the GNU General
 	Public License version 3. Please refer to gpl.txt 
 	for more information.
@@ -12,13 +20,21 @@
 import string
 
 class Settings:
+	"""
+
+	The Settings loader class provides simple functionality to load from simple configuration
+	files.
+
+	"""
 	_settings_entries = { }
 	_yes = ['1', 'true', 'y', 'yes', 'enable', 'toggle', 'enabled']		
     
 	def __init__(self, target_file):
+		""" Initializes an instance of the Settings loader. """
 		self.load(target_file)
 
 	def load(self, target_file):
+		""" Loads a configuration file from the hard disk. """
 		try:
 			file_handle = open(target_file, 'r')
         	except IOError:
@@ -37,15 +53,22 @@ class Settings:
 
 		file_handle.close()
 
-	def get_index(self, index, data_type):
+	def get_index(self, index=None, datatype=None):
+		""" Returns a loaded configuration setting from the Settings loader.
+
+		Keyword arguments:
+			index -- The name of the setting that is to be loaded from the file.
+			datatype -- The datatype that is supposed to be used to represent this setting.
+
+		"""
 		if(index in self._settings_entries):
 			entries = self._settings_entries
-			if (data_type is bool):
+			if (datatype is bool):
 				if (string.lower(self._settings_entries[index]) in self._yes):
 					return True
 				else:
 					return False
 			else:
-				return data_type(entries[index])
+				return datatype(entries[index])
 		else:
 			return None

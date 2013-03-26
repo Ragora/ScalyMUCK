@@ -2,8 +2,8 @@
 	interface.py
 
 	Basically the user interface for ScalyMUCK.
-	Copyright (c) 2013 Robert MacGregor
 
+	Copyright (c) 2013 Robert MacGregor
 	This software is licensed under the GNU General
 	Public License version 3. Please refer to gpl.txt 
 	for more information.
@@ -16,11 +16,14 @@ from blinker import signal
 
 from game import exception, settings
 
-""" The interface class is exactly how it sounds; it's what the users interact
-with directly when connected to the ScalyMUCK server, with an exception being 
-the login screen for simplicity and security.
-"""
 class Interface:
+	""" Client-Server interface class.
+
+	The interface class is exactly how it sounds; it's what the users interact
+	with directly when connected to the ScalyMUCK server, with an exception being 
+	the login screen for simplicity and security.
+
+	"""
 	logger = None
 	world = None
 	mods = [ ]
@@ -29,13 +32,20 @@ class Interface:
 	pre_message = signal('pre_message_sent')
 	post_message = signal('post_message_sent')
 
-	""" The interface class is created internallu by the ScalyMUCK server.
+	""" Initializes an instance of the ScalyMUCK Client-Server interface class.
+
+	The interface class is created internallu by the ScalyMUCK server.
 
 	The server passes in an active instance of game.Settings and game.World
 	for the interface to talk to when loading mods as the configuration is 
 	used to load relevant config files for the mods and is passed in while
 	the instance of game.World is assigned to each module so that they may
 	access the game world.
+
+	Keyword arguments:
+		config -- An instance of Settings that is to be used to load relevant configuration data.
+		world -- An instance of the World to pass over to every initialized modification.
+
 	"""
 	def __init__(self, config=None, world=None):
 		self.logger = logging.getLogger('Mods')
@@ -56,6 +66,11 @@ class Interface:
 	The config argument is meant to be an instance of game.Settings so that the interface
 	can load the modification's configuration file and pass in the loading data to the mod's
 	initialize function.
+
+	Keyword arguments:
+		name -- The name of the mod to attempt to load.
+		config -- An instance of Settings that is to be used to load relevant configuration data.
+
 	"""
 	def load_mod(self, name=None, config=None):
 		try:
@@ -80,6 +95,11 @@ class Interface:
 	the initial authentification stage, that string of data is passed in here by the
 	server for processing. This function is what actually performs the command lookups
 	in the loaded command database.
+
+	Keyword arguments:
+		sender -- The instance of Player that has trying to invoke a command.
+		input -- The text that the Player happened to send.
+
 	"""
 	def parse_command(self, sender=None, input=None):
 		returns = self.pre_message.send(None, sender=sender, input=input)
@@ -117,5 +137,3 @@ class Interface:
 				sender.send('I do not know what it is to do that.')
 
 		self.post_message.send(None, sender=sender, input=input)
-
-	
