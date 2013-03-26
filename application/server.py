@@ -4,8 +4,8 @@
 	This is the main ScalyMUCK server code,
 	it performs the initialisation of various
 	systems and is the binding of everything.
-	Copyright (c) 2013 Robert MacGregor
 
+	Copyright (c) 2013 Robert MacGregor
 	This software is licensed under the GNU General
 	Public License version 3. Please refer to gpl.txt 
 	for more information.
@@ -25,12 +25,15 @@ import daemon
 import game.models
 from game import interface, world
 
-""" Server class that is initialized by the main.py script to act as the MUCK server.
-It performs all of the core functions of the MUCK server, which is mainly accepting
-connections and performing the login sequence before giving them access to the
-server and its world.
-"""
 class Server(daemon.Daemon):
+	""" 
+
+	Server class that is initialized by the main.py script to act as the MUCK server.
+	It performs all of the core functions of the MUCK server, which is mainly accepting
+	connections and performing the login sequence before giving them access to the
+	server and its world.
+
+	"""
 	is_running = False
 	is_daemon = False
 	telnet_server = None
@@ -51,42 +54,52 @@ class Server(daemon.Daemon):
 	post_client_authenticated = signal('post_client_authenticated')
 	world_tick = signal('world_tick')
 
-	""" The server class is created and managed by the main.py script.
+	def __init__(self, config=None, path=None, workdir=None):
+		""" The server class is created and managed by the main.py script.
 
-	When created, the server automatically initiates a Telnet server provided
-	by Miniboa which immediately listens for incoming connections and will query
-	them for login details upon connection.
-	"""
-	def __init__(self, config=None, path=None):
+		When created, the server automatically initiates a Telnet server provided
+		by Miniboa which immediately listens for incoming connections and will query
+		them for login details upon connection.
+
+		Keyword arguments:
+			config -- An instance of game.Settings that is to be used when loading configuration data.
+			path -- The data path that all permenant data should be written to.
+			workdir -- The current working directory of the server.
+	 
+		"""
 		# self.pidfile = pid
-		
+
 		self.connection_logger = logging.getLogger('Connections')
 		self.logger = logging.getLogger('Server')
 
-		database_type = string.lower(config.get_index('DatabaseType', str))
+		# Loading all of the configuration variables
+		database_type = string.lower(config.get_index(index='DatabaseType', datatype=str))
+		database = config.get_index(index='DatabaseName', datatype=str)
+		user = config.get_index(index='DatabaseUser', datatype=str)
+		password = config.get_index(index='DatabasePassword', datatype=str)
+		self.work_factor = config.get_index(index='WorkFactor', datatype=int)
 		if (database_type == 'sqlite'):
-			database_location = path + config.get_index('TargetDatabase', str)
+			database_location = path + config.get_index(index='TargetDatabase', datatype=str)
 		else:
-			database_location = config.get_index('TargetDatabase', str)
-		database = config.get_index('DatabaseName', str)
-		user = config.get_index('DatabaseUser', str)
-		password = config.get_index('DatabasePassword', str)
+			database_location = config.get_index(index='TargetDatabase', datatype=str)
   		
+		# Loading welcome/exit messages
 		try:
-			with open('config/welcome_message.txt') as f:
+			with open(workdir + 'config/welcome_message.txt') as f:
 				self.welcome_message_data = f.read()  + '\n'
 		except IOError as e:
-			self.welcome_message_data = 'Unable to load welcome message!'
+			self.welcome_message_data = 'Unable to load welcome message!\n'
 			self.logger.warning('Unable to load welcome message!')
 			self.logger.warning(str(e))
 		try:
-			with open('config/exit_message.txt') as f:
+			with open(workdir + 'config/exit_message.txt') as f:
 				self.exit_message_data = f.read() + '\n'
 		except IOError as e:
-			self.exit_message_data = 'Unable to load exit message!'
+			self.exit_message_data = 'Unable to load exit message!\n'
 			self.logger.warning('Unable to load exit message!')
 			self.logger.warning(str(e))
 
+		# Connect/Create our database is required
 		database_exists = True
 		if (database_type == 'sqlite'):
 			try:
@@ -97,6 +110,7 @@ class Server(daemon.Daemon):
 
 			database_engine = create_engine('sqlite:////' + database_location, echo=False)
 		else:
+			# TODO: Make this code initialize a MySQL/PostgreSQL database automatically.
 			url = database_type + '://' + user + ':' + password + '@' + database_location + '/' + database
 			try:
 				database_engine = create_engine(url, echo=False)
@@ -104,7 +118,6 @@ class Server(daemon.Daemon):
 			except OperationalError as e:
 				self.logger.error(str(e))
 				self.logger.error('URL: ' + url)
-				print(url)
 				self.is_running = False
 				return
 
@@ -113,17 +126,13 @@ class Server(daemon.Daemon):
 
 		game.models.Base.metadata.create_all(database_engine)
 	
-		self.work_factor = config.get_index('WorkFactor', int)
 		if (database_exists is False):
 			room = self.world.create_room('Portal Room Main')
-			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room)
-			user.set_is_admin(True, commit=False)
-			user.is_owner = True
-			user.set_is_super_admin(True)
+			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room, admin=True, sadmin=True, owner=True)
 			self.logger.info('The database has been successfully initialised.')
 		
-		self.telnet_server = TelnetServer(port=config.get_index('ServerPort', int),
-						address=config.get_index('ServerAddress', str),
+		self.telnet_server = TelnetServer(port=config.get_index(index='ServerPort', datatype=int),
+						address=config.get_index(index='ServerAddress', datatype=str),
 					        on_connect = self.on_client_connect,
 					        on_disconnect = self.on_client_disconnect,
 					        timeout = 0.05)
@@ -131,14 +140,15 @@ class Server(daemon.Daemon):
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
 	
-	""" The update command is called by the main.py script file.
-
-	The update command does as it says, it causes the server to go through and
-	poll for data from any of the clients and processes this data differently
-	based on whether or not that they had actually logged in. When this function
-	finishes calling, a single world tick has passed.
-	"""
 	def update(self):
+		""" The update command is called by the main.py script file.
+
+		The update command does as it says, it causes the server to go through and
+		poll for data from any of the clients and processes this data differently
+		based on whether or not that they had actually logged in. When this function
+		finishes calling, a single world tick has passed.
+
+		"""
 		self.telnet_server.poll()
 		
 		for connection in self.pending_connection_list:
@@ -197,36 +207,27 @@ class Server(daemon.Daemon):
 
 		self.world_tick.send(None)
 
-	""" This command shuts down the ScalyMUCK server and gracefully disconnects all connected clients
-	by sending a message before their disconnection which currently reads: "The server has been shutdown
-	adruptly by the server owner." This message cannot be changed.
-	"""	
 	def shutdown(self):
+		""" Shuts down the ScalyMUCK server.
+
+		This command shuts down the ScalyMUCK server and gracefully disconnects all connected clients
+		by sending a message before their disconnection which currently reads: "The server has been shutdown
+		adruptly by the server owner." This message cannot be changed.
+
+		"""	
 		self.is_running = False
 		for connection in self.established_connection_list:
 			connection.send('The server has been shutdown adruptly by the server owner.\n')
 			connection.socket_send()
-		
-	def run(self):
-	    while (self.is_running()):
-		self.update()
 
-	def is_active(self):
-		return self.is_running
-
-	def is_running(self):
-		return self.is_running
-
-	""" This is merely a callback for Miniboa to refer to when receiving a client connection from somewhere.
-	"""
+	""" This is merely a callback for Miniboa to refer to when receiving a client connection from somewhere. """
 	def on_client_connect(self, client):
 		self.connection_logger.info('Received client connection from ' + client.address + ':' + str(client.port))
 		client.send(self.welcome_message_data)
 		self.pending_connection_list.append(client)
 		self.post_client_connect.send(sender=client)
 
-	""" This is merely a callback for Miniboa to refer to when receiving a client disconnection.
-	"""
+	""" This is merely a callback for Miniboa to refer to when receiving a client disconnection. """
 	def on_client_disconnect(self, client):
 		self.pre_client_disconnect.send(sender=client)
 		self.connection_logger.info('Received client disconnection from ' + client.address + ':' + str(client.port))
