@@ -28,6 +28,7 @@ class Interface:
 	world = None
 	mods = [ ]
 	commands = { }
+	workdir = ''
 	
 	pre_message = signal('pre_message_sent')
 	post_message = signal('post_message_sent')
@@ -45,11 +46,13 @@ class Interface:
 	Keyword arguments:
 		config -- An instance of Settings that is to be used to load relevant configuration data.
 		world -- An instance of the World to pass over to every initialized modification.
+		workdir -- The current working directory of the application. This should be an absolute path to application/.
 
 	"""
-	def __init__(self, config=None, world=None):
+	def __init__(self, config=None, world=None, workdir=''):
 		self.logger = logging.getLogger('Mods')
 		self.world = world
+		self.workdir = workdir
 
 		mods = string.split(config.get_index('LoadedMods', str), ';')
 		for mod in mods:
@@ -79,7 +82,7 @@ class Interface:
 			self.logger.warning(str(e))
 		else:
 			if (config is not None):
-				config.load('config/' + name + '.cfg')
+				config.load(self.workdir + '/config/' + name + '.cfg')
 
 			module.world = self.world
 			module.interface = self

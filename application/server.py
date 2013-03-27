@@ -20,6 +20,7 @@ from blinker import signal
 from miniboa import TelnetServer
 from sqlalchemy import create_engine
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.engine.reflection import Inspector
 
 import daemon
 import game.models
@@ -64,7 +65,7 @@ class Server(daemon.Daemon):
 		Keyword arguments:
 			config -- An instance of game.Settings that is to be used when loading configuration data.
 			path -- The data path that all permenant data should be written to.
-			workdir -- The current working directory of the server.
+			workdir -- The current working directory of the server. This should be an absolute path to application/.
 	 
 		"""
 		# self.pidfile = pid
@@ -110,19 +111,46 @@ class Server(daemon.Daemon):
 
 			database_engine = create_engine('sqlite:////' + database_location, echo=False)
 		else:
-			# TODO: Make this code initialize a MySQL/PostgreSQL database automatically.
 			url = database_type + '://' + user + ':' + password + '@' + database_location + '/' + database
 			try:
 				database_engine = create_engine(url, echo=False)
-				database_engine.connect()
+				connection = database_engine.connect()
 			except OperationalError as e:
 				self.logger.error(str(e))
 				self.logger.error('URL: ' + url)
 				self.is_running = False
 				return
 
+		# Now we check to see if MySQL/PostgreSQL needs initialized
+		if (database_type == 'mysql'):
+			try:
+				# TODO: Make this do a proper query first!
+				# Init the Player Table
+				database_engine.execute('CREATE TABLE `' + database + '`.`players` (`id` INT NOT NULL AUTO_INCREMENT, \
+`name` TEXT NULL, `description` TEXT NULL, `hash` TEXT NULL, `work_factor` INT(10) NULL, `location_id` INT(10) NULL, `inventory_id` INT(10) NULL, \
+`is_admin` BIT NULL, `is_sadmin` BIT NULL, `is_owner` BIT NULL, `display_name` TEXT NULL, PRIMARY KEY (`id`));')
+				# Init the Room table
+				database_engine.execute('CREATE TABLE `' + database + '`.`rooms` (`id` INT NOT NULL AUTO_INCREMENT, \
+`name` TEXT NULL, `description` TEXT NULL, `owner_id` INT(10) NULL, PRIMARY KEY (`id`));')
+				# Init the Bots table
+				database_engine.execute('CREATE TABLE `' + database + '`.`bots` (`id` INT NOT NULL AUTO_INCREMENT, \
+`name` TEXT NULL, `display_name` TEXT NULL, `location_id` INT(10) NULL, PRIMARY KEY (`id`));')
+				# Init the Exit table
+				database_engine.execute('CREATE TABLE `' + database + '`.`exits` (`id` INT NOT NULL AUTO_INCREMENT, \
+`name` TEXT NULL, `target_id` INT(10) NULL, `owner_id` INT(10) NULL, PRIMARY KEY (`id`));')
+				# Init the Item table
+				database_engine.execute('CREATE TABLE `' + database + '`.`items` (`id` INT NOT NULL AUTO_INCREMENT, \
+`name` TEXT NULL, `owner_id` INT(10) NULL, `description` TEXT NULL, `location_id` INT(10) NULL, PRIMARY KEY (`id`));')
+
+				database_exists = False
+
+			except OperationalError as e:
+				self.logger.info('Your MySQL database appears to be initialized already.')
+		elif (database_type == 'postgresql'):
+			return
+
 		self.world = world.World(database_engine)
-		self.interface = interface.Interface(config=config, world=self.world)
+		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir)
 
 		game.models.Base.metadata.create_all(database_engine)
 	
