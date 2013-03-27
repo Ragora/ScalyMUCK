@@ -106,6 +106,7 @@ class Player(Base):
 	
 	id = Column(Integer, primary_key=True)
 	name = Column(String)
+	display_name = Column(String)
 	description = Column(String)
 	hash = Column(String)
 	work_factor = Column(Integer)
@@ -363,7 +364,7 @@ class Item(Base):
 	
 	id = Column(Integer, primary_key=True)
 	name = Column(String)
-	owner = Column(Integer, ForeignKey('players.id'))
+	owner_id = Column(Integer, ForeignKey('players.id'))
 	description = Column(String)
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
