@@ -24,7 +24,7 @@ import string
 from blinker import signal
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import Table, Column, Integer, String, Boolean, MetaData, ForeignKey
+from sqlalchemy import Table, Column, Integer, Text, Boolean, MetaData, ForeignKey
 import bcrypt
 
 import exception
@@ -42,7 +42,7 @@ class Exit(Base):
 	__tablename__ = 'exits'
 
 	id = Column(Integer, primary_key=True)
-	name = Column(String)
+	name = Column(Text)
 	target_id = Column(Integer, ForeignKey('rooms.id'))
 	owner_id = Column(Integer, ForeignKey('players.id'))
 
@@ -105,10 +105,10 @@ class Player(Base):
 	__tablename__ = 'players'
 	
 	id = Column(Integer, primary_key=True)
-	name = Column(String)
-	display_name = Column(String)
-	description = Column(String)
-	hash = Column(String)
+	name = Column(Text)
+	display_name = Column(Text)
+	description = Column(Text)
+	hash = Column(Text)
 	work_factor = Column(Integer)
 	
 	location_id = Column(Integer, ForeignKey('rooms.id'))
@@ -326,7 +326,7 @@ class Player(Base):
 		self.world.session.commit()
 
 class Bot(Base):
-	""" 
+	"""
 
 	Bots are basically just the AI's of the game. They're not items, but they're not players
 	either. They have the special property of being interchangable with player object instances
@@ -334,23 +334,25 @@ class Bot(Base):
 	hash. 
 
 	"""
+
 	__tablename__ = 'bots'
 
 	id = Column(Integer, primary_key=True)
-	name = Column(String)
-	display_name = Column(String)
+	name = Column(Text)
+	display_name = Column(Text)
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self):
-		""" 
+		"""
 
 		The Bot is not constructed manually by any of the modifications, this should be
 		performed by calling the create_player function on the game.World instance provided
 		to every modification. 
 
 		"""
+
 		return
-	
+
 class Item(Base):
 	""" Base item model that ScalyMUCK uses.
 
@@ -363,9 +365,9 @@ class Item(Base):
 	__tablename__ = 'items'
 	
 	id = Column(Integer, primary_key=True)
-	name = Column(String)
+	name = Column(Text)
 	owner_id = Column(Integer, ForeignKey('players.id'))
-	description = Column(String)
+	description = Column(Text)
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self, name=None, description='<Unset>', owner=0):
@@ -444,8 +446,8 @@ class Room(Base):
 	__tablename__ = 'rooms'
 	id = Column(Integer, primary_key=True)
 
-	name = Column(String)
-	description = Column(String)
+	name = Column(Text)
+	description = Column(Text)
 	items = relationship('Item')
 	players = relationship('Player')
 	bots = relationship('Bot')
