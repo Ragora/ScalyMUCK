@@ -54,6 +54,7 @@ class World():
 		self.cached_rooms.append(room)
 		return room
 	      
+	# TODO: This code is pretty screwy, I think I need to redo it.
 	def find_room(self, id=None, name=None):
 		""" Locates the specified Room in the ScalyMUCK world.
 
@@ -147,7 +148,8 @@ class World():
 		self.cached_players.append(player)
 		self.cached_rooms.append(player_inventory)
 		return player
-	      
+
+	# TODO: This code is pretty screwy, I think I need to redo it.
 	def find_player(self,id=None,name=None):
 		""" Locates a Player inside of the ScalyMUCK world.
 

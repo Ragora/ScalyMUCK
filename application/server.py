@@ -68,8 +68,6 @@ class Server(daemon.Daemon):
 			workdir -- The current working directory of the server. This should be an absolute path to application/.
 	 
 		"""
-		# self.pidfile = pid
-
 		self.connection_logger = logging.getLogger('Connections')
 		self.logger = logging.getLogger('Server')
 
@@ -85,6 +83,7 @@ class Server(daemon.Daemon):
 			database_location = config.get_index(index='TargetDatabase', datatype=str)
   		
 		# Loading welcome/exit messages
+		# NOTE: Can this code be simplified to look any nicer than it currently is?
 		try:
 			with open(workdir + 'config/welcome_message.txt') as f:
 				self.welcome_message_data = f.read()  + '\n'
@@ -124,7 +123,7 @@ class Server(daemon.Daemon):
 		# Now we check to see if MySQL/PostgreSQL needs initialized
 		if (database_type == 'mysql'):
 			try:
-				# TODO: Make this do a proper query first!
+				# TODO: Make this do a proper query first! Or see why the create_all call below doesn't work. Also need to make this query less brainfuck in case of the former.
 				database_engine.execute('CREATE TABLE `' + database + '`.`rooms` (`id` INT NOT NULL AUTO_INCREMENT, \
 `name` TEXT NULL, `description` TEXT NULL, `owner_id` INT(10) NULL, PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`players` (`id` INT NOT NULL AUTO_INCREMENT, \
 `name` TEXT NULL, `location_id` INT(10), `display_name` TEXT NULL, `description` TEXT NULL, `hash` TEXT NULL, `work_factor` INT(10) NULL, `inventory_id` INT(10) NULL, \
@@ -134,33 +133,9 @@ class Server(daemon.Daemon):
 FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`items` (`id` INT NOT NULL AUTO_INCREMENT, \
 `name` TEXT NULL, FOREIGN KEY (`owner_id` INT(10) NULL, `location_id` INT(10) NULL, FOREIGN KEY (owner_id) REFERENCES players(id), `description` TEXT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), \
 PRIMARY KEY (`id`));')
-				# Init the Room table
-#				database_engine.execute('CREATE TABLE `' + database + '`.`rooms` (`id` INT NOT NULL AUTO_INCREMENT, \
-#`name` TEXT NULL, `description` TEXT NULL, `owner_id` INT(10) NULL, PRIMARY KEY (`id`));')
-				# Init the Player Table
-#				database_engine.execute('CREATE TABLE `' + database + '`.`players` (`id` INT NOT NULL AUTO_INCREMENT, \
-#`name` TEXT NULL, `location_id` INT(10), `display_name` TEXT NULL, `description` TEXT NULL, `hash` TEXT NULL, `work_factor` INT(10) NULL, `inventory_id` INT(10) NULL, \
-#`is_admin` BIT NULL, `is_sadmin` BIT NULL, `is_owner` BIT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`));')
-				# Modify the Bots table
-#				database_engine.execute('ALTER TABLE bots ADD COLUMN name TEXT')
-				# Init the Bots table
-#				database_engine.execute('CREATE TABLE `' + database + '`.`bots` (`id` INT NOT NULL AUTO_INCREMENT, \
-#`name` TEXT NULL, `location_id` INT(10), `display_name` TEXT NULL, `location_id` INT(10) NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`));')
-				# Init the Exit table
-#				database_engine.execute('CREATE TABLE `' + database + '`.`exits` (`id` INT NOT NULL AUTO_INCREMENT, \
-#`name` TEXT NULL, FOREIGN KEY (target_id) REFERENCES rooms(id), FOREIGN KEY (owner_id) REFERENCES players(id), \
-#FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`));')
-				print('wat')
-				# Init the Item table
-#				database_engine.execute('CREATE TABLE`' + database + '`.`items` (`id` INT NOT NULL AUTO_INCREMENT, \
-#`name` TEXT NULL, FOREIGN KEY (owner_id) REFERENCES players(id), `description` TEXT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), \
-#PRIMARY KEY (`id`));')
-
 				database_exists = False
-				print('oh mer gawd')
 
 			except OperationalError as e:
-				print('OP Error')
 				self.logger.info('Your MySQL database appears to be initialized already.')
 		elif (database_type == 'postgresql'):
 			return
@@ -168,6 +143,7 @@ PRIMARY KEY (`id`));')
 		self.world = world.World(database_engine)
 		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir)
 
+		# TODO: Need to see why this create_all call doesn't work.
 		game.models.Base.metadata.create_all(database_engine)
 	
 		if (database_exists is False):
