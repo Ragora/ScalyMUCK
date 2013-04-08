@@ -125,26 +125,42 @@ class Server(daemon.Daemon):
 		if (database_type == 'mysql'):
 			try:
 				# TODO: Make this do a proper query first!
-				# Init the Player Table
-				database_engine.execute('CREATE TABLE `' + database + '`.`players` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, `description` TEXT NULL, `hash` TEXT NULL, `work_factor` INT(10) NULL, `location_id` INT(10) NULL, `inventory_id` INT(10) NULL, \
-`is_admin` BIT NULL, `is_sadmin` BIT NULL, `is_owner` BIT NULL, `display_name` TEXT NULL, PRIMARY KEY (`id`));')
-				# Init the Room table
 				database_engine.execute('CREATE TABLE `' + database + '`.`rooms` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, `description` TEXT NULL, `owner_id` INT(10) NULL, PRIMARY KEY (`id`));')
+`name` TEXT NULL, `description` TEXT NULL, `owner_id` INT(10) NULL, PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`players` (`id` INT NOT NULL AUTO_INCREMENT, \
+`name` TEXT NULL, `location_id` INT(10), `display_name` TEXT NULL, `description` TEXT NULL, `hash` TEXT NULL, `work_factor` INT(10) NULL, `inventory_id` INT(10) NULL, \
+`is_admin` BIT NULL, `is_sadmin` BIT NULL, `is_owner` BIT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`bots` (`id` INT NOT NULL AUTO_INCREMENT, \
+`name` TEXT NULL, `location_id` INT(10) NULL, `display_name` TEXT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`exits` (`id` INT NOT NULL AUTO_INCREMENT, \
+`name` TEXT NULL, `target_id` INT(10), `owner_id` INT(10), FOREIGN KEY (target_id) REFERENCES rooms(id), FOREIGN KEY (owner_id) REFERENCES players(id), \
+FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`items` (`id` INT NOT NULL AUTO_INCREMENT, \
+`name` TEXT NULL, FOREIGN KEY (`owner_id` INT(10) NULL, `location_id` INT(10) NULL, FOREIGN KEY (owner_id) REFERENCES players(id), `description` TEXT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), \
+PRIMARY KEY (`id`));')
+				# Init the Room table
+#				database_engine.execute('CREATE TABLE `' + database + '`.`rooms` (`id` INT NOT NULL AUTO_INCREMENT, \
+#`name` TEXT NULL, `description` TEXT NULL, `owner_id` INT(10) NULL, PRIMARY KEY (`id`));')
+				# Init the Player Table
+#				database_engine.execute('CREATE TABLE `' + database + '`.`players` (`id` INT NOT NULL AUTO_INCREMENT, \
+#`name` TEXT NULL, `location_id` INT(10), `display_name` TEXT NULL, `description` TEXT NULL, `hash` TEXT NULL, `work_factor` INT(10) NULL, `inventory_id` INT(10) NULL, \
+#`is_admin` BIT NULL, `is_sadmin` BIT NULL, `is_owner` BIT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`));')
+				# Modify the Bots table
+#				database_engine.execute('ALTER TABLE bots ADD COLUMN name TEXT')
 				# Init the Bots table
-				database_engine.execute('CREATE TABLE `' + database + '`.`bots` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, `display_name` TEXT NULL, `location_id` INT(10) NULL, PRIMARY KEY (`id`));')
+#				database_engine.execute('CREATE TABLE `' + database + '`.`bots` (`id` INT NOT NULL AUTO_INCREMENT, \
+#`name` TEXT NULL, `location_id` INT(10), `display_name` TEXT NULL, `location_id` INT(10) NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`));')
 				# Init the Exit table
-				database_engine.execute('CREATE TABLE `' + database + '`.`exits` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, `target_id` INT(10) NULL, `owner_id` INT(10) NULL, PRIMARY KEY (`id`));')
+#				database_engine.execute('CREATE TABLE `' + database + '`.`exits` (`id` INT NOT NULL AUTO_INCREMENT, \
+#`name` TEXT NULL, FOREIGN KEY (target_id) REFERENCES rooms(id), FOREIGN KEY (owner_id) REFERENCES players(id), \
+#FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`));')
+				print('wat')
 				# Init the Item table
-				database_engine.execute('CREATE TABLE `' + database + '`.`items` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, `owner_id` INT(10) NULL, `description` TEXT NULL, `location_id` INT(10) NULL, PRIMARY KEY (`id`));')
+#				database_engine.execute('CREATE TABLE`' + database + '`.`items` (`id` INT NOT NULL AUTO_INCREMENT, \
+#`name` TEXT NULL, FOREIGN KEY (owner_id) REFERENCES players(id), `description` TEXT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), \
+#PRIMARY KEY (`id`));')
 
 				database_exists = False
+				print('oh mer gawd')
 
 			except OperationalError as e:
+				print('OP Error')
 				self.logger.info('Your MySQL database appears to be initialized already.')
 		elif (database_type == 'postgresql'):
 			return
@@ -158,6 +174,7 @@ class Server(daemon.Daemon):
 			room = self.world.create_room('Portal Room Main')
 			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room, admin=True, sadmin=True, owner=True)
 			self.logger.info('The database has been successfully initialised.')
+			print('whoa')
 		
 		self.telnet_server = TelnetServer(port=config.get_index(index='ServerPort', datatype=int),
 						address=config.get_index(index='ServerAddress', datatype=str),
