@@ -20,7 +20,7 @@ from daemon import Daemon
 from server import Server
 from game import settings
 
-# I hate using global but I need it to provide proper cleanups from the sighandle function
+# NOTE: I hate using global but I need it so the async sighandle below can refer to the server object to perform a proper cleanup.
 global server
 server = None
 
@@ -41,6 +41,7 @@ def server_main(workdir):
 	config = settings.Settings(workdir + 'config/settings_server.cfg')
 	
 	# Prepare the logs
+	# NOTE: This code looks sucky, could it be improved to look better?
 	formatting = logging.Formatter('%(levelname)s (%(asctime)s): %(message)s', '%d/%m/%y at %I:%M:%S %p')
 	if (config.get_index(index='LogConnections', datatype=bool)):
 		logger = logging.getLogger('Connections')
