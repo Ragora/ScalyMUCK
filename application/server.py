@@ -120,32 +120,16 @@ class Server(daemon.Daemon):
 				self.is_running = False
 				return
 
-		# Now we check to see if MySQL/PostgreSQL needs initialized
-		if (database_type == 'mysql'):
-			try:
-				# TODO: Make this do a proper query first! Or see why the create_all call below doesn't work. Also need to make this query less brainfuck in case of the former.
-				database_engine.execute('CREATE TABLE `' + database + '`.`rooms` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, `description` TEXT NULL, `owner_id` INT(10) NULL, PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`players` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, `location_id` INT(10), `display_name` TEXT NULL, `description` TEXT NULL, `hash` TEXT NULL, `work_factor` INT(10) NULL, `inventory_id` INT(10) NULL, \
-`is_admin` BIT NULL, `is_sadmin` BIT NULL, `is_owner` BIT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`bots` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, `location_id` INT(10) NULL, `display_name` TEXT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`exits` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, `target_id` INT(10), `owner_id` INT(10), FOREIGN KEY (target_id) REFERENCES rooms(id), FOREIGN KEY (owner_id) REFERENCES players(id), \
-FOREIGN KEY (location_id) REFERENCES rooms(id), PRIMARY KEY (`id`)); CREATE TABLE `' + database + '`.`items` (`id` INT NOT NULL AUTO_INCREMENT, \
-`name` TEXT NULL, FOREIGN KEY (`owner_id` INT(10) NULL, `location_id` INT(10) NULL, FOREIGN KEY (owner_id) REFERENCES players(id), `description` TEXT NULL, FOREIGN KEY (location_id) REFERENCES rooms(id), \
-PRIMARY KEY (`id`));')
-				database_exists = False
-
-			except OperationalError as e:
-				self.logger.info('Your MySQL database appears to be initialized already.')
-		elif (database_type == 'postgresql'):
-			return
-
 		self.world = world.World(database_engine)
 		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir)
-
-		# TODO: Need to see why this create_all call doesn't work.
 		game.models.Base.metadata.create_all(database_engine)
 	
+		# Check to see if our root user exists
+		if (database_type != 'sqlite'):
+			root_user = self.world.find_player(name='RaptorJesus')
+			if (root_user is None):
+				database_exists = False
+
 		if (database_exists is False):
 			room = self.world.create_room('Portal Room Main')
 			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room, admin=True, sadmin=True, owner=True)
