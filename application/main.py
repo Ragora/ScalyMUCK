@@ -88,7 +88,7 @@ def server_main(workdir):
 
 	print(' ')
 	print('Killing ScalyMUCK server ...')
-	muck_server.shutdown()	
+	server.shutdown()	
 	logging.shutdown()
 
 class MUCKDaemon(Daemon):

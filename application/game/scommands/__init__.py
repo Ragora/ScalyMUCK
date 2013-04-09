@@ -239,7 +239,8 @@ def command_help(**kwargs):
 		sender.send(out[:len(out)-2]) 
 		return
 	else:
-		sender.send('From: ' + interface.commands[input]['mod'])
+		# TODO: Make this list the mod?
+		# sender.send('From: ' + interface.commands[input]['mod'])
 		sender.send('Usage: ' + interface.commands[input]['usage'])
 		sender.send(interface.commands[input]['description'])
 

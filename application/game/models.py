@@ -24,7 +24,7 @@ import string
 from blinker import signal
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy import Table, Column, Integer, Text, Boolean, MetaData, ForeignKey
+from sqlalchemy import Table, Column, Integer, String, Text, Boolean, MetaData, ForeignKey
 import bcrypt
 
 import exception
@@ -42,7 +42,7 @@ class Exit(Base):
 	__tablename__ = 'exits'
 
 	id = Column(Integer, primary_key=True)
-	name = Column(Text)
+	name = Column(String(200))
 	target_id = Column(Integer, ForeignKey('rooms.id'))
 	owner_id = Column(Integer, ForeignKey('players.id'))
 
@@ -105,10 +105,10 @@ class Player(Base):
 	__tablename__ = 'players'
 	
 	id = Column(Integer, primary_key=True)
-	name = Column(Text)
-	display_name = Column(Text)
-	description = Column(Text)
-	hash = Column(Text)
+	name = Column(String(200))
+	display_name = Column(String(200))
+	description = Column(String(200))
+	hash = Column(String(200))
 	work_factor = Column(Integer)
 	
 	location_id = Column(Integer, ForeignKey('rooms.id'))
@@ -338,8 +338,8 @@ class Bot(Base):
 	__tablename__ = 'bots'
 
 	id = Column(Integer, primary_key=True)
-	name = Column(Text)
-	display_name = Column(Text)
+	name = Column(String(200))
+	display_name = Column(String(200))
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self):
@@ -365,9 +365,9 @@ class Item(Base):
 	__tablename__ = 'items'
 	
 	id = Column(Integer, primary_key=True)
-	name = Column(Text)
+	name = Column(String(200))
 	owner_id = Column(Integer, ForeignKey('players.id'))
-	description = Column(Text)
+	description = Column(String(200))
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self, name=None, description='<Unset>', owner=0):
@@ -446,8 +446,8 @@ class Room(Base):
 	__tablename__ = 'rooms'
 	id = Column(Integer, primary_key=True)
 
-	name = Column(Text)
-	description = Column(Text)
+	name = Column(String(200))
+	description = Column(String(200))
 	items = relationship('Item')
 	players = relationship('Player')
 	bots = relationship('Bot')
