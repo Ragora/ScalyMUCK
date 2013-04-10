@@ -1,5 +1,5 @@
-ScalyMUCK
 py-bcrypt==0.2
-SQLAlchemy==0.7.9
+SQLAlchemy==0.8.0
 sqlalchemy-migrate==0.7.2
 blinker==1.2
+distribute==0.6.35

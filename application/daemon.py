@@ -1,8 +1,8 @@
 """Generic linux daemon base class for python 3.x."""
 import os, sys, signal, time
 class Daemon:
-	"""A generic daemon class.
-	Code by an Anonymous user from: http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
+	"""A generic daemon class. Modified by Robert MacGregor
+	Original code by an Anonymous user from: http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
 	Usage: subclass the daemon class and override the run() method."""
 
 	def __init__(self, pidfile): self.pidfile = pidfile
@@ -56,7 +56,7 @@ class Daemon:
 	def delpid(self):
 		os.remove(self.pidfile)
 
-	def start(self):
+	def start(self, **kwargs):
 		"""Start the daemon."""
 		# Check for a pidfile to see if the daemon already runs
 		try:
@@ -72,10 +72,9 @@ class Daemon:
 			sys.stderr.write(message.format(self.pidfile))
 			sys.exit(1)
 
-		
 		# Start the daemon
 		self.daemonize()
-		self.run()
+		self.run(**kwargs)
 
 	def stop(self):
 		"""Stop the daemon."""
@@ -112,7 +111,7 @@ class Daemon:
 		self.stop()
 		self.start()
 
-	def run(self):
+	def run(self, **kwargs):
 		"""You should override this method when you subclass Daemon.
 		
 		It will be called after the process has been daemonized by 
