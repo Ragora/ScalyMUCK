@@ -149,6 +149,7 @@ class Server(daemon.Daemon):
 				data = connection.get_command()
 				command_data = string.split(data, ' ')
 
+				# Try and perform the authentification process
 				if (len(command_data) < 3):
 					connection.send('You did not specify all of the required arguments.\n')
 				elif (len(command_data) >= 3 and string.lower(command_data[0]) == 'connect'):
@@ -224,8 +225,10 @@ class Server(daemon.Daemon):
 	def on_client_disconnect(self, client):
 		self.pre_client_disconnect.send(sender=client)
 		self.connection_logger.info('Received client disconnection from ' + client.address + ':' + str(client.port))
+		# Iterate over anyone who had connected but did not authenticate
 		if (client in self.pending_connection_list):
 			self.pending_connection_list.remove(client)
+		# Otherwise run over the list of people who had authenticated
 		elif (client in self.established_connection_list):
 			for player in client.player.location.players:
 				if (player is not client.player):
