@@ -152,13 +152,12 @@ class Interface:
 				function = self.commands[command]['command']
 				function(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
-				line_one = 'An error has occurred while executing the command.'
+				line_one = 'An error has occurred while executing the command: ' + command
 				line_two = 'Error Condition: '
 				line_three = str(e)
 
 				self.logger.error(line_one)
 				self.logger.error(line_two)
-				self.logger.error(line_three)
 				sender.send(line_one)
 				sender.send(line_two)
 				sender.send(line_three)
