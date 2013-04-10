@@ -30,6 +30,7 @@ author = 'Liukcairo'
 
 world = None
 interface = None
+connection = None
 
 work_factor = 10
 
@@ -64,7 +65,6 @@ def command_say(**kwargs):
 	sender.location.broadcast(sender.display_name + ' says, "' + input + '"', sender)
 	sender.send('You say, "' + input + '"')
 	post_user_say.send(None, sender=sender, input=input)
-	return
 
 def command_pose(**kwargs):
 	sender = kwargs['sender']
@@ -76,7 +76,6 @@ def command_pose(**kwargs):
 
 	sender.location.broadcast(sender.display_name + ' ' + kwargs['input'])
 	post_user_pose.send(None, sender=sender, input=input)
-	return
 
 def command_look(**kwargs):
 	sender = kwargs['sender']
@@ -124,7 +123,6 @@ def command_look(**kwargs):
 	sender.send(target.description)
 
 	post_user_look.send(sender=sender, input=input, target=target)
-	return
 
 def command_move(**kwargs):
 	sender = kwargs['sender']
@@ -150,7 +148,6 @@ def command_move(**kwargs):
 			return
 
 	sender.send('I do not see that.')
-	return
 
 def command_inventory(**kwargs):
 	sender = kwargs['sender']
@@ -218,7 +215,7 @@ def command_drop(**kwargs):
 				if (result[1] is True):
 					return
 
-			sender.send('You dropped that item.')
+			sender.send('You dropped a/an ' + item.name + '.')
 			sender.location.broadcast(sender.display_name + ' drops a/an ' + item.name + '.', sender)
 			item.set_location(sender.location)
 			post_item_drop.send(sender=sender, item=item)
@@ -327,10 +324,11 @@ def command_admin(**kwargs):
 		if (target.is_admin == 0):
 			sender.send(target.display_name + ' is no longer an administrator.')
 			target.send(sender.display_name + ' took your adminship.')
+			return
 		else:
 			sender.send(target.display_name + ' is now an administrator.')
 			target.send(sender.display_name + ' gave you adminship rights.')
-		return
+			return
 	sender.send('Unknown user.')
 
 def command_sadmin(**kwargs):
@@ -360,10 +358,11 @@ def command_sadmin(**kwargs):
 		if (target.is_sadmin is False):
 			sender.send(target.display_name + ' is no longer a super administrator.')
 			target.send(sender.display_name + ' took your super adminship.')
+			return
 		else:
 			sender.send(target.display_name + ' is now a super administrator.')
 			target.send(sender.display_name + ' gave you super adminship rights.')
-		return
+			return
 	sender.send('Unknown user.')
 
 def command_chown(**kwargs):
@@ -380,7 +379,6 @@ def command_chown(**kwargs):
 # Callbacks
 def callback_client_authenticated(trigger, sender):
 	command_look(sender=sender, input='')
-	return
 
 def callback_message_sent(trigger, sender, input):
 	if (len(input) != 0):
@@ -406,7 +404,6 @@ def initialize(config):
 	signal('post_client_authenticated').connect(callback_client_authenticated)
 	signal('pre_message_sent').connect(callback_message_sent)
 	work_factor = config.get_index('WorkFactor', int)
-	return
 
 def get_commands():
 	command_dict = {
