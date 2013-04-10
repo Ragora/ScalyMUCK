@@ -44,8 +44,8 @@ class Server(daemon.Daemon):
 	interface = None
 	work_factor = 10
 
-	welcome_message_data = ''
-	exit_message_data = ''
+	welcome_message_data = 'Unable to load welcome message!\n'
+	exit_message_data = 'Unable to load exit message!\n'
 	
 	pending_connection_list = [ ]
 	established_connection_list = [ ]
@@ -83,21 +83,10 @@ class Server(daemon.Daemon):
 			database_location = config.get_index(index='TargetDatabase', datatype=str)
   		
 		# Loading welcome/exit messages
-		# NOTE: Can this code be simplified to look any nicer than it currently is?
-		try:
-			with open(workdir + 'config/welcome_message.txt') as f:
-				self.welcome_message_data = f.read()  + '\n'
-		except IOError as e:
-			self.welcome_message_data = 'Unable to load welcome message!\n'
-			self.logger.warning('Unable to load welcome message!')
-			self.logger.warning(str(e))
-		try:
-			with open(workdir + 'config/exit_message.txt') as f:
-				self.exit_message_data = f.read() + '\n'
-		except IOError as e:
-			self.exit_message_data = 'Unable to load exit message!\n'
-			self.logger.warning('Unable to load exit message!')
-			self.logger.warning(str(e))
+		with open(workdir + 'config/welcome_message.txt') as f:
+			self.welcome_message_data = f.read()  + '\n'
+		with open(workdir + 'config/exit_message.txt') as f:
+			self.exit_message_data = f.read() + '\n'
 
 		# Connect/Create our database is required
 		database_exists = True
@@ -121,7 +110,7 @@ class Server(daemon.Daemon):
 				return
 
 		self.world = world.World(database_engine)
-		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir)
+		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, connection=connection)
 		game.models.Base.metadata.create_all(database_engine)
 	
 		# Check to see if our root user exists
@@ -134,7 +123,6 @@ class Server(daemon.Daemon):
 			room = self.world.create_room('Portal Room Main')
 			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room, admin=True, sadmin=True, owner=True)
 			self.logger.info('The database has been successfully initialised.')
-			print('whoa')
 		
 		self.telnet_server = TelnetServer(port=config.get_index(index='ServerPort', datatype=int),
 						address=config.get_index(index='ServerAddress', datatype=str),

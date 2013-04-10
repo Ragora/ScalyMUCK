@@ -11,6 +11,7 @@
 
 import string
 import logging
+import importlib
 
 from blinker import signal
 
@@ -47,16 +48,17 @@ class Interface:
 		config -- An instance of Settings that is to be used to load relevant configuration data.
 		world -- An instance of the World to pass over to every initialized modification.
 		workdir -- The current working directory of the application. This should be an absolute path to application/.
+		connection -- A working connection object that points to the active database.
 
 	"""
-	def __init__(self, config=None, world=None, workdir=''):
+	def __init__(self, config=None, world=None, workdir='', connection=None):
 		self.logger = logging.getLogger('Mods')
 		self.world = world
 		self.workdir = workdir
 
 		mods = string.split(config.get_index('LoadedMods', str), ';')
 		for mod in mods:
-			self.load_mod(name=mod, config=config)
+			self.load_mod(name=mod, config=config, connection=connection)
 		return
 
 	""" Loads the specified modification from the "game" folder.
@@ -73,11 +75,12 @@ class Interface:
 	Keyword arguments:
 		name -- The name of the mod to attempt to load.
 		config -- An instance of Settings that is to be used to load relevant configuration data.
+		connection -- A working connection object that points to the active database.
 
 	"""
-	def load_mod(self, name=None, config=None):
+	def load_mod(self, name=None, config=None, connection=None):
 		try:
-			module = __import__('game.' + name, globals(), locals(), [''], -1)
+			module = importlib.import_module('game.' + name)
 		except ImportError as e:
 			self.logger.warning(str(e))
 		else:
@@ -86,6 +89,7 @@ class Interface:
 
 			module.world = self.world
 			module.interface = self
+			module.connection = connection
 			module.initialize(config)
 			self.mods.append(module)
 
