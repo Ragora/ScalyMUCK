@@ -110,7 +110,7 @@ class Server(daemon.Daemon):
 				return
 
 		self.world = world.World(database_engine)
-		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, connection=connection)
+		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, session=self.world.session)
 		game.models.Base.metadata.create_all(database_engine)
 	
 		# Check to see if our root user exists

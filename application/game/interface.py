@@ -28,7 +28,7 @@ class Interface:
 	logger = None
 	world = None
 	config = None
-	connection = None
+	session = None
 	mods = [ ]
 	commands = { }
 	workdir = ''
@@ -50,15 +50,15 @@ class Interface:
 		config -- An instance of Settings that is to be used to load relevant configuration data.
 		world -- An instance of the World to pass over to every initialized modification.
 		workdir -- The current working directory of the application. This should be an absolute path to application/.
-		connection -- A working connection object that points to the active database.
+		session -- A working session object that points to the active database.
 
 	"""
-	def __init__(self, config=None, world=None, workdir='', connection=None):
+	def __init__(self, config=None, world=None, workdir='', session=None):
 		self.logger = logging.getLogger('Mods')
 		self.world = world
 		self.workdir = workdir
 		self.config = config
-		self.connection = connection
+		self.session = session
 
 		# Implement the default commands.
 		self.commands['mods'] = { }
@@ -103,7 +103,7 @@ class Interface:
 				self.commands.update(commands)
 				module.world = self.world
 				module.interface = self
-				module.connection = self.connection
+				module.session = self.connection
 				module.initialize(self.config)
 				return
 
@@ -117,7 +117,7 @@ class Interface:
 
 			module.world = self.world
 			module.interface = self
-			module.connection = self.connection
+			module.session = self.session
 			module.initialize(self.config)
 			self.mods.append((name, module))
 
