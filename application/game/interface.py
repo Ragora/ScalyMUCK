@@ -27,6 +27,8 @@ class Interface:
 	"""
 	logger = None
 	world = None
+	config = None
+	connection = None
 	mods = [ ]
 	commands = { }
 	workdir = ''
@@ -55,10 +57,24 @@ class Interface:
 		self.logger = logging.getLogger('Mods')
 		self.world = world
 		self.workdir = workdir
+		self.config = config
+		self.connection = connection
 
+		# Implement the default commands.
+		self.commands['mods'] = { }
+		self.commands['mods']['command'] = self.command_mods
+		self.commands['mods']['description'] = 'Lists all loaded mods.'
+		self.commands['mods']['usage'] = 'mods'
+
+		self.commands['load'] = { }
+		self.commands['load']['command'] = self.command_load
+		self.commands['load']['description'] = 'Loads the specified mod.'
+		self.commands['load']['usage'] = 'load <name>'
+
+		# Iterate through our loaded mods and actually load them
 		mods = string.split(config.get_index('LoadedMods', str), ';')
 		for mod in mods:
-			self.load_mod(name=mod, config=config, connection=connection)
+			self.load_mod(name=mod)
 		return
 
 	""" Loads the specified modification from the "game" folder.
@@ -78,20 +94,32 @@ class Interface:
 		connection -- A working connection object that points to the active database.
 
 	"""
-	def load_mod(self, name=None, config=None, connection=None):
+	def load_mod(self, name=None):
+		name = name.lower()
+		for mod_name, module in self.mods:
+			if (mod_name == name):
+				reload(module)
+				commands = module.get_commands()
+				self.commands.update(commands)
+				module.world = self.world
+				module.interface = self
+				module.connection = self.connection
+				module.initialize(self.config)
+				return
+
 		try:
 			module = importlib.import_module('game.' + name)
 		except ImportError as e:
 			self.logger.warning(str(e))
 		else:
-			if (config is not None):
-				config.load(self.workdir + '/config/' + name + '.cfg')
+			if (self.config is not None):
+				self.config.load(self.workdir + '/config/' + name + '.cfg')
 
 			module.world = self.world
 			module.interface = self
-			module.connection = connection
-			module.initialize(config)
-			self.mods.append(module)
+			module.connection = self.connection
+			module.initialize(self.config)
+			self.mods.append((name, module))
 
 			commands = module.get_commands()
 			self.commands.update(commands)
@@ -144,3 +172,31 @@ class Interface:
 				sender.send('I do not know what it is to do that.')
 
 		self.post_message.send(None, sender=sender, input=input)
+
+	def command_mods(self, **kwargs):
+		""" Internal command to list installed mods. """
+		sender = kwargs['sender']
+		if (sender.is_owner is False):
+			sender.send('You are not the server owner.')
+			return
+
+		loaded = ''
+		for name, module in self.mods:
+			loaded += name + ', '
+		sender.send(loaded.rstrip(', '))
+
+	def command_load(self, **kwargs):
+		""" Internal command to load mods. """
+		sender = kwargs['sender']
+		if (sender.is_owner is False):
+			sender.send('You are not the server owner.')
+			return
+
+		input = kwargs['input'].lower()
+		for name, module in self.mods:
+			if (input == name):
+				self.load_mod(input)
+				sender.send('Mod "' + input + '" reloaded.')
+				return
+		self.load_mod(input)
+		sender.send('Attempted to load mod "' + input + '".')
