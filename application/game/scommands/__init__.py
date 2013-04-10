@@ -30,7 +30,7 @@ author = 'Liukcairo'
 
 world = None
 interface = None
-connection = None
+session = None
 
 work_factor = 10
 
