@@ -158,6 +158,7 @@ class Interface:
 
 				self.logger.error(line_one)
 				self.logger.error(line_two)
+				self.logger.error(line_three)
 				sender.send(line_one)
 				sender.send(line_two)
 				sender.send(line_three)
