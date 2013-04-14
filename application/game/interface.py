@@ -65,11 +65,13 @@ class Interface:
 		self.commands['mods']['command'] = self.command_mods
 		self.commands['mods']['description'] = 'Lists all loaded mods.'
 		self.commands['mods']['usage'] = 'mods'
+		self.commands['mods']['privilege'] = 3
 
 		self.commands['load'] = { }
 		self.commands['load']['command'] = self.command_load
 		self.commands['load']['description'] = 'Loads the specified mod.'
 		self.commands['load']['usage'] = 'load <name>'
+		self.commands['load']['privilege'] = 3
 
 		# Iterate through our loaded mods and actually load them
 		mods = string.split(config.get_index('LoadedMods', str), ';')
@@ -145,6 +147,18 @@ class Interface:
 
 		if (intercept_input is False and command in self.commands):
 			try:
+				privilege = self.commands[command]['privilege']
+				if (privilege == 1 and sender.is_admin is False):
+					sender.send('You must be an administrator.')
+					return
+				elif (privilege == 2 and sender.is_sadmin is False):
+					sender.send('You must be a super administrator.')
+					return
+				elif (privilege == 3 and sender.is_owner is False):
+					sender.send('You must be the owner of the server.')
+					return
+
+				# You're not trying to do something you shouldn't be? Good.
 				function = self.commands[command]['command']
 				function(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
@@ -172,10 +186,6 @@ class Interface:
 	def command_mods(self, **kwargs):
 		""" Internal command to list installed mods. """
 		sender = kwargs['sender']
-		if (sender.is_owner is False):
-			sender.send('You are not the server owner.')
-			return
-
 		loaded = ''
 		for name, module in self.mods:
 			loaded += name + ', '
@@ -184,10 +194,6 @@ class Interface:
 	def command_load(self, **kwargs):
 		""" Internal command to load mods. """
 		sender = kwargs['sender']
-		if (sender.is_owner is False):
-			sender.send('You are not the server owner.')
-			return
-
 		input = kwargs['input'].lower()
 		for name, module in self.mods:
 			if (input == name):

@@ -229,6 +229,9 @@ class Modification:
 			sender.send('Command listing: ')
 			out = ''
 			for command in self.interface.commands:
+				privilege = self.interface.commands[command]['privilege']
+				if ((privilege == 1 and sender.is_admin is False) or (privilege == 2 and sender.is_sadmin is False) or (privilege == 3 and sender.is_owner is False)):
+					continue
 				out += command + ', '
 			# Cheap trick to strip off the last comma (and space) but eh!
 			sender.send(out[:len(out)-2]) 
@@ -245,10 +248,6 @@ class Modification:
 
 	def command_froguser(self, **kwargs):
 		sender = kwargs['sender']
-		if (sender.is_sadmin is False):
-			sender.send('You are not magical enough.')
-			return
-
 		args = kwargs['arguments']
 		if (len(args) < 1):
 			sender.send('Usage: frog <name>')
@@ -274,10 +273,6 @@ class Modification:
 
 	def command_adduser(self, **kwargs):
 		sender = kwargs['sender']
-		if (sender.is_sadmin is False):
-			sender.send('You are not magical enough.')
-			return
-
 		args = kwargs['arguments']
 		if (len(args) < 2):
 			sender.send('Usage: adduser <name> <password>')
@@ -291,16 +286,12 @@ class Modification:
 			return
 
 		# TODO: Make this take server prefs into consideration, and also let this have a default location ...
-		player = self.world.create_player(name, password, work_factor, sender.location)
+		player = self.world.create_player(name, password, self.work_factor, sender.location)
 		sender.send('User "' + name + '" created.')
 		self.post_user_create.send(None, creator=sender, created=player)
 
 	def command_admin(self, **kwargs):
 		sender = kwargs['sender']
-		if (sender.is_admin is False):
-			sender.send('You are not magical enough.')
-			return
-
 		args = kwargs['arguments']
 		if (len(args) < 1):
 			sender.send('Usage: admin <name>')
@@ -331,10 +322,6 @@ class Modification:
 
 	def command_sadmin(self, **kwargs):
 		sender = kwargs['sender']
-		if (sender.is_sadmin is False):
-			sender.send('You are not magical enough.')
-			return
-
 		args = kwargs['arguments']
 		if (len(args) < 1):
 			sender.send('Usage: sadmin <name>')
@@ -399,7 +386,8 @@ class Modification:
 				'command': self.command_say,
 				'description': 'Makes you say something. Only visible to the current room you\'re in.',
 				'usage': 'say <arbitrary text> | "<arbitrary text>',
-				'aliases': [ 'speak' ]
+				'aliases': [ 'speak' ],
+				'privilege': 0
 			},
 
 			'pose': 
@@ -407,7 +395,8 @@ class Modification:
 				'command': self.command_pose,
 				'description': 'Used to show arbitrary action. Only visible to the current room you\'re in.',
 				'usage': 'pose <arbitrary pose> | :<arbitrary pose>',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 0
 			},
 
 			'look': 
@@ -415,7 +404,8 @@ class Modification:
 				'command': self.command_look,
 				'description': 'Get your bearings. Look around in the local area to see what you can see.',
 				'usage': 'look [room name | item name | player name]',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 0
 			},
 		
 			'move':
@@ -423,7 +413,8 @@ class Modification:
 				'command': self.command_move,
 				'description': 'Moves to a new location.',
 				'usage': 'move <exit name>',
-				'aliases': [ 'go' ]
+				'aliases': [ 'go' ],
+				'privilege': 0
 			},
 
 			'inventory':
@@ -431,7 +422,8 @@ class Modification:
 				'command': self.command_inventory,
 				'description': 'View your inventory.',
 				'usage': 'inventory',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 0
 			},
 
 			'take':
@@ -439,7 +431,8 @@ class Modification:
 				'command': self.command_take,
 				'description': 'Take an item from the current room.',
 				'usage': 'take <item>',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 0
 			},
 
 			'passwd':
@@ -447,7 +440,8 @@ class Modification:
 				'command': self.command_passwd,
 				'description': 'Changes your password.',
 				'usage': 'passwd <new password>',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 0
 			},
 
 			'drop':
@@ -455,7 +449,8 @@ class Modification:
 				'command': self.command_drop,
 				'description': 'Drops an item from your inventory.',
 				'usage': 'drop <item name>',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 0
 			},
 
 			'help':
@@ -463,7 +458,8 @@ class Modification:
 				'command': self.command_help,
 				'description': 'Displays the help text.',
 				'usage': 'help [command name]',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 0
 			},
 
 			'quit':
@@ -471,7 +467,8 @@ class Modification:
 				'command': self.command_quit,
 				'description': 'Drops your connection from the server.',
 				'usage': 'quit',
-				'aliases': [ 'leave' ]
+				'aliases': [ 'leave' ],
+				'privilege': 0
 			},
 
 			'frog':
@@ -479,7 +476,8 @@ class Modification:
 				'command': self.command_froguser,
 				'description': 'Super Admin only: Deletes a user from the world -- making them an item in your inventory to with as you please.',
 				'usage': 'frog <player name>',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 2
 			},
 
 			'adduser':
@@ -487,7 +485,8 @@ class Modification:
 				'command': self.command_adduser,
 				'description': 'Creates a new player in the world.',
 				'usage': 'adduser <name> <password>',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 2
 			},
 
 			'admin':
@@ -495,7 +494,8 @@ class Modification:
 				'command': self.command_admin,
 				'description': 'Admin only: Toggles the admin status of a specified player.',
 				'usage': 'admin <name>',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 1
 			},
 
 			'sadmin':
@@ -503,7 +503,8 @@ class Modification:
 				'command': self.command_sadmin,
 				'description': 'Super Admin only: Toggles the super admin status of a specified player.',
 				'usage': 'sadmin <name>',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 2
 			},
 
 			'chown':
@@ -511,7 +512,8 @@ class Modification:
 				'command': self.command_chown,
 				'description': 'Transfers ownership of an item in your inventory or in the room to a specified player providied you are the original owner.',
 				'usage': 'chown <item name> <new owner name>',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 0
 			},
 
 			'ping':
@@ -519,7 +521,8 @@ class Modification:
 				'command': self.command_ping,
 				'description': 'Ping-Pong.',
 				'usage': 'ping',
-				'aliases': [ ]
+				'aliases': [ ],
+				'privilege': 0
 			}
 		}
 		return command_dict
