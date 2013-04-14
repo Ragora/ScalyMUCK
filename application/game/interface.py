@@ -96,15 +96,14 @@ class Interface:
 	"""
 	def load_mod(self, name=None):
 		name = name.lower()
-		for mod_name, module in self.mods:
+		for index, group in enumerate(self.mods):
+			mod_name, module = group
 			if (mod_name == name):
 				reload(module)
-				commands = module.get_commands()
+				modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session)
+				commands = modification.get_commands()
 				self.commands.update(commands)
-				module.world = self.world
-				module.interface = self
-				module.session = self.connection
-				module.initialize(self.config)
+				self.mods[index] = (mod_name, module, modification)
 				return
 
 		try:
@@ -115,13 +114,10 @@ class Interface:
 			if (self.config is not None):
 				self.config.load(self.workdir + '/config/' + name + '.cfg')
 
-			module.world = self.world
-			module.interface = self
-			module.session = self.session
-			module.initialize(self.config)
-			self.mods.append((name, module))
+			modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session)
+			self.mods.append((name, (name, module, modification)))
 
-			commands = module.get_commands()
+			commands = modification.get_commands()
 			self.commands.update(commands)
 
 	""" Called internally by the ScalyMUCK server.
