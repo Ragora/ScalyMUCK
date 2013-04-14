@@ -22,4 +22,4 @@ description = 'This modification implements various normal MU* commands into Sca
 copyright = 'Copyright (c) 2013 Liukcairo'
 author = 'Liukcairo'
 
-from scommands import initialize, get_commands
+from scommands import Modification
