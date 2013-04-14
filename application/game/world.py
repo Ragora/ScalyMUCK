@@ -196,7 +196,6 @@ class World():
 					self.cached_rooms.append(target_player.location)
 				else:
 					target_player.location = self.find_room(id=target_player.location_id)
-
 				if (self.room_loaded(target_player.inventory_id) is False):
 					target_player.inventory = self.session.query(Room).filter_by(id=target_player.inventory_id).first()
 					self.cached_rooms.append(target_player.inventory)
