@@ -146,7 +146,7 @@ class Server(daemon.Daemon):
 		
 		for connection in self.pending_connection_list:
 			if (connection.cmd_ready is True):
-				data = connection.get_command()
+				data = "".join(filter(lambda x: ord(x)<128, connection.get_command()))
 				command_data = string.split(data, ' ')
 
 				# Try and perform the authentification process
@@ -195,8 +195,8 @@ class Server(daemon.Daemon):
 
 		# With already connected clients, we'll now deploy the command interface.
 		for connection in self.established_connection_list:
-			input = connection.get_command()
-			if (input is not None):
+			if (connection.cmd_ready):
+				input = "".join(filter(lambda x: ord(x)<128, connection.get_command()))
 				self.interface.parse_command(sender=connection.player, input=input)
 
 		self.world_tick.send(None)
