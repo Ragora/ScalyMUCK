@@ -29,6 +29,8 @@ import bcrypt
 
 import exception
 
+server = None
+world = None
 Base = declarative_base()
 
 class Exit(Base):
@@ -42,7 +44,10 @@ class Exit(Base):
 	__tablename__ = 'exits'
 
 	id = Column(Integer, primary_key=True)
-	name = Column(String(200))
+	name = Column(String(25))
+	description = Column(String(2000))
+	user_message = Column(String(100))
+	room_message = Column(String(100))
 	target_id = Column(Integer, ForeignKey('rooms.id'))
 	owner_id = Column(Integer, ForeignKey('players.id'))
 
@@ -91,8 +96,8 @@ class Exit(Base):
 		"""
 		self.name = name
 		if (commit is True):
-			self.world.session.add(self)
-			self.world.session.commit()
+			world.session.add(self)
+			world.session.commit()
 		
 class Player(Base):
 	""" 
@@ -105,11 +110,10 @@ class Player(Base):
 	__tablename__ = 'players'
 	
 	id = Column(Integer, primary_key=True)
-	name = Column(String(200))
-	display_name = Column(String(200))
+	name = Column(String(25))
+	display_name = Column(String(25))
 	description = Column(String(200))
-	hash = Column(String(200))
-	work_factor = Column(Integer)
+	hash = Column(String(128))
 	
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 	location = None
@@ -121,6 +125,8 @@ class Player(Base):
 
 	connection = None
 	world = None
+	server = None
+	interface = None
 
 	def __init__(self, name=None, password=None, workfactor=None, location=None, inventory=None, description='<Unset>', admin=False, sadmin=False, owner=False):
 		""" Initializes an instance of the Player model.
@@ -172,6 +178,9 @@ class Player(Base):
 		is simply dropped.
 
 		"""
+		if (self.connection is None):
+			self.connection = server.find_connection(self.id)
+
 		if (self.connection is not None):
 			self.connection.send(message + '\n')
 			return True
@@ -196,11 +205,10 @@ class Player(Base):
 			if (commit): self.commit()
 			return
 		elif (type(location) is int):
-			location = self.world.session.query(Room).filter_by(id=location).first()
+			location = world.session.query(Room).filter_by(id=location).first()
 			if (location is not None):
 				self.set_location(location, commit=commit)
 			return
-		return
 
 	def set_name(self, name, commit=True):
 		""" Sets the name of this Player.
@@ -215,7 +223,7 @@ class Player(Base):
 		"""
 		self.name = string.lower(name)
 		self.display_name = name
-		if (commit): self.commit()
+		if (commit is True): self.commit()
 
 	def set_password(self, password, commit=True):
 		""" Sets the password of this Player.
@@ -229,11 +237,8 @@ class Player(Base):
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
-		if (self.world is None):
-			return
-
-		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(self.work_factor))
-		if (commit): self.commit()
+		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(server.work_factor))
+		if (commit is True): self.commit()
 
 	def delete(self):
 		""" Deletes the Player from the world and terminates their connection.
@@ -245,7 +250,6 @@ class Player(Base):
 
 		"""
 		self.disconnect()
-		self.world.cached_players.remove(self)
 		self.world.session.delete(self)
 		self.world.session.commit()
 
@@ -322,8 +326,8 @@ class Player(Base):
 
 	def commit(self):
 		""" Commits any changes left in RAM to the database. """
-		self.world.session.add(self)
-		self.world.session.commit()
+		world.session.add(self)
+		world.session.commit()
 
 class Bot(Base):
 	"""
@@ -334,12 +338,11 @@ class Bot(Base):
 	hash. 
 
 	"""
-
 	__tablename__ = 'bots'
 
 	id = Column(Integer, primary_key=True)
-	name = Column(String(200))
-	display_name = Column(String(200))
+	name = Column(String(25))
+	display_name = Column(String(25))
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self):
@@ -365,9 +368,9 @@ class Item(Base):
 	__tablename__ = 'items'
 	
 	id = Column(Integer, primary_key=True)
-	name = Column(String(200))
+	name = Column(String(25))
 	owner_id = Column(Integer, ForeignKey('players.id'))
-	description = Column(String(200))
+	description = Column(String(2000))
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
 	def __init__(self, name=None, description='<Unset>', owner=0):
@@ -411,8 +414,8 @@ class Item(Base):
 
 		self.name = name
 		if (commit):
-			self.world.session.add(self)
-			self.world.session.commit()
+			world.session.add(self)
+			world.session.commit()
 
 	def set_location(self, location, commit=True):
 		""" Sets the location of the calling item of this function.
@@ -429,10 +432,10 @@ class Item(Base):
 			self.location = location
 			self.location_id = location.id
 			if (commit):
-				self.world.session.add(self)
-				self.world.session.commit()
+				world.session.add(self)
+				world.session.commit()
 		elif (type(location) is int):
-			location = self.world.session.query(Room).filter_by(id=location).first()
+			location = world.session.query(Room).filter_by(id=location).first()
 			if (location is not None):
 				self.set_location(location, commit=commit)
 
@@ -446,8 +449,8 @@ class Room(Base):
 	__tablename__ = 'rooms'
 	id = Column(Integer, primary_key=True)
 
-	name = Column(String(200))
-	description = Column(String(200))
+	name = Column(String(25))
+	description = Column(String(2000))
 	items = relationship('Item')
 	players = relationship('Player')
 	bots = relationship('Bot')
@@ -493,6 +496,7 @@ class Room(Base):
 			name -- The name of the exit that should be used.
 			target -- The ID or instance of a Room that this exit should be linking to.
 			owner -- The ID or instance of a Player that should become the owner of this Exit.
+
 		"""
 		if (name is None):
 			raise exception.ModelArgumentError('The name was not specified. (or it was None)')
@@ -500,15 +504,15 @@ class Room(Base):
 			raise exception.ModelArgumentError('The target room was not specified. (or it was None)')
 
 		if (type(target) is int):
-			target = self.world.find_room(id=target)
+			target = world.find_room(id=target)
 			if (target is not None):
 				self.add_exit(name, target)
 		elif (type(target) is Room):
 			exit = Exit(name, target, owner)
 			self.exits.append(exit)
-			self.world.session.add(self)
-			self.world.session.add(exit)
-			self.world.session.commit()
+			world.session.add(self)
+			world.session.add(exit)
+			world.session.commit()
 
 	def set_name(self, name, commit=True):
 		""" Sets the name of this Room.
@@ -518,6 +522,7 @@ class Room(Base):
 		Keyword arguments:
 			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
 			by any previous function calls thay may have set this to false. Default: True
+
 		"""
 		self.name = name
 		if (commit): self.commit()
@@ -529,6 +534,7 @@ class Room(Base):
 		some_room.broadcast('Dragons are best!', that_guy, this_guy, other_guy)
 
 		The exceptions may be an ID or an instance.
+
 		"""
 		for player in self.players:
 			if (player not in exceptions and player.id not in exceptions):
@@ -536,8 +542,8 @@ class Room(Base):
 
 	def commit(self):
 		""" Commits any changes left in RAM to the database."""
-		self.world.session.add(self)
-		self.world.session.commit()
+		world.session.add(self)
+		world.session.commit()
 
 	def find_player(self, id=None, name=None):
 		""" Locates a Player located in the calling instance of Room.
@@ -550,19 +556,19 @@ class Room(Base):
 			id -- The identification number of the Player to locate inside of this room. This overrides the name if
 			both are specified.
 			name -- The name of the Player to locate.
+
 		"""
 		if (id is None and name is None):
 			raise exception.ModelArgumentError('No arguments specified (or were None)')
 
 		if (id is not None):
-			return self.world.find_player(id=id)
+			player = world.find_player(id=id)
 		elif (name is not None):
 			name = string.lower(name)
-			for player in self.players:
-				if (name in player.name):
-					return player
-		else:
-			return None
+			for test_player in self.players:
+				if (name in test_player.name):
+					player = test_player
+		return player
 
 	def find_item(self, id=None, name=None):
 		""" Locates an Item located in the calling instance of Room.
@@ -575,17 +581,17 @@ class Room(Base):
 			id -- The identification number of the Item to locate inside of this room. This overrides the name if
 			both are specified.
 			name -- The name of the Item to locate.
+
 		"""
 		if (id is None and name is None):
 			raise exception.ModelArgumentError('No arguments specified (or were None)')
 
 		if (id is not None):
-			return self.world.find_item(id=id)
+			item = world.find_item(id=id)
 		elif (name is not None):
 			name = string.lower(name)
-			for item in self.items:
-				if (name in item.name):
-					return item
-		else:
-			return None
-		
+			for test_item in self.items:
+				if (name in test_item.name):
+					item = test_item
+					break
+		return item
