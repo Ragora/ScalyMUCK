@@ -12,6 +12,7 @@
 import string
 import logging
 import importlib
+import inspect
 
 from blinker import signal
 
@@ -69,12 +70,21 @@ class Interface:
 		self.commands['mods']['description'] = 'Lists all loaded mods.'
 		self.commands['mods']['usage'] = 'mods'
 		self.commands['mods']['privilege'] = 3
+		self.commands['mods']['modification'] = '<CORE>'
 
 		self.commands['load'] = { }
 		self.commands['load']['command'] = self.command_load
 		self.commands['load']['description'] = 'Loads the specified mod.'
 		self.commands['load']['usage'] = 'load <name>'
 		self.commands['load']['privilege'] = 3
+		self.commands['load']['modification'] = '<CORE>'
+
+		self.commands['unload'] = { }
+		self.commands['unload']['command'] = self.command_unload
+		self.commands['unload']['description'] = 'Unloads the specified mod.'
+		self.commands['unload']['usage'] = 'unload <name>'
+		self.commands['unload']['privilege'] = 3
+		self.commands['unload']['modification'] = '<CORE>'
 
 		# Iterate through our loaded mods and actually load them
 		mods = string.split(config.get_index('LoadedMods', str), ';')
@@ -102,11 +112,18 @@ class Interface:
 		"""
 		name = name.lower()
 		for index, group in enumerate(self.mods):
-			mod_name, module = group
+			mod_name, module, mod_instance = group
 			if (mod_name == name):
-				reload(module)
+				# Reload the mod in all of its entirety
+				modules = inspect.getmembers(module, inspect.ismodule)
+				for name, sub_module in modules:
+					reload(sub_module)
+				module = reload(module)
+
 				modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session)
 				commands = modification.get_commands()
+				for command in commands:
+					commands[command]['modification'] = mod_name
 				self.commands.update(commands)
 				self.mods[index] = (mod_name, module, modification)
 				return
@@ -120,9 +137,11 @@ class Interface:
 				self.config.load(self.workdir + '/config/' + name + '.cfg')
 
 			modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session)
-			self.mods.append((name, (name, module, modification)))
+			self.mods.append((name, module, modification))
 
 			commands = modification.get_commands()
+			for command in commands:
+				commands[command]['modification'] = name
 			self.commands.update(commands)
 
 	def parse_command(self, sender=None, input=None):
@@ -166,15 +185,18 @@ class Interface:
 				function(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
 				line_one = 'An error has occurred while executing the command: ' + command
-				line_two = 'Error Condition: '
-				line_three = str(e)
+				line_two = 'From modification: ' + self.commands[command]['modification']
+				line_three = 'Error Condition: '
+				line_four = str(e)
 
 				self.logger.error(line_one)
 				self.logger.error(line_two)
 				self.logger.error(line_three)
+				self.logger.error(line_four)
 				sender.send(line_one)
 				sender.send(line_two)
 				sender.send(line_three)
+				sender.send(line_four)
 				sender.send('Please report this incident to your server administrator immediately.')
 
 		elif (intercept_input is False and command != ''):
@@ -186,18 +208,35 @@ class Interface:
 		""" Internal command to list installed mods. """
 		sender = kwargs['sender']
 		loaded = ''
-		for name, module in self.mods:
-			loaded += name + ', '
+		for group in self.mods:
+			mod_name, module, mod_instance = group
+			loaded += mod_name + ', '
 		sender.send(loaded.rstrip(', '))
 
 	def command_load(self, **kwargs):
 		""" Internal command to load mods. """
 		sender = kwargs['sender']
 		input = kwargs['input'].lower()
-		for name, module in self.mods:
-			if (input == name):
+		for group in self.mods:
+			mod_name, module, mod_instance = group
+			if (input == mod_name):
 				self.load_mod(input)
 				sender.send('Mod "' + input + '" reloaded.')
 				return
 		self.load_mod(input)
 		sender.send('Attempted to load mod "' + input + '".')
+
+	def command_unload(self, **kwargs):
+		""" Internal command to unload mods. """
+		sender = kwargs['sender']
+		input = kwargs['input'].lower()
+		for index, group in enumerate(self.mods):
+			mod_name, module, mod_instance = group
+			if (input == mod_name):
+				self.mods.pop(index)
+				commands = mod_instance.get_commands()
+				for command in commands:
+					self.commands.pop(command)
+				sender.send('Mod "' + input + '" unloaded.')
+				return
+		sender.send('Unknown mod.')
