@@ -14,7 +14,7 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
 
-from models import Room, Player, Item
+from models import Room, Player, Item, Bot
 import exception
 
 class World():
@@ -84,7 +84,7 @@ class World():
 			raise exception.WorldArgumentError('All of the arguments to create_player are mandatory! (or None was passed in)')
 
 		if (type(location) is int):
-			self.find_room(id=location)
+			location = self.find_room(id=location)
 
 		player_inventory = self.create_room(name + "'s Inventory")				
 		player = Player(name, password, workfactor, location.id, 0, admin=admin, sadmin=sadmin, owner=owner)
@@ -103,6 +103,31 @@ class World():
 		player.location = location
 		player.inventory = player_inventory
 		return player
+
+	def create_bot(self, name=None, location=None):
+		""" Creates a new instance of a Bot.
+
+		Keyword arguments:
+			name -- The name of the new Player instance to be used.
+			location -- The ID or instance of Room that the new Player is to be created at.
+
+		"""
+		if (name is None or location is None):
+			raise exception.WorldArgumentError('All of the arguments to create_bot are mandatory! (or None was passed in)')
+
+		if (type(location) is int):
+			location = self.find_room(id=location)
+			
+		bot = bot(name, '<Unset>', location)
+		self.session.add(bot)
+		location.bots.append(bot)
+		self.session.add(location)
+		self.session.commit()
+
+		self.session.refresh(bot)
+		
+		bot.location = location
+		return bot
 
 	def find_player(self,id=None,name=None):
 		""" Locates a Player inside of the ScalyMUCK world.
@@ -129,6 +154,28 @@ class World():
 			target_player.inventory = self.find_room(id=target_player.inventory_id)
 
 		return target_player
+
+	def find_bot(self,id=None):
+		""" Locates a Bot inside of the ScalyMUCK world.
+
+		This searches the entire WORLD for the specified Bot so if you happen to be running a very, very
+		large world this search will end up getting slow and it is recommended in that case that you try and
+		use the Room level find_player function whenever possible.
+
+		Keyword arguments (one or the other):
+			id -- The ID of the Bot to locate. This overrides the name if both are specified.
+		
+		"""
+		if (id is None):
+			raise exception.WorldArgumentError('No id or name specified. (or both were None)')
+
+		if (id is not None):
+			target_bot = self.session.query(Bot).filter_by(id=id).first()
+
+		if (target_bot is not None):
+			target_bot.location = self.find_room(id=target_bot.location_id)
+
+		return target_bot
 
 	def get_players(self):
 		""" Returns a list of all Players in the ScalyMUCK world. """
