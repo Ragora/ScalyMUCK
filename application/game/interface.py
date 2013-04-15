@@ -29,6 +29,7 @@ class Interface:
 	world = None
 	config = None
 	session = None
+	server = None
 	mods = [ ]
 	commands = { }
 	workdir = ''
@@ -36,29 +37,31 @@ class Interface:
 	pre_message = signal('pre_message_sent')
 	post_message = signal('post_message_sent')
 
-	""" Initializes an instance of the ScalyMUCK Client-Server interface class.
+	def __init__(self, config=None, world=None, workdir='', session=None, server=None):
+		""" Initializes an instance of the ScalyMUCK Client-Server interface class.
 
-	The interface class is created internallu by the ScalyMUCK server.
+		The interface class is created internallu by the ScalyMUCK server.
 
-	The server passes in an active instance of game.Settings and game.World
-	for the interface to talk to when loading mods as the configuration is 
-	used to load relevant config files for the mods and is passed in while
-	the instance of game.World is assigned to each module so that they may
-	access the game world.
+		The server passes in an active instance of game.Settings and game.World
+		for the interface to talk to when loading mods as the configuration is 
+		used to load relevant config files for the mods and is passed in while
+		the instance of game.World is assigned to each module so that they may
+		access the game world.
 
-	Keyword arguments:
-		config -- An instance of Settings that is to be used to load relevant configuration data.
-		world -- An instance of the World to pass over to every initialized modification.
-		workdir -- The current working directory of the application. This should be an absolute path to application/.
-		session -- A working session object that points to the active database.
+		Keyword arguments:
+			config -- An instance of Settings that is to be used to load relevant configuration data.
+			world -- An instance of the World to pass over to every initialized modification.
+			workdir -- The current working directory of the application. This should be an absolute path to application/.
+			session -- A working session object that points to the active database.
+			server -- The very instance of the ScalyMUCK server.
 
-	"""
-	def __init__(self, config=None, world=None, workdir='', session=None):
+		"""
 		self.logger = logging.getLogger('Mods')
 		self.world = world
 		self.workdir = workdir
 		self.config = config
 		self.session = session
+		self.server = server
 
 		# Implement the default commands.
 		self.commands['mods'] = { }
@@ -79,24 +82,24 @@ class Interface:
 			self.load_mod(name=mod)
 		return
 
-	""" Loads the specified modification from the "game" folder.
-
-	Modifications are loaded from the application/game folder of ScalyMUCK,
-	they are basically just normal Python modules that are imported and have
-	a special function call to load the commands. See the URL below for information:
-	http://dx.no-ip.org/doku/doku.php/projects:scalymuck:modapi:examplemod
-
-	The config argument is meant to be an instance of game.Settings so that the interface
-	can load the modification's configuration file and pass in the loading data to the mod's
-	initialize function.
-
-	Keyword arguments:
-		name -- The name of the mod to attempt to load.
-		config -- An instance of Settings that is to be used to load relevant configuration data.
-		connection -- A working connection object that points to the active database.
-
-	"""
 	def load_mod(self, name=None):
+		""" Loads the specified modification from the "game" folder.
+
+		Modifications are loaded from the application/game folder of ScalyMUCK,
+		they are basically just normal Python modules that are imported and have
+		a special function call to load the commands. See the URL below for information:
+		http://dx.no-ip.org/doku/doku.php/projects:scalymuck:modapi:examplemod
+
+		The config argument is meant to be an instance of game.Settings so that the interface
+		can load the modification's configuration file and pass in the loading data to the mod's
+		initialize function.
+
+		Keyword arguments:
+			name -- The name of the mod to attempt to load.
+			config -- An instance of Settings that is to be used to load relevant configuration data.
+			connection -- A working connection object that points to the active database.
+
+		"""
 		name = name.lower()
 		for index, group in enumerate(self.mods):
 			mod_name, module = group
@@ -122,19 +125,19 @@ class Interface:
 			commands = modification.get_commands()
 			self.commands.update(commands)
 
-	""" Called internally by the ScalyMUCK server.
-
-	When a user sends a string of data to the server for processing and have passed
-	the initial authentification stage, that string of data is passed in here by the
-	server for processing. This function is what actually performs the command lookups
-	in the loaded command database.
-
-	Keyword arguments:
-		sender -- The instance of Player that has trying to invoke a command.
-		input -- The text that the Player happened to send.
-
-	"""
 	def parse_command(self, sender=None, input=None):
+		""" Called internally by the ScalyMUCK server.
+
+		When a user sends a string of data to the server for processing and have passed
+		the initial authentification stage, that string of data is passed in here by the
+		server for processing. This function is what actually performs the command lookups
+		in the loaded command database.
+
+		Keyword arguments:
+			sender -- The instance of Player that has trying to invoke a command.
+			input -- The text that the Player happened to send.
+
+		"""
 		returns = self.pre_message.send(None, sender=sender, input=input)
 		intercept_input = False
 		for set in returns:
@@ -175,11 +178,7 @@ class Interface:
 				sender.send('Please report this incident to your server administrator immediately.')
 
 		elif (intercept_input is False and command != ''):
-			# This is done because apparently when in the terminal, you can send keycodes and blow up the server
-			try:
-				sender.send('I do not know what it is to "' + command + '".')
-			except UnicodeDecodeError as e:
-				sender.send('I do not know what it is to do that.')
+			sender.send('I do not know what it is to "' + command + '".')
 
 		self.post_message.send(None, sender=sender, input=input)
 
