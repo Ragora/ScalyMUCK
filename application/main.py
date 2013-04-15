@@ -20,84 +20,89 @@ from daemon import Daemon
 from server import Server
 from game import settings
 
-# NOTE: I hate using global but I need it so the async sighandle below can refer to the server object to perform a proper cleanup.
-global server
-server = None
+class Application:
+	""" Main application class. """
+	server = None
 
-def sighandle(signum, frame):
-	""" Used for asynchronous signal handling. """
-	print(' ')
-	print('Killing ScalyMUCK server...')
-	server.shutdown()	
-	logging.shutdown()
+	def sighandle(self, signum, frame):
+		""" Used for asynchronous signal handling. """
+		print(' ')
+		print('Killing ScalyMUCK server...')
+		self.server.shutdown()	
+		logging.shutdown()
 
-def server_main(workdir):
-	""" Called by main() or by the daemoniser code. """	
-	workdir += '/'
+	def __init__(self, workdir, is_daemon=False):
+		""" Called by main() or by the daemoniser code. """	
+		workdir += '/'
 
-	home_path = os.path.expanduser('~')
-	data_path = home_path + '/.scalyMUCK/'
+		home_path = os.path.expanduser('~')
+		data_path = home_path + '/.scalyMUCK/'
 
-	config = settings.Settings(workdir + 'config/settings_server.cfg')
+		config = settings.Settings(workdir + 'config/settings_server.cfg')
 	
-	# Prepare the logs
-	# NOTE: This code looks sucky, could it be improved to look better?
-	formatting = logging.Formatter('%(levelname)s (%(asctime)s): %(message)s', '%d/%m/%y at %I:%M:%S %p')
-	if (config.get_index(index='LogConnections', datatype=bool)):
-		logger = logging.getLogger('Connections')
-		logger.setLevel(logging.INFO)
+		# Prepare the logs
+		# NOTE: This code looks sucky, could it be improved to look better?
+		formatting = logging.Formatter('%(levelname)s (%(asctime)s): %(message)s', '%d/%m/%y at %I:%M:%S %p')
+		console_handle = logging.StreamHandler()
+		if (config.get_index(index='LogConnections', datatype=bool)):
+			logger = logging.getLogger('Connections')
+			logger.setLevel(logging.INFO)
 
-		handle = logging.FileHandler(data_path+'connection_log.txt')
-		handle.setLevel(logging.DEBUG)
+			file_handle = logging.FileHandler(data_path+'connection_log.txt')
+			file_handle.setLevel(logging.DEBUG)
+			file_handle.setFormatter(formatting)
 
-		handle.setFormatter(formatting)
-		logger.addHandler(handle)
-		logger.info('ScalyMUCK Server Server Start')
+			logger.info('ScalyMUCK Server Server Start')
+			logger.addHandler(file_handle)
+			if (is_daemon is False):
+				logger.addHandler(console_handle)
 
-	if (config.get_index(index='LogMods', datatype=bool)):
-		logger = logging.getLogger('Mods')
-		logger.setLevel(logging.INFO)
+		if (config.get_index(index='LogMods', datatype=bool)):
+			logger = logging.getLogger('Mods')
+			logger.setLevel(logging.INFO)
 
-		handle = logging.FileHandler(data_path+'mod_log.txt')
-		handle.setLevel(logging.INFO)
-		handle.setFormatter(formatting)
+			file_handle = logging.FileHandler(data_path+'mod_log.txt')
+			file_handle.setLevel(logging.INFO)
+			file_handle.setFormatter(formatting)
 
-		logger.addHandler(handle)
-		logger.info('ScalyMUCK Server Server Start')
+			logger.info('ScalyMUCK Server Server Start')
+			logger.addHandler(file_handle)
+			if (is_daemon is False):
+				logger.addHandler(console_handle)
 
-	if (config.get_index(index='LogServer', datatype=bool)):
-		logger = logging.getLogger('Server')
-		logger.setLevel(logging.INFO)
+		if (config.get_index(index='LogServer', datatype=bool)):
+			logger = logging.getLogger('Server')
+			logger.setLevel(logging.INFO)
 
-		handle = logging.FileHandler(data_path+'server_log.txt')
-		handle.setLevel(logging.INFO)
-		handle.setFormatter(formatting)
+			file_handle = logging.FileHandler(data_path+'server_log.txt')
+			file_handle.setLevel(logging.INFO)
+			file_handle.setFormatter(formatting)			
 
-		logger.addHandler(handle)
-		logger.info('ScalyMUCK Server Server Start')
+			logger.addHandler(file_handle)
+			if (is_daemon is False):
+				logger.addHandler(console_handle)
+			logger.info('ScalyMUCK Server Server Start')
 
-	global server
-	server = Server(config=config, path=data_path, workdir=workdir)
+		self.server = Server(config=config, path=data_path, workdir=workdir)
 
-	# Set the signals for asynchronous events
-	signal.signal(signal.SIGINT, sighandle)
-	signal.signal(signal.SIGTERM, sighandle)
+		# Set the signals for asynchronous events
+		signal.signal(signal.SIGINT, self.sighandle)
+		signal.signal(signal.SIGTERM, self.sighandle)
 
-	while (server.is_running):
-		server.update()
+		while (self.server.is_running):
+			self.server.update()
 
-	print(' ')
-	print('Killing ScalyMUCK server ...')
-	server.shutdown()	
-	logging.shutdown()
+		print(' ')
+		print('Killing ScalyMUCK server ...')
+		self.server.shutdown()	
+		logging.shutdown()
 
 class MUCKDaemon(Daemon):
 	""" Used for daemonising the code. """
 
 	def run(self, **kwargs):
 		""" Called by the Daemonizer code. """
-		server_main(kwargs['workdir'])
-		return
+		Application(kwargs['workdir'], is_daemon=True)
 
 def main():
 	""" Called in the 'init' if below. """
@@ -109,7 +114,7 @@ def main():
 			return
 
 	if (command is None):
-		server_main(os.getcwd())
+		Application(os.getcwd())
 	else:
 		daemon = MUCKDaemon('/tmp/scaly_muck_pid.pid')
                 if command == 'start':
