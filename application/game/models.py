@@ -203,12 +203,10 @@ class Player(Base):
 			self.location = location
 			self.location_id = location.id
 			if (commit): self.commit()
-			return
 		elif (type(location) is int):
 			location = world.session.query(Room).filter_by(id=location).first()
 			if (location is not None):
 				self.set_location(location, commit=commit)
-			return
 
 	def set_name(self, name, commit=True):
 		""" Sets the name of this Player.
@@ -553,7 +551,7 @@ class Room(Base):
 		"""
 		if (name is None):
 			raise exception.ModelArgumentError('The name was not specified. (or it was None)')
-		elif (target_room is None):
+		elif (target is None):
 			raise exception.ModelArgumentError('The target room was not specified. (or it was None)')
 
 		if (type(target) is int):
@@ -566,6 +564,19 @@ class Room(Base):
 			world.session.add(self)
 			world.session.add(exit)
 			world.session.commit()
+
+	def set_description(self, description, commit=True):
+		""" Sets the description of this Room.
+
+		Sets the description of the calling Room instance.
+
+		Keyword arguments:
+			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		self.description = description
+		if (commit): self.commit()
 
 	def set_name(self, name, commit=True):
 		""" Sets the name of this Room.
@@ -614,6 +625,7 @@ class Room(Base):
 		if (id is None and name is None):
 			raise exception.ModelArgumentError('No arguments specified (or were None)')
 
+		player = None
 		if (id is not None):
 			for test_player in self.players:
 				if (id == test_player.id):
@@ -672,6 +684,7 @@ class Room(Base):
 		if (id is None and name is None):
 			raise exception.ModelArgumentError('No arguments specified (or were None)')
 
+		item = None
 		if (id is not None):
 			for test_item in self.items:
 				if (test_item.id == id):

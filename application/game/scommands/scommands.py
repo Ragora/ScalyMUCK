@@ -148,7 +148,7 @@ class Modification:
 
 		for exit in sender.location.exits:
 			if (string.lower(exit.name) == string.lower(input)):
-				results = self.pre_exit_room.send(None, sender=sender, target=exit.target)
+				results = self.pre_exit_room.send(None, sender=sender, target=exit.target_id)
 				for result in results:
 					if (result[1] is True):
 						return
@@ -157,7 +157,7 @@ class Modification:
 				sender.location.broadcast(sender.display_name + ' exits the room.', sender)
 				sender.set_location(exit.target_id)
 				sender.location.broadcast(sender.display_name + ' enters the room.', sender)
-				self.command_look(sender=sender, world=kwargs['world'])
+				self.command_look(sender=sender, input='')
 				self.post_exit_room.send(None, sender=sender, target=sender.location)
 				return
 
