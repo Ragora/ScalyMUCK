@@ -36,7 +36,6 @@ class Server(daemon.Daemon):
 
 	"""
 	is_running = False
-	is_daemon = False
 	telnet_server = None
 	logger = None
 	connection_logger = None
@@ -110,7 +109,7 @@ class Server(daemon.Daemon):
 				return
 
 		self.world = world.World(database_engine)
-		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, session=self.world.session)
+		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, session=self.world.session, server=self)
 		game.models.Base.metadata.create_all(database_engine)
 	
 		# Check to see if our root user exists
@@ -132,6 +131,9 @@ class Server(daemon.Daemon):
 	
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
+
+		game.models.server = self
+		game.models.world = self.world
 	
 	def update(self):
 		""" The update command is called by the main.py script file.
@@ -146,7 +148,7 @@ class Server(daemon.Daemon):
 		
 		for connection in self.pending_connection_list:
 			if (connection.cmd_ready is True):
-				data = connection.get_command()
+				data = "".join(filter(lambda x: ord(x)<128, connection.get_command()))
 				command_data = string.split(data, ' ')
 
 				# Try and perform the authentification process
@@ -163,14 +165,13 @@ class Server(daemon.Daemon):
 						player_hash = target_player.hash
 						if (player_hash == bcrypt.hashpw(password, player_hash) == player_hash):
 							connection.id = target_player.id
-							connection.player = target_player
 							target_player.connection = connection
 
-							# Check to see if we need to update their hash
-							if (target_player.work_factor != self.work_factor):
-								target_player.work_factor = self.work_factor
+							# Check if our work factors differ
+							work_factor = int(player_hash.split('$')[2])
+							if (work_factor != self.work_factor):
 								target_player.set_password(password)
-								self.logger.warning(target_player.display_name + ' had their account hash updated.')
+								self.logger.info(target_player.display_name + ' had their hash updated.')
 
 							self.connection_logger.info('Client ' + connection.address + ':' + str(connection.port) + ' signed in as user ' + target_player.display_name + '.')
 							self.post_client_authenticated.send(None, sender=target_player)
@@ -180,9 +181,11 @@ class Server(daemon.Daemon):
 
 							for player in self.established_connection_list:
 								if (player.id == connection.id):
-									# Fixme: This message isn't dispatched as telnet_server.poll is not called before the player is deactivated
 									player.send('Your connection has been replaced.\n')
+									player.socket_send()
 									player.deactivate()
+									player.sock.close()
+									connection.send('You boot off an old connection.\n')
 									self.established_connection_list.remove(player)
 									break
 							self.pending_connection_list.remove(connection)	
@@ -195,9 +198,11 @@ class Server(daemon.Daemon):
 
 		# With already connected clients, we'll now deploy the command interface.
 		for connection in self.established_connection_list:
-			input = connection.get_command()
-			if (input is not None):
-				self.interface.parse_command(sender=connection.player, input=input)
+			if (connection.cmd_ready):
+				input = "".join(filter(lambda x: ord(x)<128, connection.get_command()))
+				sending_player = self.world.find_player(id=connection.id)
+				sending_player.connection = connection
+				self.interface.parse_command(sender=sending_player, input=input)
 
 		self.world_tick.send(None)
 
@@ -214,15 +219,21 @@ class Server(daemon.Daemon):
 			connection.send('The server has been shutdown adruptly by the server owner.\n')
 			connection.socket_send()
 
-	""" This is merely a callback for Miniboa to refer to when receiving a client connection from somewhere. """
+	def find_connection(self, id):
+		""" Finds a player connection by their database ID. """
+		for player in self.established_connection_list:
+			if (player.id == id):
+				return player
+
 	def on_client_connect(self, client):
+		""" This is merely a callback for Miniboa to refer to when receiving a client connection from somewhere. """
 		self.connection_logger.info('Received client connection from ' + client.address + ':' + str(client.port))
 		client.send(self.welcome_message_data)
 		self.pending_connection_list.append(client)
 		self.post_client_connect.send(sender=client)
 
-	""" This is merely a callback for Miniboa to refer to when receiving a client disconnection. """
 	def on_client_disconnect(self, client):
+		""" This is merely a callback for Miniboa to refer to when receiving a client disconnection. """
 		self.pre_client_disconnect.send(sender=client)
 		self.connection_logger.info('Received client disconnection from ' + client.address + ':' + str(client.port))
 		# Iterate over anyone who had connected but did not authenticate
@@ -230,8 +241,8 @@ class Server(daemon.Daemon):
 			self.pending_connection_list.remove(client)
 		# Otherwise run over the list of people who had authenticated
 		elif (client in self.established_connection_list):
-			for player in client.player.location.players:
-				if (player is not client.player):
-					player.send(client.player.display_name + ' has disconnected.')
+			player = self.world.find_player(id=client.id)
+			room = self.world.find_room(id=player.location_id)
+			room.broadcast(player.display_name + ' has disconnected.', player)
+
 			self.established_connection_list.remove(client)
-			client.player.connection = None
