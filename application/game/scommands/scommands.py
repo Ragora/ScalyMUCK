@@ -36,6 +36,7 @@ class Modification:
 	post_user_create = signal('post_user_create')
 	pre_exit_room = signal('pre_exit_room')
 	post_exit_room = signal('post_exit_room')
+	pre_show_description = signal('pre_show_description')
 
 	def __init__(self, **kwargs):
 		self.config = kwargs['config']
@@ -86,9 +87,15 @@ class Modification:
 
 		if (input != ''):
 			target = sender.location.find_player(name=input)
+			if (target is None):
+				target = sender.location.find_bot(name=input)
+			if (target is None):
+				target = sender.location.find_item(name=input)
+
 			if (target is not None):
 				name = target.display_name
-				target.send('++++++++ ' + sender.display_name + ' is looking at you!')
+				if (type(target) is models.Player):
+					target.send('++++++++ ' + sender.display_name + ' is looking at you!')
 			else:
 				target = sender.location.find_item(name=input)
 				if (target is not None):
@@ -110,14 +117,22 @@ class Modification:
 			sender.send('People: ')
 			for player in target.players:
 				sender.send('	' + player.display_name)
-			sender.send('Items: ')
 
+			sender.send('Bots: ')
+			if (len(target.bots) != 0):
+				for bot in target.bots:
+					sender.send('	' + bot.display_name)
+			else:
+				sender.send('	None')
+
+			sender.send('Items: ')
 			if (len(target.items) != 0):
 				for item in target.items:
 					sender.send('	' + item.name)
 			else:
 				sender.send('	None')
 
+		self.pre_show_description.send(None, sender=sender, target=target)
 		sender.send('Description:')
 		sender.send(target.description)
 

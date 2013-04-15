@@ -342,10 +342,11 @@ class Bot(Base):
 
 	id = Column(Integer, primary_key=True)
 	name = Column(String(25))
+	description = Column(String(2000))
 	display_name = Column(String(25))
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 
-	def __init__(self):
+	def __init__(self, name=None, description=None, location=None):
 		"""
 
 		The Bot is not constructed manually by any of the modifications, this should be
@@ -353,8 +354,60 @@ class Bot(Base):
 		to every modification. 
 
 		"""
+		self.name = name
+		self.description = description
+		self.display_name = name
+		self.name = name.lower()
 
-		return
+		if (type(location) is Room):
+			location = location.id
+		self.location_id = location
+
+	def send(self, message):
+		""" This is basically 'send' like for players except it does NOTHING. """
+
+	def set_location(self, location, commit=True):
+		""" Sets the current location of this Bot.
+	
+		This sets the location of the player object without any prior notification to the person
+		being moved nor anyone in the original room or the target room. That is the calling modification's
+		job to provide any relevant messages.
+
+		Keyword arguments:
+			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		if (type(location) is Room):
+			self.location = location
+			self.location_id = location.id
+			if (commit): self.commit()
+			return
+		elif (type(location) is int):
+			location = world.session.query(Room).filter_by(id=location).first()
+			if (location is not None):
+				self.set_location(location, commit=commit)
+			return
+
+	def set_name(self, name, commit=True):
+		""" Sets the name of this Bot.
+
+		This sets of the name of the Player in the database without any notification to either the Player
+		or anyone in the room with the Player.
+
+		Keyword arguments:
+			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		self.name = string.lower(name)
+		self.display_name = name
+		if (commit is True): self.commit()
+
+	def commit(self):
+		""" Commits any changes left in RAM to the database. """
+		world.session.add(self)
+		world.session.commit()
 
 class Item(Base):
 	""" Base item model that ScalyMUCK uses.
@@ -562,13 +615,46 @@ class Room(Base):
 			raise exception.ModelArgumentError('No arguments specified (or were None)')
 
 		if (id is not None):
-			player = world.find_player(id=id)
+			for test_player in self.players:
+				if (id == test_player.id):
+					player = test_player
+					break
 		elif (name is not None):
 			name = string.lower(name)
 			for test_player in self.players:
 				if (name in test_player.name):
 					player = test_player
+					break
 		return player
+
+	def find_bot(self, id=None, name=None):
+		""" Locates a Bot located in the calling instance of Room.
+		
+		This is a less computionally intensive version of the world's find_bot as there is going to be much less data
+		to be sorting through since you actually know where the Bot is located (otherwise you wouldn't be calling this!)
+		and all you need is the instance.
+
+		Keyword arguments (one or the other):
+			id -- The identification number of the Bot to locate inside of this room. This overrides the name if
+			both are specified.
+			name -- The name of the Bot to locate.
+
+		"""
+		if (id is None and name is None):
+			raise exception.ModelArgumentError('No arguments specified (or were None)')
+
+		if (id is not None):
+			for test_bot in self.bots:
+				if (id == test_bot.id):
+					bot = test_bot
+					break
+		elif (name is not None):
+			name = string.lower(name)
+			for test_bot in self.bots:
+				if (name in test_bot.name):
+					bot = test_bot
+					break
+		return bot
 
 	def find_item(self, id=None, name=None):
 		""" Locates an Item located in the calling instance of Room.
@@ -587,7 +673,10 @@ class Room(Base):
 			raise exception.ModelArgumentError('No arguments specified (or were None)')
 
 		if (id is not None):
-			item = world.find_item(id=id)
+			for test_item in self.items:
+				if (test_item.id == id):
+					item = test_item
+					break
 		elif (name is not None):
 			name = string.lower(name)
 			for test_item in self.items:
