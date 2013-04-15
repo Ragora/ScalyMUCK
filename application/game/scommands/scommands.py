@@ -237,8 +237,7 @@ class Modification:
 			sender.send(out[:len(out)-2]) 
 			return
 		else:
-			# TODO: Make this list the mod?
-			# sender.send('From: ' + interface.commands[input]['mod'])
+			sender.send('From: ' + self.interface.commands[input]['modification'])
 			sender.send('Usage: ' + self.interface.commands[input]['usage'])
 			sender.send(self.interface.commands[input]['description'])
 
