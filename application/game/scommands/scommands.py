@@ -91,10 +91,12 @@ class Modification:
 				target = sender.location.find_bot(name=input)
 			if (target is None):
 				target = sender.location.find_item(name=input)
+			if (target is not None):
+				target = sender.inventory.find_item(name=input)
 
 			if (target is not None):
 				name = target.display_name
-				if (type(target) is models.Player):
+				if (type(target) is game.models.Player):
 					target.send('++++++++ ' + sender.display_name + ' is looking at you!')
 			else:
 				target = sender.location.find_item(name=input)
@@ -187,18 +189,18 @@ class Modification:
 			sender.send('Usage: take <object name>')
 			return
 
-		for item in sender.location.items:
-			if (item.name == input):
-				results = self.pre_item_take.send(None, sender=sender, item=item)
-				for result in results:
-					if (result[1] is True):
-						return
+		item = sender.location.find_item(name=input)
+		if (item is not None):
+			results = self.pre_item_pickup.send(None, sender=sender, item=item)
+			for result in results:
+				if (result[1] is True):
+					return
 
-				sender.send('Taken.')
+			sender.send('Taken.')
 
-				item.set_location(sender.inventory)
-				self.post_item_take.send(None, sender=sender, item=item)
-				return
+			item.set_location(sender.inventory)
+			self.post_item_pickup.send(None, sender=sender, item=item)
+			return
 
 		sender.send('I do not see that.')
 
@@ -221,19 +223,19 @@ class Modification:
 			sender.send('Usage: drop <item name>')
 			return
 
-		for item in sender.inventory.items:
-			if (item.name == input):
-				results = self.pre_item_drop.send(sender=sender, item=item)
-				for result in results:
-					if (result[1] is True):
-						return
+		item = sender.inventory.find_item(name=input)
+		if (item is not None):
+			results = self.pre_item_drop.send(sender=sender, item=item)
+			for result in results:
+				if (result[1] is True):
+					return
 
-				sender.send('You dropped a/an ' + item.name + '.')
-				sender.location.broadcast(sender.display_name + ' drops a/an ' + item.name + '.', sender)
-				item.set_location(sender.location)
-				self.post_item_drop.send(sender=sender, item=item)
-				return
-		sender.send('I see no such item.')
+			sender.send('You dropped a/an ' + item.name + '.')
+			sender.location.broadcast(sender.display_name + ' drops a/an ' + item.name + '.', sender)
+			item.set_location(sender.location)
+			self.post_item_drop.send(sender=sender, item=item)
+		else:
+			sender.send('I see no such item.')
 
 	def command_help(self, **kwargs):
 		sender = kwargs['sender']
