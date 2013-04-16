@@ -37,8 +37,8 @@ class ObjectBase:
 	""" Base class for the inheritance of useful member functions that work accross all models. """
 	def delete(self):
 		""" Deletes the object from the world. """
-		self.world.session.delete(self)
-		self.world.session.commit()
+		world.session.delete(self)
+		world.session.commit()
 
 	def set_name(self, name, commit=True):
 		""" Sets the name of the object.
@@ -106,8 +106,8 @@ class ObjectBase:
 		if (type(self) is Player):
 			self.disconnect()
 
-		self.world.session.delete(self)
-		self.world.session.commit()
+		world.session.delete(self)
+		world.session.commit()
 
 class Exit(Base, ObjectBase):
 	""" 
@@ -122,8 +122,10 @@ class Exit(Base, ObjectBase):
 	id = Column(Integer, primary_key=True)
 	name = Column(String(25))
 	description = Column(String(2000))
-	user_use_message = Column(String(100))
-	room_use_message = Column(String(100))
+	user_enter_message = Column(String(100))
+	room_enter_message = Column(String(100))
+	user_exit_message = Column(String(100))
+	room_exit_message = Column(String(100))
 	target_id = Column(Integer)
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 	owner_id = Column(Integer, ForeignKey('players.id'))
@@ -156,8 +158,10 @@ class Exit(Base, ObjectBase):
 		else:
 			self.owner_id = owner.id
 
-		self.user_use_message = 'You move out.'
-		self.room_use_message = 'left.'
+		self.user_enter_message = 'You move out.'
+		self.room_enter_message = 'left.'
+		self.user_exit_message = 'You arrive in the next room.'
+		self.room_exit_message = 'arrived from another room.'
 		self.description = '<Unset>'
 
 	def __repr__(self):
@@ -629,6 +633,6 @@ class Room(Base, ObjectBase):
 			name = string.lower(name)
 			for test_exit in self.exits:
 				if (name in test_exit.name.lower()):
-					item = test_exit
+					exit = test_exit
 					break
 		return exit
