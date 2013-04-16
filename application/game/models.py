@@ -33,7 +33,83 @@ server = None
 world = None
 Base = declarative_base()
 
-class Exit(Base):
+class ObjectBase:
+	""" Base class for the inheritance of useful member functions that work accross all models. """
+	def delete(self):
+		""" Deletes the object from the world. """
+		self.world.session.delete(self)
+		self.world.session.commit()
+
+	def set_name(self, name, commit=True):
+		""" Sets the name of the object.
+
+		This sets the name of the object that is displayed and used to process requests towards it.
+
+		Keyword arguments:
+			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		self.name = name
+		if (type(self) is Player):
+			self.name = name.lower()
+			self.display_name = name
+
+		if (commit is True):
+			world.session.add(self)
+			world.session.commit()
+
+	def set_location(self, location, commit=True):
+		""" Sets the current location of this object.
+	
+		This sets the location of the object without any prior notification to the person
+		being moved (if it's a player) nor anyone in the original room or the target room. 
+		That is the calling modification's job to provide any relevant messages.
+
+		Keyword arguments:
+			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		if (type(self) is Room):
+			return
+
+		if (type(location) is Room):
+			self.location = location
+			self.location_id = location.id
+			if (commit): self.commit()
+		elif (type(location) is int):
+			location = world.session.query(Room).filter_by(id=location).first()
+			if (location is not None):
+				self.set_location(location, commit=commit)
+
+	def set_description(self, description, commit=True):
+		""" Sets the description of this object.
+
+		Sets the description of the calling object instance.
+
+		Keyword arguments:
+			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		self.description = description
+		if (commit): self.commit()
+
+	def commit(self):
+		""" Commits any changes left in RAM to the database. """
+		world.session.add(self)
+		world.session.commit()
+
+	def delete(self):
+		""" Deletes the object from the world. """
+		if (type(self) is Player):
+			self.disconnect()
+
+		self.world.session.delete(self)
+		self.world.session.commit()
+
+class Exit(Base, ObjectBase):
 	""" 
 
 	Exits are what the players use to exit and move into other rooms in the ScalyMUCK
@@ -46,9 +122,10 @@ class Exit(Base):
 	id = Column(Integer, primary_key=True)
 	name = Column(String(25))
 	description = Column(String(2000))
-	user_message = Column(String(100))
-	room_message = Column(String(100))
-	target_id = Column(Integer, ForeignKey('rooms.id'))
+	user_use_message = Column(String(100))
+	room_use_message = Column(String(100))
+	target_id = Column(Integer)
+	location_id = Column(Integer, ForeignKey('rooms.id'))
 	owner_id = Column(Integer, ForeignKey('players.id'))
 
 	def __init__(self, name, target=None, owner=0):
@@ -66,40 +143,28 @@ class Exit(Base):
 		if (target is None):
 			raise exception.ModelArgumentError('No target was specified. (or it was None)')
 
+		# Set the name
 		self.name=name
 		if (type(target) is int):
 			self.target_id = target
 		else:
 			self.target_id = target.id
 
+		# Set the owner
 		if (type(owner) is int):
 			self.owner_id = owner
 		else:
 			self.owner_id = owner.id
 
+		self.user_use_message = 'You move out.'
+		self.room_use_message = 'left.'
+		self.description = '<Unset>'
+
 	def __repr__(self):
 		""" Produces a representation of the exit, as to be expected. """
 		return "<Exit('%s','%u'>" % (self.name, self.target_id)
-
-	def set_name(self, name, commit=True):
-		""" Sets the name of the exit.
-
-		This sets the name of the exit that is both displayed to the user and used to process user 
-		requests in regard to exit objects. The commit parameter is used if you don't want to dump 
-		changes to the database yet; if you're changing multiple properties at once, it doesn't hit 
-		the database needlessly as often then.
-
-		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
-			by any previous function calls thay may have set this to false. Default: True
-
-		"""
-		self.name = name
-		if (commit is True):
-			world.session.add(self)
-			world.session.commit()
 		
-class Player(Base):
+class Player(Base, ObjectBase):
 	""" 
 
 	Players are well, the players that actually move and interact in the world. They
@@ -187,42 +252,6 @@ class Player(Base):
 		else:
 			return False
 
-	def set_location(self, location, commit=True):
-		""" Sets the current location of this Player.
-	
-		This sets the location of the player object without any prior notification to the person
-		being moved nor anyone in the original room or the target room. That is the calling modification's
-		job to provide any relevant messages.
-
-		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
-			by any previous function calls thay may have set this to false. Default: True
-
-		"""
-		if (type(location) is Room):
-			self.location = location
-			self.location_id = location.id
-			if (commit): self.commit()
-		elif (type(location) is int):
-			location = world.session.query(Room).filter_by(id=location).first()
-			if (location is not None):
-				self.set_location(location, commit=commit)
-
-	def set_name(self, name, commit=True):
-		""" Sets the name of this Player.
-
-		This sets of the name of the Player in the database without any notification to either the Player
-		or anyone in the room with the Player.
-
-		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
-			by any previous function calls thay may have set this to false. Default: True
-
-		"""
-		self.name = string.lower(name)
-		self.display_name = name
-		if (commit is True): self.commit()
-
 	def set_password(self, password, commit=True):
 		""" Sets the password of this Player.
 
@@ -237,19 +266,6 @@ class Player(Base):
 		"""
 		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(server.work_factor))
 		if (commit is True): self.commit()
-
-	def delete(self):
-		""" Deletes the Player from the world and terminates their connection.
-
-		This deletes the Player from the game world and drops their connection if there 
-		happens to be one established. As of now, the user's property will suddenly start
-		pointing to a bad owner or perhaps even someone else if SQLAlchemy assigns someone
-		their old ID. The changes are automatically committed once this action is performed.
-
-		"""
-		self.disconnect()
-		self.world.session.delete(self)
-		self.world.session.commit()
 
 	def disconnect(self):
 		""" Drops the Player's connection from the server.
@@ -322,12 +338,7 @@ class Player(Base):
 		else:
 			return False
 
-	def commit(self):
-		""" Commits any changes left in RAM to the database. """
-		world.session.add(self)
-		world.session.commit()
-
-class Bot(Base):
+class Bot(Base, ObjectBase):
 	"""
 
 	Bots are basically just the AI's of the game. They're not items, but they're not players
@@ -364,50 +375,7 @@ class Bot(Base):
 	def send(self, message):
 		""" This is basically 'send' like for players except it does NOTHING. """
 
-	def set_location(self, location, commit=True):
-		""" Sets the current location of this Bot.
-	
-		This sets the location of the player object without any prior notification to the person
-		being moved nor anyone in the original room or the target room. That is the calling modification's
-		job to provide any relevant messages.
-
-		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
-			by any previous function calls thay may have set this to false. Default: True
-
-		"""
-		if (type(location) is Room):
-			self.location = location
-			self.location_id = location.id
-			if (commit): self.commit()
-			return
-		elif (type(location) is int):
-			location = world.session.query(Room).filter_by(id=location).first()
-			if (location is not None):
-				self.set_location(location, commit=commit)
-			return
-
-	def set_name(self, name, commit=True):
-		""" Sets the name of this Bot.
-
-		This sets of the name of the Player in the database without any notification to either the Player
-		or anyone in the room with the Player.
-
-		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
-			by any previous function calls thay may have set this to false. Default: True
-
-		"""
-		self.name = string.lower(name)
-		self.display_name = name
-		if (commit is True): self.commit()
-
-	def commit(self):
-		""" Commits any changes left in RAM to the database. """
-		world.session.add(self)
-		world.session.commit()
-
-class Item(Base):
+class Item(Base, ObjectBase):
 	""" Base item model that ScalyMUCK uses.
 
 	Items are really a generic object in ScalyMUCK, they're not players nor rooms nor exits but
@@ -451,46 +419,7 @@ class Item(Base):
 		""" Produces a representation of the item, as to be expected. """
 		return "<Item('%s','%s')>" % (self.name, self.description)
 
-	def set_name(self, name, commit=True):
-		""" Sets the name of the calling item of this function.
-
-		Sets the name of this item that is both used in displaying to users and for processing
-		relevant requests in regards to this item instance. 
-
-		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
-			by any previous function calls thay may have set this to false. Default: True
-
-		"""
-
-		self.name = name
-		if (commit):
-			world.session.add(self)
-			world.session.commit()
-
-	def set_location(self, location, commit=True):
-		""" Sets the location of the calling item of this function.
-
-		Sets the location of the calling item in database unless the commit keyword argument 
-		is set to be False.
-
-		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
-			by any previous function calls thay may have set this to false. Default: True
-
-		"""
-		if (type(location) is Room):
-			self.location = location
-			self.location_id = location.id
-			if (commit):
-				world.session.add(self)
-				world.session.commit()
-		elif (type(location) is int):
-			location = world.session.query(Room).filter_by(id=location).first()
-			if (location is not None):
-				self.set_location(location, commit=commit)
-
-class Room(Base):
+class Room(Base, ObjectBase):
 	""" Base room model that ScalyMUCK uses.
 
 	Rooms are what make up the world inside of just about any MUCK really. Even if the rooms are not described as such, they still
@@ -565,32 +494,6 @@ class Room(Base):
 			world.session.add(exit)
 			world.session.commit()
 
-	def set_description(self, description, commit=True):
-		""" Sets the description of this Room.
-
-		Sets the description of the calling Room instance.
-
-		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
-			by any previous function calls thay may have set this to false. Default: True
-
-		"""
-		self.description = description
-		if (commit): self.commit()
-
-	def set_name(self, name, commit=True):
-		""" Sets the name of this Room.
-
-		Sets the name of the calling Room instance.
-
-		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
-			by any previous function calls thay may have set this to false. Default: True
-
-		"""
-		self.name = name
-		if (commit): self.commit()
-
 	def broadcast(self, message, *exceptions):
 		""" Broadcasts a message to all inhabitants of the Room except those specified.
 
@@ -603,11 +506,6 @@ class Room(Base):
 		for player in self.players:
 			if (player not in exceptions and player.id not in exceptions):
 				player.send(message)
-
-	def commit(self):
-		""" Commits any changes left in RAM to the database."""
-		world.session.add(self)
-		world.session.commit()
 
 	def find_player(self, id=None, name=None):
 		""" Locates a Player located in the calling instance of Room.
@@ -634,7 +532,7 @@ class Room(Base):
 		elif (name is not None):
 			name = string.lower(name)
 			for test_player in self.players:
-				if (name in test_player.name):
+				if (name in test_player.name.lower()):
 					player = test_player
 					break
 		return player
@@ -655,6 +553,7 @@ class Room(Base):
 		if (id is None and name is None):
 			raise exception.ModelArgumentError('No arguments specified (or were None)')
 
+		bot = None
 		if (id is not None):
 			for test_bot in self.bots:
 				if (id == test_bot.id):
@@ -663,10 +562,16 @@ class Room(Base):
 		elif (name is not None):
 			name = string.lower(name)
 			for test_bot in self.bots:
-				if (name in test_bot.name):
+				if (name in test_bot.name.lower()):
 					bot = test_bot
 					break
 		return bot
+
+	def get_exits(self):
+		""" Return a list of all exits. """
+		for exit in self.exits:
+			exit.location = self
+		return self.exits
 
 	def find_item(self, id=None, name=None):
 		""" Locates an Item located in the calling instance of Room.
@@ -693,7 +598,37 @@ class Room(Base):
 		elif (name is not None):
 			name = string.lower(name)
 			for test_item in self.items:
-				if (name in test_item.name):
+				if (name in test_item.name.lower()):
 					item = test_item
 					break
 		return item
+
+	def find_exit(self, id=None, name=None):
+		""" Locates an Item located in the calling instance of Room.
+		
+		This is a less computionally intensive version of the world's find_item as there is going to be much less data
+		to be sorting through since you actually know where the Item is located (otherwise you wouldn't be calling this!)
+		and all you need is the instance.
+
+		Keyword arguments (one or the other):
+			id -- The identification number of the Item to locate inside of this room. This overrides the name if
+			both are specified.
+			name -- The name of the Item to locate.
+
+		"""
+		if (id is None and name is None):
+			raise exception.ModelArgumentError('No arguments specified (or were None)')
+
+		exit = None
+		if (id is not None):
+			for test_exit in self.exits:
+				if (test_exit.id == id):
+					exit = test_exit
+					break
+		elif (name is not None):
+			name = string.lower(name)
+			for test_exit in self.exits:
+				if (name in test_exit.name.lower()):
+					item = test_exit
+					break
+		return exit

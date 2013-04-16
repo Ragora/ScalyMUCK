@@ -31,7 +31,6 @@ class World():
 		""" Initializes an instance of the World with an SQLAlchemy engine. """
 		self.engine = engine
 		self.session = scoped_session(sessionmaker(bind=self.engine))
-		return
 	      
 	def create_room(self, name, description='<Unset>', owner=0):
 		""" Creates a new Room if the World.
