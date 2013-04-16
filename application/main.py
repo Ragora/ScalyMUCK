@@ -36,9 +36,9 @@ class Application:
 		workdir += '/'
 
 		home_path = os.path.expanduser('~')
-		data_path = home_path + '/.scalyMUCK/'
+		data_path = '%s/.scalyMUCK/' % (home_path)
 
-		config = settings.Settings(workdir + 'config/settings_server.cfg')
+		config = settings.Settings('%sconfig/settings_server.cfg' % (workdir))
 	
 		# Prepare the logs
 		# NOTE: This code looks sucky, could it be improved to look better?
@@ -48,7 +48,7 @@ class Application:
 			logger = logging.getLogger('Connections')
 			logger.setLevel(logging.INFO)
 
-			file_handle = logging.FileHandler(data_path+'connection_log.txt')
+			file_handle = logging.FileHandler('%sconnection_log.txt' % (data_path))
 			file_handle.setLevel(logging.DEBUG)
 			file_handle.setFormatter(formatting)
 
@@ -61,7 +61,7 @@ class Application:
 			logger = logging.getLogger('Mods')
 			logger.setLevel(logging.INFO)
 
-			file_handle = logging.FileHandler(data_path+'mod_log.txt')
+			file_handle = logging.FileHandler('%smod_log.txt' % (data_path))
 			file_handle.setLevel(logging.INFO)
 			file_handle.setFormatter(formatting)
 
@@ -74,7 +74,7 @@ class Application:
 			logger = logging.getLogger('Server')
 			logger.setLevel(logging.INFO)
 
-			file_handle = logging.FileHandler(data_path+'server_log.txt')
+			file_handle = logging.FileHandler('%sserver_log.txt' % (data_path))
 			file_handle.setLevel(logging.INFO)
 			file_handle.setFormatter(formatting)			
 
@@ -110,7 +110,7 @@ def main():
 	if (len(sys.argv) == 2):
 		command = string.lower(sys.argv[1])
 		if (command != 'start' and command != 'stop' and command != 'restart'):
-			print('Usage: ' + sys.argv[0] + ' <start|stop|restart>')
+			print('Usage: %s <start|stop|restart>' % (sys.argv[0]))
 			return
 
 	if (command is None):
@@ -124,7 +124,7 @@ def main():
                 elif command == 'restart':
                         daemon.restart()
                 else:
-                        print('Usage: ' + sys.argv[0] + ' <start|stop|restart>')
+                        print('Usage: %s <start|stop|restart>' % (sys.argv[0]))
                         sys.exit(2)
                 sys.exit(0)
 
