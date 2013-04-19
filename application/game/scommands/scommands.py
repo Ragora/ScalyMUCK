@@ -88,7 +88,7 @@ class Modification:
 				target = sender.location.find_bot(name=input)
 			if (target is None):
 				target = sender.location.find_item(name=input)
-			if (target is not None):
+			if (target is None):
 				target = sender.inventory.find_item(name=input)
 
 			if (target is not None):
