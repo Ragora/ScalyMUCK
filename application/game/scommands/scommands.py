@@ -86,10 +86,6 @@ class Modification:
 			target = sender.location.find_player(name=input)
 			if (target is None):
 				target = sender.location.find_bot(name=input)
-			if (target is None):
-				target = sender.location.find_item(name=input)
-			if (target is not None):
-				target = sender.inventory.find_item(name=input)
 
 			if (target is not None):
 				name = target.display_name
@@ -97,6 +93,9 @@ class Modification:
 					target.send('++++++++ %s is looking at you!' % (sender.display_name))
 			else:
 				target = sender.location.find_item(name=input)
+				if (target is None):
+					target = sender.inventory.find_item(name=input)
+
 				if (target is not None):
 					name = target.name
 				else:
