@@ -96,7 +96,7 @@ class Server(daemon.Daemon):
 				self.logger.info('This appears to be your first time running the ScalyMUCK server. We must initialise your database ...')
 				database_exists = False
 
-			database_engine = create_engine('sqlite:////' + database_location, echo=False)
+			database_engine = create_engine('sqlite:////%s' % (database_location), echo=False)
 		else:
 			url = database_type + '://' + user + ':' + password + '@' + database_location + '/' + database
 			try:
@@ -171,13 +171,13 @@ class Server(daemon.Daemon):
 							work_factor = int(player_hash.split('$')[2])
 							if (work_factor != self.work_factor):
 								target_player.set_password(password)
-								self.logger.info(target_player.display_name + ' had their hash updated.')
+								self.logger.info('%s had their hash updated.' % (target_player.display_name))
 
-							self.connection_logger.info('Client ' + connection.address + ':' + str(connection.port) + ' signed in as user ' + target_player.display_name + '.')
+							self.connection_logger.info('Client %s:%u signed in as user %s.' % (connection.address, connection.port, target_player.display_name))
 							self.post_client_authenticated.send(None, sender=target_player)
 							for player in target_player.location.players:
 								if (player is not target_player):
-									player.send(target_player.display_name + ' has connected.')
+									player.send('%s has connected.' % (target_player.display_name))
 
 							for player in self.established_connection_list:
 								if (player.id == connection.id):
@@ -227,7 +227,7 @@ class Server(daemon.Daemon):
 
 	def on_client_connect(self, client):
 		""" This is merely a callback for Miniboa to refer to when receiving a client connection from somewhere. """
-		self.connection_logger.info('Received client connection from ' + client.address + ':' + str(client.port))
+		self.connection_logger.info('Received client connection from %s:%u' % (client.address, client.port))
 		client.send(self.welcome_message_data)
 		self.pending_connection_list.append(client)
 		self.post_client_connect.send(sender=client)
@@ -235,7 +235,7 @@ class Server(daemon.Daemon):
 	def on_client_disconnect(self, client):
 		""" This is merely a callback for Miniboa to refer to when receiving a client disconnection. """
 		self.pre_client_disconnect.send(sender=client)
-		self.connection_logger.info('Received client disconnection from ' + client.address + ':' + str(client.port))
+		self.connection_logger.info('Received client disconnection from %s:%u' % (client.address, client.port))
 		# Iterate over anyone who had connected but did not authenticate
 		if (client in self.pending_connection_list):
 			self.pending_connection_list.remove(client)
@@ -243,6 +243,6 @@ class Server(daemon.Daemon):
 		elif (client in self.established_connection_list):
 			player = self.world.find_player(id=client.id)
 			room = self.world.find_room(id=player.location_id)
-			room.broadcast(player.display_name + ' has disconnected.', player)
+			room.broadcast('%s has disconnected.' % (player.display_name), player)
 
 			self.established_connection_list.remove(client)

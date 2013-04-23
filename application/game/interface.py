@@ -129,12 +129,12 @@ class Interface:
 				return
 
 		try:
-			module = importlib.import_module('game.' + name)
+			module = importlib.import_module('game.%s' % (name))
 		except ImportError as e:
 			self.logger.warning(str(e))
 		else:
 			if (self.config is not None):
-				self.config.load(self.workdir + '/config/' + name + '.cfg')
+				self.config.load('%s/config/%s.cfg' % (self.workdir, name))
 
 			modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session)
 			self.mods.append((name, module, modification))
@@ -184,8 +184,8 @@ class Interface:
 				function = self.commands[command]['command']
 				function(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
-				line_one = 'An error has occurred while executing the command: ' + command
-				line_two = 'From modification: ' + self.commands[command]['modification']
+				line_one = 'An error has occurred while executing the command: %s' % (command)
+				line_two = 'From modification: %s' % (self.commands[command]['modification'])
 				line_three = 'Error Condition: '
 				line_four = str(e)
 
@@ -200,7 +200,7 @@ class Interface:
 				sender.send('Please report this incident to your server administrator immediately.')
 
 		elif (intercept_input is False and command != ''):
-			sender.send('I do not know what it is to "' + command + '".')
+			sender.send('I do not know what it is to "%s".' % (command))
 
 		self.post_message.send(None, sender=sender, input=input)
 
@@ -221,10 +221,10 @@ class Interface:
 			mod_name, module, mod_instance = group
 			if (input == mod_name):
 				self.load_mod(input)
-				sender.send('Mod "' + input + '" reloaded.')
+				sender.send('Mod "%s" reloaded.' % (input))
 				return
 		self.load_mod(input)
-		sender.send('Attempted to load mod "' + input + '".')
+		sender.send('Attempted to load mod "%s".' % (input))
 
 	def command_unload(self, **kwargs):
 		""" Internal command to unload mods. """
@@ -237,6 +237,6 @@ class Interface:
 				commands = mod_instance.get_commands()
 				for command in commands:
 					self.commands.pop(command)
-				sender.send('Mod "' + input + '" unloaded.')
+				sender.send('Mod "%s" unloaded.' % (input))
 				return
 		sender.send('Unknown mod.')

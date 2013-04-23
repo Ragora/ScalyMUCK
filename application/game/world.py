@@ -31,7 +31,6 @@ class World():
 		""" Initializes an instance of the World with an SQLAlchemy engine. """
 		self.engine = engine
 		self.session = scoped_session(sessionmaker(bind=self.engine))
-		return
 	      
 	def create_room(self, name, description='<Unset>', owner=0):
 		""" Creates a new Room if the World.
@@ -86,7 +85,7 @@ class World():
 		if (type(location) is int):
 			location = self.find_room(id=location)
 
-		player_inventory = self.create_room(name + "'s Inventory")				
+		player_inventory = self.create_room('%s\'s Inventory' % (name))				
 		player = Player(name, password, workfactor, location.id, 0, admin=admin, sadmin=sadmin, owner=owner)
 		player.inventory_id = player_inventory.id
 		self.session.add(player)
@@ -227,3 +226,13 @@ class World():
 		self.session.commit()
 		self.session.refresh(item)
 		return item
+
+	def get_rooms(self, **kwargs):
+		""" Returns all rooms in the database that meet the specified criterion.
+
+		Keyword arguments:
+			owner -- The owner we are to filter by. If not specified, this filter is not used.
+
+		"""
+		rooms = self.session.query(Room).filter_by(**kwargs)
+		return rooms
