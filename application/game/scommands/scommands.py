@@ -21,8 +21,6 @@ class Modification:
 	interface = None
 	session = None
 
-	work_factor = 10
-
 	pre_user_look = signal('pre_user_look')
 	post_user_look = signal('post_user_look')
 	pre_user_say = signal('pre_user_say')
@@ -46,7 +44,6 @@ class Modification:
 
 		signal('post_client_authenticated').connect(self.callback_client_authenticated)
 		signal('pre_message_sent').connect(self.callback_message_sent)
-		self.work_factor = self.config.get_index('WorkFactor', int)
 
 	# Commands
 	def command_say(self, **kwargs):
@@ -62,8 +59,8 @@ class Modification:
 			if (result[1] is True):
 				return
 
-		sender.location.broadcast(sender.display_name + ' says, "' + input + '"', sender)
-		sender.send('You say, "' + input + '"')
+		sender.location.broadcast('%s says, "%s"' % (sender.display_name, input), sender)
+		sender.send('You say, "%s"' % (input))
 		self.post_user_say.send(None, sender=sender, input=input)
 
 	def command_pose(self, **kwargs):
@@ -74,7 +71,7 @@ class Modification:
 			if (result[1] is True):
 				return
 
-		sender.location.broadcast(sender.display_name + ' ' + kwargs['input'])
+		sender.location.broadcast('%s %s' % (sender.display_name, kwargs['input']))
 		self.post_user_pose.send(None, sender=sender, input=input)
 
 	def command_look(self, **kwargs):
@@ -89,15 +86,16 @@ class Modification:
 			target = sender.location.find_player(name=input)
 			if (target is None):
 				target = sender.location.find_bot(name=input)
-			if (target is None):
-				target = sender.location.find_item(name=input)
 
 			if (target is not None):
 				name = target.display_name
-				if (type(target) is models.Player):
-					target.send('++++++++ ' + sender.display_name + ' is looking at you!')
+				if (type(target) is game.models.Player):
+					target.send('++++++++ %s is looking at you!' % (sender.display_name))
 			else:
 				target = sender.location.find_item(name=input)
+				if (target is None):
+					target = sender.inventory.find_item(name=input)
+
 				if (target is not None):
 					name = target.name
 				else:
@@ -110,25 +108,25 @@ class Modification:
 			sender.send('Obvious Exits: ')
 			if (len(target.exits) != 0):
 				for exit in target.exits:
-					sender.send('	' + exit.name)
+					sender.send('	%s' % (exit.name))
 			else:
 				sender.send('	None')
 
 			sender.send('People: ')
 			for player in target.players:
-				sender.send('	' + player.display_name)
+				sender.send('	%s' % (player.display_name))
 
 			sender.send('Bots: ')
 			if (len(target.bots) != 0):
 				for bot in target.bots:
-					sender.send('	' + bot.display_name)
+					sender.send('	%s' % (bot.display_name))
 			else:
 				sender.send('	None')
 
 			sender.send('Items: ')
 			if (len(target.items) != 0):
 				for item in target.items:
-					sender.send('	' + item.name)
+					sender.send('	%s' % (item.name))
 			else:
 				sender.send('	None')
 
@@ -146,22 +144,21 @@ class Modification:
 			sender.send('Usage: move <name of exit>')
 			return
 
-		for exit in sender.location.exits:
-			if (string.lower(exit.name) == string.lower(input)):
-				results = self.pre_exit_room.send(None, sender=sender, target=exit.target)
-				for result in results:
-					if (result[1] is True):
-						return
-
-				sender.send('You move out.')
-				sender.location.broadcast(sender.display_name + ' exits the room.', sender)
-				sender.set_location(exit.target_id)
-				sender.location.broadcast(sender.display_name + ' enters the room.', sender)
-				self.command_look(sender=sender, world=kwargs['world'])
-				self.post_exit_room.send(None, sender=sender, target=sender.location)
-				return
-
-		sender.send('I do not see that.')
+		exit = sender.location.find_exit(name=input)
+		if (exit is not None):
+			sender.send(exit.user_enter_message)
+			sender.location.broadcast('%s %s' % (sender.display_name, exit.room_enter_message), sender)
+			results = self.pre_exit_room.send(None, sender=sender, target=exit.target_id)
+			for result in results:
+				if (result[1] is True):
+					return
+			sender.set_location(exit.target_id)
+			sender.location.broadcast('%s %s' % (sender.display_name, exit.room_exit_message), sender)
+			sender.send(exit.user_exit_message)
+			self.command_look(sender=sender, input='')
+			self.post_exit_room.send(None, sender=sender, target=sender.location)
+		else:
+			sender.send('I do not see that.')
 
 	def command_inventory(self, **kwargs):
 		sender = kwargs['sender']
@@ -169,7 +166,7 @@ class Modification:
 		sender.send('Items:')
 		if (len(sender.inventory.items) != 0):
 			for item in sender.inventory.items:
-				sender.send('	' + item.name)
+				sender.send('	%s' % (item.name))
 		else:
 			sender.send('	None')
 
@@ -177,7 +174,7 @@ class Modification:
 		if (len(sender.inventory.players) != 0):
 			sender.send('People: ')
 			for player in sender.inventory.players:
-				sender.send('	' + player.display_name)
+				sender.send('	%s' % (player.display_name))
 
 	def command_take(self, **kwargs):
 		sender = kwargs['sender']
@@ -187,18 +184,18 @@ class Modification:
 			sender.send('Usage: take <object name>')
 			return
 
-		for item in sender.location.items:
-			if (item.name == input):
-				results = self.pre_item_take.send(None, sender=sender, item=item)
-				for result in results:
-					if (result[1] is True):
-						return
+		item = sender.location.find_item(name=input)
+		if (item is not None):
+			results = self.pre_item_pickup.send(None, sender=sender, item=item)
+			for result in results:
+				if (result[1] is True):
+					return
 
-				sender.send('Taken.')
+			sender.send('Taken.')
 
-				item.set_location(sender.inventory)
-				self.post_item_take.send(None, sender=sender, item=item)
-				return
+			item.set_location(sender.inventory)
+			self.post_item_pickup.send(None, sender=sender, item=item)
+			return
 
 		sender.send('I do not see that.')
 
@@ -221,19 +218,19 @@ class Modification:
 			sender.send('Usage: drop <item name>')
 			return
 
-		for item in sender.inventory.items:
-			if (item.name == input):
-				results = self.pre_item_drop.send(sender=sender, item=item)
-				for result in results:
-					if (result[1] is True):
-						return
+		item = sender.inventory.find_item(name=input)
+		if (item is not None):
+			results = self.pre_item_drop.send(sender=sender, item=item)
+			for result in results:
+				if (result[1] is True):
+					return
 
-				sender.send('You dropped a/an ' + item.name + '.')
-				sender.location.broadcast(sender.display_name + ' drops a/an ' + item.name + '.', sender)
-				item.set_location(sender.location)
-				self.post_item_drop.send(sender=sender, item=item)
-				return
-		sender.send('I see no such item.')
+			sender.send('You dropped a/an %s.' % (item.name ))
+			sender.location.broadcast('%s drops a/an %s.' % (sender.display_name, item.name) ,sender)
+			item.set_location(sender.location)
+			self.post_item_drop.send(sender=sender, item=item)
+		else:
+			sender.send('I see no such item.')
 
 	def command_help(self, **kwargs):
 		sender = kwargs['sender']
@@ -252,8 +249,8 @@ class Modification:
 			sender.send(out[:len(out)-2]) 
 			return
 		else:
-			sender.send('From: ' + self.interface.commands[input]['modification'])
-			sender.send('Usage: ' + self.interface.commands[input]['usage'])
+			sender.send('From: %s' % (self.interface.commands[input]['modification']))
+			sender.send('Usage: %s' % (self.interface.commands[input]['usage']))
 			sender.send(self.interface.commands[input]['description'])
 
 	def command_quit(self, **kwargs):
@@ -278,12 +275,12 @@ class Modification:
 				return
 
 			item = self.world.create_item(target.display_name, target.description, sender, sender.inventory)
-			sender.send('User "' + target.display_name + '" frogged. Check your inventory.')
-			target.send(sender.display_name + ' has turned you into a small plastic figurine, never to move again and discreetly places you in their inventory.')
-			sender.location.broadcast(sender.display_name + ' has turned ' + target.display_name + ' into a small plastic figurine, never to move again.', sender, target)
+			sender.send('User "%s" frogged. Check your inventory.' % (target.display_name))
+			target.send('%s has turned you into a small plastic figurine, never to move again and discreetly places you in their inventory.' % (sender.display_name))
+			sender.location.broadcast('%s has turned %s into a small plastic figurine, never to move again.' % (sender.display_name, target.display_name), sender, target)
 			target.delete()
 		else:
-			sender.send('User "' + name + '" does not exist anywhere.')
+			sender.send('User "%s" does not exist anywhere.' % (name))
 
 	def command_adduser(self, **kwargs):
 		sender = kwargs['sender']
@@ -300,8 +297,8 @@ class Modification:
 			return
 
 		# TODO: Make this take server prefs into consideration, and also let this have a default location ...
-		player = self.world.create_player(name, password, self.work_factor, sender.location)
-		sender.send('User "' + name + '" created.')
+		player = self.world.create_player(name, password, game.models.server.work_factor, sender.location)
+		sender.send('User "%s" created.' % (name))
 		self.post_user_create.send(None, creator=sender, created=player)
 
 	def command_admin(self, **kwargs):
@@ -320,17 +317,17 @@ class Modification:
 				return
 			elif (sender.check_admin_trump(target) is False):
 				sender.send('You cannot do that. They are too strong.')
-				target.send(sender.display_name + ' tried to take your administrator privileges away.')
+				target.send('%s tried to take your administrator privileges away.' % (sender.display_name))
 				return
 
 			target.set_is_admin(target.is_admin is False)
 			if (target.is_admin == 0):
-				sender.send(target.display_name + ' is no longer an administrator.')
-				target.send(sender.display_name + ' took your adminship.')
+				sender.send('%s is no longer an administrator.' % (target.display_name))
+				target.send('%s took your adminship.' % (sender.display_name))
 				return
 			else:
-				sender.send(target.display_name + ' is now an administrator.')
-				target.send(sender.display_name + ' gave you adminship rights.')
+				sender.send('%s is now an administrator.' % (target.display_name))
+				target.send('%s gave you adminship rights.' % (sender.display_name))
 				return
 		sender.send('Unknown user.')
 
@@ -350,17 +347,17 @@ class Modification:
 				return
 			elif (sender.check_admin_trump(target) is False):
 				sender.send('You cannot do that. They are too strong.')
-				target.send(sender.display_name + ' tried to take your super administrator privileges away.')
+				target.send('%s tried to take your super administrator privileges away.' % (sender.display_name))
 				return
 
 			target.set_is_super_admin(target.is_sadmin is False)
 			if (target.is_sadmin is False):
-				sender.send(target.display_name + ' is no longer a super administrator.')
-				target.send(sender.display_name + ' took your super adminship.')
+				sender.send('%s is no longer a super administrator.' % (target.display_name))
+				target.send('%s took your super adminship.' % (sender.display_name))
 				return
 			else:
-				sender.send(target.display_name + ' is now a super administrator.')
-				target.send(sender.display_name + ' gave you super adminship rights.')
+				sender.send('%s is now a super administrator.' % (target.display_name))
+				target.send('%s gave you super adminship rights.' % (sender.display_name))
 				return
 		sender.send('Unknown user.')
 
