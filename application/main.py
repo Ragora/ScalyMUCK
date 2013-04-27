@@ -57,13 +57,14 @@ class Application:
 			if (is_daemon is False):
 				logger.addHandler(console_handle)
 
-		# Check for if we're trying to run as root
-		run_as_root = config.get_index(index='I_DONT_KNOW_HOW_TO_SECURITY_LET_ME_RUN_AS_ROOT',datatype=bool)
-		if (os.geteuid() == 0 and run_as_root is False):
-			logger.error('FATAL -- You should not run this application as root!')
-			return
-		elif (os.geteuid() == 0 and run_as_root):
-			logger.warn('WARNING -- It is your death wish running this application as root.')
+		# Check for if we're trying to run as root (if we're on linux)
+		if ('linux' in sys.platform):
+			run_as_root = config.get_index(index='I_DONT_KNOW_HOW_TO_SECURITY_LET_ME_RUN_AS_ROOT',datatype=bool)
+			if (os.geteuid() == 0 and run_as_root is False):
+				logger.error('FATAL -- You should not run this application as root!')
+				return
+			elif (os.geteuid() == 0 and run_as_root):
+				logger.warn('WARNING -- It is your death wish running this application as root.')
 
 		# Prepare the other logs
 		if (config.get_index(index='LogMods', datatype=bool)):
