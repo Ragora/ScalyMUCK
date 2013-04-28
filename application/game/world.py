@@ -46,7 +46,7 @@ class World():
 		self.session.refresh(room)
 		return room
 	      
-	def find_room(self, id=None, name=None):
+	def find_room(self, **kwargs):
 		""" Locates the specified Room in the ScalyMUCK world.
 
 		This can be a bit computionally intense if you are running a very large world.
@@ -56,14 +56,7 @@ class World():
 			name -- The name of the requested room to return an instance of.
 
 		"""
-		if (name is None and id is None):
-			raise exception.WorldArgumentError('Neither an id nor a name was specified to find_room. (or None was passed in)')
-
-		if (id is not None):
-			target_room = self.session.query(Room).filter_by(id=id).first()
-		elif (name is not None):
-			target_room = self.session.query.query(Room).filter_by(name=name).first()
-
+		target_room = self.session.query(Room).filter_by(**kwargs).first()
 		return target_room
 	
 	def create_player(self, name=None, password=None, workfactor=None, location=None, admin=False, sadmin=False, owner=False):
@@ -128,7 +121,7 @@ class World():
 		bot.location = location
 		return bot
 
-	def find_player(self,id=None,name=None):
+	def find_player(self, **kwargs):
 		""" Locates a Player inside of the ScalyMUCK world.
 
 		This searches the entire WORLD for the specified Player so if you happen to be running a very, very
@@ -140,21 +133,14 @@ class World():
 			name -- The name of the Player to locate.
 		
 		"""
-		if (name is None and id is None):
-			raise exception.WorldArgumentError('No id or name specified. (or both were None)')
-
-		if (id is not None):
-			target_player = self.session.query(Player).filter_by(id=id).first()
-		elif (name is not None):
-			target_player = self.session.query(Player).filter_by(name=name).first()
-
+		target_player = self.session.query(Player).filter_by(**kwargs).first()
 		if (target_player is not None):
 			target_player.location = self.find_room(id=target_player.location_id)
 			target_player.inventory = self.find_room(id=target_player.inventory_id)
 
 		return target_player
 
-	def find_bot(self,id=None):
+	def find_bot(self, **kwargs):
 		""" Locates a Bot inside of the ScalyMUCK world.
 
 		This searches the entire WORLD for the specified Bot so if you happen to be running a very, very
@@ -165,12 +151,7 @@ class World():
 			id -- The ID of the Bot to locate. This overrides the name if both are specified.
 		
 		"""
-		if (id is None):
-			raise exception.WorldArgumentError('No id or name specified. (or both were None)')
-
-		if (id is not None):
-			target_bot = self.session.query(Bot).filter_by(id=id).first()
-
+		target_bot = self.session.query(Bot).filter_by(**kwargs).first()
 		if (target_bot is not None):
 			target_bot.location = self.find_room(id=target_bot.location_id)
 
@@ -188,19 +169,17 @@ class World():
 				list.append(load_test)
 		return list
 
-	def find_item(self, id):
-		""" Locates an item by it's ID number.
+	def find_item(self, **kwargs):
+		""" Locates an item by any specifications.
 
 		If the ID number does not exist then None is returned.
 
 		"""
-		if (id is None):
-			raise exception.WorldArgumentError('No ID was specified. (or it was None')
-
-		target_item = self.session.query(Item).filter_by(id=id).first()
+		target_item = self.session.query(Item).filter_by(**kwargs).first()
 		if (target_item is not None):
 			target_item.location = self.find_room(id=target_item.location_id)
-			return target_item
+
+		return target_item
 
 	def create_item(self, name=None, description='<Unset>', owner=0, location=None):
 		""" Creates a new item in the ScalyMUCK world.
