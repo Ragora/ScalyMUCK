@@ -144,7 +144,10 @@ class Server(daemon.Daemon):
 		finishes calling, a single world tick has passed.
 
 		"""
-		self.telnet_server.poll()
+		try:
+			self.telnet_server.poll()
+		except UnicodeDecodeError:
+			return
 		
 		for connection in self.pending_connection_list:
 			if (connection.cmd_ready is True):
