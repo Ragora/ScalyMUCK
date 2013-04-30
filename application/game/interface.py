@@ -140,8 +140,17 @@ class Interface:
 			self.mods.append((name, module, modification))
 
 			commands = modification.get_commands()
+			# Process aliases first
+			aliases = { }
+			for command in commands:
+				for alias in commands[command]['aliases']:
+					aliases.setdefault(alias, commands[command])
+			commands.update(aliases)
+			# Then process the dictionary
 			for command in commands:
 				commands[command]['modification'] = name
+				if (command in self.commands):
+					self.logger.warn('Overlapping command definitions for command %s! %s -> %s' % (command, name, self.commands[command][modification]))
 			self.commands.update(commands)
 
 	def parse_command(self, sender=None, input=None):
