@@ -444,7 +444,7 @@ class Modification:
 				'command': self.command_take,
 				'description': 'Take an item from the current room.',
 				'usage': 'take <item>',
-				'aliases': [ ],
+				'aliases': [ 'get' ],
 				'privilege': 0
 			},
 
