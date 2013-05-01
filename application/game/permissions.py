@@ -9,15 +9,23 @@
 	for more information.
 """
 
+import logging
+
 import settings
 
+logger = logging.getLog('Mods')
 class Permissions:
 	""" Main class for permission handling in ScalyMUCK. """
 	permissions = { }
 
-	def set_permission(self, name, value):
+	def set_permission(self, name, value, evaluator=None):
 		""" Sets a permission in the repo. """
-		permissions[name] = value
+		if (evaluator is None):
+			evaluator = self.standard_evaluator
+		permissions[name] = (value, evaluator)
 
 	def test_permission(self, name, player):
 		""" Tests the permission availability against a player. """
+
+	def standard_evaluator(self):
+		""" Tests all standard permissions built into the server. """
