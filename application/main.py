@@ -39,6 +39,9 @@ class Application:
 		data_path = '%s/.scalyMUCK/' % (home_path)
 
 		config = settings.Settings('%sconfig/settings_server.cfg' % (workdir))
+
+		# Make sure the folder exists. (doesn't cause any issues if it already exists)
+		os.system('mkdir %s' % (data_path))
 	
 		# Prepare the server log
 		# NOTE: This code looks sucky, could it be improved to look better?
@@ -56,6 +59,19 @@ class Application:
 			logger.addHandler(file_handle)
 			if (is_daemon is False):
 				logger.addHandler(console_handle)
+
+		if (config.get_index(index='LogServer', datatype=bool)):
+			logger = logging.getLogger('Server')
+			logger.setLevel(logging.INFO)
+
+			file_handle = logging.FileHandler('%sserver_log.txt' % (data_path))
+			file_handle.setLevel(logging.INFO)
+			file_handle.setFormatter(formatting)			
+
+			logger.addHandler(file_handle)
+			if (is_daemon is False):
+				logger.addHandler(console_handle)
+			logger.info('ScalyMUCK Server Server Start')
 
 		# Check for if we're trying to run as root (if we're on linux)
 		if ('linux' in sys.platform):
@@ -79,19 +95,6 @@ class Application:
 			logger.addHandler(file_handle)
 			if (is_daemon is False):
 				logger.addHandler(console_handle)
-
-		if (config.get_index(index='LogServer', datatype=bool)):
-			logger = logging.getLogger('Server')
-			logger.setLevel(logging.INFO)
-
-			file_handle = logging.FileHandler('%sserver_log.txt' % (data_path))
-			file_handle.setLevel(logging.INFO)
-			file_handle.setFormatter(formatting)			
-
-			logger.addHandler(file_handle)
-			if (is_daemon is False):
-				logger.addHandler(console_handle)
-			logger.info('ScalyMUCK Server Server Start')
 
 		self.server = Server(config=config, path=data_path, workdir=workdir)
 
