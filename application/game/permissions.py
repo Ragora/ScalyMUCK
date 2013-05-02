@@ -27,5 +27,9 @@ class Permissions:
 	def test_permission(self, name, player):
 		""" Tests the permission availability against a player. """
 
-	def standard_evaluator(self):
+	def standard_evaluator(self, name, player):
 		""" Tests all standard permissions built into the server. """
+		if (name == 'AllowAdminOverride'):
+			return
+		else:
+			logger.warn('Attempted to evaluate undefined permission: "%s"!' % (name))
