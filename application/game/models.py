@@ -423,6 +423,13 @@ class Item(Base, ObjectBase):
 		""" Produces a representation of the item, as to be expected. """
 		return "<Item('%s','%s')>" % (self.name, self.description)
 
+	def set_owner(self, owner):
+		""" Sets a new owner for this item. """
+		if (type(owner) is Player):
+			owner = owner.id
+		self.owner_id = owner
+		self.commit()
+
 class Room(Base, ObjectBase):
 	""" Base room model that ScalyMUCK uses.
 

@@ -17,6 +17,7 @@ import inspect
 from blinker import signal
 
 import modloader
+import permissions
 from game import exception, settings
 
 logger = logging.getLogger('Mods')
@@ -32,6 +33,7 @@ class Interface:
 	config = None
 	session = None
 	server = None
+	permissions = None
 	workdir = ''
 	modloader = None
 	
@@ -63,7 +65,8 @@ class Interface:
 		self.config = config
 		self.session = session
 		self.server = server
-		self.modloader = modloader.ModLoader(world=world, interface=self, session=session, workdir=workdir)
+		self.permissions = permissions.Permissions(workdir=workdir)
+		self.modloader = modloader.ModLoader(world=world, interface=self, session=session, workdir=workdir, permissions=self.permissions)
 		self.modloader.load(config.get_index('LoadedMods', str))
 
 	def parse_command(self, sender=None, input=None):

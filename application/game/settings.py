@@ -26,11 +26,12 @@ class Settings:
 	files.
 
 	"""
-	_settings_entries = { }
+	_settings_entries = None
 	_yes = ['1', 'true', 'y', 'yes', 'enable', 'toggle', 'enabled']		
     
 	def __init__(self, target_file):
 		""" Initializes an instance of the Settings loader. """
+		self._settings_entries = { }
 		self.load(target_file)
 
 	def load(self, target_file):
@@ -52,6 +53,10 @@ class Settings:
 				continue
 
 		file_handle.close()
+
+	def get_indices(self):
+		""" Returns all known indices. """
+		return self._settings_entries.keys()
 
 	def get_index(self, index=None, datatype=None):
 		""" Returns a loaded configuration setting from the Settings loader.

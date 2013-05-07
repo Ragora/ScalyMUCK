@@ -41,6 +41,7 @@ class Modification:
 		self.interface = kwargs['interface']
 		self.session = kwargs['session']
 		self.world = kwargs['world']
+		self.permissions = kwargs['permissions']
 
 		signal('post_client_authenticated').connect(self.callback_client_authenticated)
 		signal('pre_message_sent').connect(self.callback_message_sent)
@@ -371,6 +372,19 @@ class Modification:
 
 		item_name = args[0]
 		owner_name = args[1]
+
+		item = sender.inventory.find_item(name=item_name)
+		if (item.owner_id != sender.id):
+			sender.send('This is not your item.')
+			return
+
+		player = self.world.find_player(name=owner_name)
+		if (player is None):
+			sender.send('There is no such player.')
+		else:
+			item.set_owner(player)
+			sender.send('%s now owns that item.' % (player.display_name))
+			player.send('%s has given you a %s.' % (sender.display_name, item.name))
 
 	def command_ping(self, **kwargs):
 		kwargs['sender'].send('Pong.')
