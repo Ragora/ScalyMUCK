@@ -1,6 +1,4 @@
 """
-	server.py
-
 	This is the main ScalyMUCK server code,
 	it performs the initialisation of various
 	systems and is the binding of everything.
@@ -93,9 +91,10 @@ class Server(daemon.Daemon):
 		self.auth_low_argc = config.get_index('AuthLowArgC', str)
 		self.auth_invalid_combination = config.get_index('AuthInvalidCombination', str)
 		self.auth_connected = config.get_index('AuthConnected', str)
-		self.auth_replace_Connection = config.get_index('AuthReplaceConnection', str)
+		self.auth_replace_connection = config.get_index('AuthReplaceConnection', str)
 		self.auth_connection_replaced = config.get_index('AuthConnectionReplaced', str)
 		self.auth_connect_suggestion = config.get_index('AuthConnectSuggestion', str).replace('\\n','\n')
+		self.auth_replace_connection_global = config.get_index('AuthReplaceConnectionGlobal', str)
 		self.game_client_disconnect = config.get_index('GameClientDisconnect', str)
   		
 		# Loading welcome/exit messages
@@ -135,9 +134,13 @@ class Server(daemon.Daemon):
 			if (root_user is None):
 				database_exists = False
 
+		game.models.server = self
+		game.models.world = self.world
+
 		if (database_exists is False):
 			room = self.world.create_room('Portal Room Main')
 			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room, admin=True, sadmin=True, owner=True)
+			room.set_owner(user)
 			self.logger.info('The database has been successfully initialised.')
 		
 		self.telnet_server = TelnetServer(port=config.get_index(index='ServerPort', datatype=int),
@@ -148,9 +151,6 @@ class Server(daemon.Daemon):
 	
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
-
-		game.models.server = self
-		game.models.world = self.world
 	
 	def update(self):
 		""" The update command is called by the main.py script file.
@@ -168,7 +168,7 @@ class Server(daemon.Daemon):
 		
 		for connection in self.pending_connection_list:
 			if (connection.cmd_ready is True):
-				data = "".join(filter(lambda x: ord(x)<128, connection.get_command()))
+				data = "".join(filter(lambda x: ord(x)<127 and ord(x)>31, connection.get_command()))
 				command_data = string.split(data, ' ')
 
 				# Try and perform the authentification process
@@ -180,7 +180,7 @@ class Server(daemon.Daemon):
 					
 					target_player = self.world.find_player(name=name)
 					if (target_player is None):
-						connection.send('%s\n' % (self.auth_invalid_combination))
+						connection.send('%s\n' % self.auth_invalid_combination)
 					else:
 						player_hash = target_player.hash
 						if (player_hash == bcrypt.hashpw(password, player_hash) == player_hash):
@@ -197,15 +197,16 @@ class Server(daemon.Daemon):
 							self.post_client_authenticated.send(None, sender=target_player)
 							for player in target_player.location.players:
 								if (player is not target_player):
-									player.send('%s %s' % (target_player.display_name, self.auth_connected))
+									player.send(self.auth_connected % target_player.display_name)
 
 							for player in self.established_connection_list:
 								if (player.id == connection.id):
-									player.send('%s\n' % (self.auth_replace_connection))
+									player.send('%s\n' % self.auth_replace_connection)
 									player.socket_send()
 									player.deactivate()
 									player.sock.close()
-									connection.send('%s\n' % (self.auth_connection_replaced))
+									connection.send('%s\n' % self.auth_connection_replaced)
+									self.world.find_room(id=target_player.location_id).broadcast(self.auth_replace_connection_global % target_player.display_name, target_player)
 									self.established_connection_list.remove(player)
 									break
 							self.pending_connection_list.remove(connection)	
@@ -220,7 +221,7 @@ class Server(daemon.Daemon):
 		# With already connected clients, we'll now deploy the command interface.
 		for connection in self.established_connection_list:
 			if (connection.cmd_ready):
-				input = "".join(filter(lambda x: ord(x)<128, connection.get_command()))
+				input = "".join(filter(lambda x: ord(x)<127 and ord(x)>31, connection.get_command()))
 				sending_player = self.world.find_player(id=connection.id)
 				sending_player.connection = connection
 				self.interface.parse_command(sender=sending_player, input=input)
@@ -264,6 +265,6 @@ class Server(daemon.Daemon):
 		elif (client in self.established_connection_list):
 			player = self.world.find_player(id=client.id)
 			room = self.world.find_room(id=player.location_id)
-			room.broadcast('%s %s' % (player.display_name, self.game_client_disconnect), player)
+			room.broadcast(self.game_client_disconnect % player.display_name, player)
 
 			self.established_connection_list.remove(client)

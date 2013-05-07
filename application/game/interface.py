@@ -1,6 +1,4 @@
 """
-	interface.py
-
 	Basically the user interface for ScalyMUCK.
 
 	Copyright (c) 2013 Robert MacGregor
@@ -17,6 +15,7 @@ import inspect
 from blinker import signal
 
 import modloader
+import permissions
 from game import exception, settings
 
 logger = logging.getLogger('Mods')
@@ -32,6 +31,7 @@ class Interface:
 	config = None
 	session = None
 	server = None
+	permissions = None
 	workdir = ''
 	modloader = None
 	
@@ -63,7 +63,8 @@ class Interface:
 		self.config = config
 		self.session = session
 		self.server = server
-		self.modloader = modloader.ModLoader(world=world, interface=self, session=session, workdir=workdir)
+		self.permissions = permissions.Permissions(workdir=workdir)
+		self.modloader = modloader.ModLoader(world=world, interface=self, session=session, workdir=workdir, permissions=self.permissions)
 		self.modloader.load(config.get_index('LoadedMods', str))
 
 	def parse_command(self, sender=None, input=None):
@@ -107,7 +108,22 @@ class Interface:
 				command_func(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
 				line_one = 'An error has occurred while executing the command: %s' % (command)
-				line_two = 'From modification: %s' % (self.commands[command]['modification'])
+				line_two = 'From modification: %s' % (self.modloader.commands[command]['modification'])
+				line_three = 'Error Condition: '
+				line_four = str(e)
+
+				self.logger.error(line_one)
+				self.logger.error(line_two)
+				self.logger.error(line_three)
+				self.logger.error(line_four)
+				sender.send(line_one)
+				sender.send(line_two)
+				sender.send(line_three)
+				sender.send(line_four)
+				sender.send('Please report this incident to your server administrator immediately.')
+			except StandardError as e:
+				line_one = 'A critical error has occurred while executing the command: %s' % (command)
+				line_two = 'From modification: %s' % (self.modloader.commands[command]['modification'])
 				line_three = 'Error Condition: '
 				line_four = str(e)
 

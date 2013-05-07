@@ -2,3 +2,7 @@
 *.py~
 *.cfg~
 *.txt~
+*.rst~
+doc/build/doctrees
+application/game/fuzzball
+application/game/construction

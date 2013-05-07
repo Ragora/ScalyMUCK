@@ -1,7 +1,8 @@
 """
-	scommands.py
-
-	ScalyMUCK generic commands.
+	Found here is a great example of how modifications are implemented inside of ScalyMUCK. All modifications that
+	are intended to be loaded into ScalyMUCK must be provided in the form of a module you can merely drag and drop
+	into application/game/ and from there the server host can modify their server_config.cfg file to add the modification
+	to the loaded modification listing.
 
 	Copyright (c) 2013 Robert MacGregor
 	This software is licensed under the GNU General
@@ -11,15 +12,16 @@
 
 import string
 
-import game.models
-
 from blinker import signal
+
+import game.models
 
 class Modification:
 	""" Main class object to load and initialize the scommands modification. """
 	world = None
 	interface = None
 	session = None
+	modloader = None
 
 	pre_user_look = signal('pre_user_look')
 	post_user_look = signal('post_user_look')
@@ -37,10 +39,31 @@ class Modification:
 	pre_show_description = signal('pre_show_description')
 
 	def __init__(self, **kwargs):
+		""" 
+
+		This initializes an instance of the scommands modification and it will remain loaded in memory
+		until the server owner either unloads it or reloads it which therefore will reset
+		any associated data unless the data had been defined on the class definition itself
+		rather than being initialized in this function. 
+
+		Keyword arguments:
+			* config -- This is the instance of Settings that contains all loaded configuration settings available for this modification, if the file exists. If the file does not exist, then this will simply be None.
+			* interface -- This is the instance of the user interface used internally by ScalyMUCK. Generally, you won't need access to this for any reason and is currently deprecated for later removal.
+
+		Actions such as binding your Blinker signals should be performed here so that events will be
+		received properly when they occur.
+
+		Along with initializing the modification, __init__ acts as a gateway for other important
+		data passed in by the modloader under the **kwargs argument.
+
+		"""
+		
 		self.config = kwargs['config']
 		self.interface = kwargs['interface']
 		self.session = kwargs['session']
 		self.world = kwargs['world']
+		self.permissions = kwargs['permissions']
+		self.modloader = kwargs['modloader']
 
 		signal('post_client_authenticated').connect(self.callback_client_authenticated)
 		signal('pre_message_sent').connect(self.callback_message_sent)
@@ -238,12 +261,12 @@ class Modification:
 		sender = kwargs['sender']
 		input = string.lower(kwargs['input'])
 
-		if (input not in self.interface.commands):
+		if (input not in self.modloader.commands):
 			sender.send('For more information, type: help <command>')
 			sender.send('Command listing: ')
 			out = ''
-			for command in self.interface.commands:
-				privilege = self.interface.commands[command]['privilege']
+			for command in self.modloader.commands:
+				privilege = self.modloader.commands[command]['privilege']
 				if ((privilege == 1 and sender.is_admin is False) or (privilege == 2 and sender.is_sadmin is False) or (privilege == 3 and sender.is_owner is False)):
 					continue
 				out += command + ', '
@@ -251,9 +274,9 @@ class Modification:
 			sender.send(out[:len(out)-2]) 
 			return
 		else:
-			sender.send('From: %s' % (self.interface.commands[input]['modification']))
-			sender.send('Usage: %s' % (self.interface.commands[input]['usage']))
-			sender.send(self.interface.commands[input]['description'])
+			sender.send('From: %s' % (self.modloader.commands[input]['modification']))
+			sender.send('Usage: %s' % (self.modloader.commands[input]['usage']))
+			sender.send(self.modloader.commands[input]['description'])
 
 	def command_quit(self, **kwargs):
 		sender = kwargs['sender']
@@ -374,14 +397,46 @@ class Modification:
 		item_name = args[0]
 		owner_name = args[1]
 
+		item = sender.inventory.find_item(name=item_name)
+		if (item.owner_id != sender.id):
+			sender.send('This is not your item.')
+			return
+
+		player = self.world.find_player(name=owner_name)
+		if (player is None):
+			sender.send('There is no such player.')
+		else:
+			item.set_owner(player)
+			sender.send('%s now owns that item.' % (player.display_name))
+			player.send('%s has given you a %s.' % (sender.display_name, item.name))
+
 	def command_ping(self, **kwargs):
 		kwargs['sender'].send('Pong.')
 
 	# Callbacks
 	def callback_client_authenticated(self, trigger, sender):
+		""" Callback that is bound to the "post_client_authenticated" event.
+
+		Callbacks like this one are helpful in cases that if you want to initialize
+		certain data upon the authentication of a certain client -- perhaps you're loading
+		mod data that is related to this client.
+
+		Refer to the :command:`__init__` function.
+
+		"""
 		self.command_look(sender=sender, input='')
 
 	def callback_message_sent(self, trigger, sender, input):
+		""" Callback that is bound to the "pre_message_sent" event.
+
+		Callbacks like this one are helpful in cases that if you want to intercept
+		input for any reason, such as an interactive menu that will handle it's own
+		text parsing for handling menu functions as that if the callback at any point
+		returns true, the server will not pass the input text into the core parser.
+
+		Refer to the :command:`__init__` function.
+
+		"""
 		if (len(input) != 0):
 			if (input[0] == ':'):		
 				self.command_pose(sender=sender, input=input[1:].lstrip())
@@ -393,6 +448,14 @@ class Modification:
 		return False
 
 	def get_commands(self):
+		""" Returns a dictionary mapping the available commands in this modification.
+
+		This is a function call merely for the purpose of being able to provide variable
+		output, so that if the modification has an accompanying configuration file it can
+		omit or include certain commands based on the configuration settings loaded in the
+		modification's :command:`__init__` function.
+
+		"""
 		command_dict = {
 			'say': 
 			{ 
