@@ -22,15 +22,17 @@ class ModLoader:
 	world = None
 	interface = None
 	session = None
+	permissions = None
 	commands = { }
 	modifications = { }
 
-	def __init__(self, world=None, interface=None, session=None, workdir=None):
+	def __init__(self, world=None, interface=None, session=None, workdir=None, permissions=None):
 		""" Initializes an instance of the ScalyMUCK mod loader. """
 		self.workdir = workdir
 		self.world = world
 		self.interface = interface
 		self.session = session
+		self.permissions = permissions
 		self.set_defaults()
 
 	def load(self, modifications):
@@ -44,7 +46,7 @@ class ModLoader:
 				for name, sub_module in modules:
 					reload(sub_module)
 				module = reload(module)
-				modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session)
+				modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session, permissions=self.permissions)
 				self.modifications[mod_name] = (instance, module)
 			else:
 				try:
@@ -55,7 +57,7 @@ class ModLoader:
 				else:
 					config = settings.Settings('%s/config/%s.cfg' % (self.workdir, mod_name))
 
-					modification = module.Modification(config=config, world=self.world, interface=self, session=self.session)
+					modification = module.Modification(config=config, world=self.world, interface=self, session=self.session, permissions=self.permissions)
 					self.modifications.setdefault(mod_name, (modification, module))
 					commands = modification.get_commands()
 				logger.info('Processed modification %s.' % (mod_name))
