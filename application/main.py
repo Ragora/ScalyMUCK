@@ -42,7 +42,13 @@ class Application:
 
 		# Make sure the folder exists. (doesn't cause any issues if it already exists)
 		os.system('mkdir %s' % (data_path))
-	
+
+		# Reset any logs
+		if ('win' in sys.platform):
+			os.system('del %s*.txt' % (data_path))
+		elif ('linux' in sys.platform):
+			os.system('rm %s*.txt' % (data_path))
+			
 		# Prepare the server log
 		# NOTE: This code looks sucky, could it be improved to look better?
 		formatting = logging.Formatter('%(levelname)s (%(asctime)s): %(message)s', '%d/%m/%y at %I:%M:%S %p')
@@ -112,7 +118,6 @@ class Application:
 
 class MUCKDaemon(Daemon):
 	""" Used for daemonising the code. """
-
 	def run(self, **kwargs):
 		""" Called by the Daemonizer code. """
 		Application(kwargs['workdir'], is_daemon=True)
