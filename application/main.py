@@ -44,10 +44,11 @@ class Application:
 		os.system('mkdir %s' % (data_path))
 
 		# Reset any logs
-		if ('win' in sys.platform):
-			os.system('del %s*.txt' % (data_path))
-		elif ('linux' in sys.platform):
-			os.system('rm %s*.txt' % (data_path))
+		if (config.get_index('ClearLogsOnStart', bool) is True):
+			if ('win' in sys.platform):
+				os.system('del %s*.txt' % (data_path))
+			elif ('linux' in sys.platform):
+				os.system('rm %s*.txt' % (data_path))
 			
 		# Prepare the server log
 		# NOTE: This code looks sucky, could it be improved to look better?
