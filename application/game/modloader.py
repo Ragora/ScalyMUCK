@@ -46,7 +46,7 @@ class ModLoader:
 				for name, sub_module in modules:
 					reload(sub_module)
 				module = reload(module)
-				modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session, permissions=self.permissions)
+				modification = module.Modification(config=self.config, world=self.world, interface=self.interface, session=self.session, permissions=self.permissions, modloader=self)
 				self.modifications[mod_name] = (instance, module)
 			else:
 				try:
@@ -57,7 +57,7 @@ class ModLoader:
 				else:
 					config = settings.Settings('%s/config/%s.cfg' % (self.workdir, mod_name))
 
-					modification = module.Modification(config=config, world=self.world, interface=self, session=self.session, permissions=self.permissions)
+					modification = module.Modification(config=config, world=self.world, interface=self.interface, session=self.session, permissions=self.permissions, modloader=self)
 					self.modifications.setdefault(mod_name, (modification, module))
 					commands = modification.get_commands()
 				logger.info('Processed modification %s.' % (mod_name))
