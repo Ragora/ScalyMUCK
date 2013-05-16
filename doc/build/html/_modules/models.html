@@ -1,0 +1,739 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>models &mdash; ScalyMUCK 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for models</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	models.py</span>
+
+<span class="sd">	This is where all of ScalyMUCK&#39;s model definitions are located,</span>
+<span class="sd">	save for the modifications that may extend the software in such</span>
+<span class="sd">	a way that it demands for extra models but that is beyond the</span>
+<span class="sd">	point. </span>
+
+<span class="sd">	The &quot;base&quot; definitions located here are:</span>
+<span class="sd">		Exit</span>
+<span class="sd">		Player</span>
+<span class="sd">		Room</span>
+<span class="sd">		Item</span>
+<span class="sd">		Bot</span>
+
+<span class="sd">	Copyright (c) 2013 Robert MacGregor</span>
+<span class="sd">	This software is licensed under the GNU General</span>
+<span class="sd">	Public License version 3. Please refer to gpl.txt </span>
+<span class="sd">	for more information.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">string</span>
+
+<span class="kn">from</span> <span class="nn">blinker</span> <span class="kn">import</span> <span class="n">signal</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="kn">import</span> <span class="n">declarative_base</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">relationship</span><span class="p">,</span> <span class="n">backref</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">Table</span><span class="p">,</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">,</span> <span class="n">MetaData</span><span class="p">,</span> <span class="n">ForeignKey</span>
+<span class="kn">import</span> <span class="nn">bcrypt</span>
+
+<span class="kn">import</span> <span class="nn">exception</span>
+
+<span class="n">server</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="n">world</span> <span class="o">=</span> <span class="bp">None</span>
+<span class="n">Base</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ObjectBase"><a class="viewcode-back" href="../models.html#models.ObjectBase">[docs]</a><span class="k">class</span> <span class="nc">ObjectBase</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot; Base class for the inheritance of useful member functions that work accross all models. &quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Deletes the object from the world. &quot;&quot;&quot;</span>
+		<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ObjectBase.set_name"><a class="viewcode-back" href="../models.html#models.ObjectBase.set_name">[docs]</a>	<span class="k">def</span> <span class="nf">set_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Sets the name of the object.</span>
+
+<span class="sd">		This sets the name of the object that is displayed and used to process requests towards it.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Player</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="n">name</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="n">commit</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+			<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+			<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ObjectBase.set_location"><a class="viewcode-back" href="../models.html#models.ObjectBase.set_location">[docs]</a>	<span class="k">def</span> <span class="nf">set_location</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Sets the current location of this object.</span>
+<span class="sd">	</span>
+<span class="sd">		This sets the location of the object without any prior notification to the person</span>
+<span class="sd">		being moved (if it&#39;s a player) nor anyone in the original room or the target room. </span>
+<span class="sd">		That is the calling modification&#39;s job to provide any relevant messages.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Room</span><span class="p">):</span>
+			<span class="k">return</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Room</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">location_id</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">id</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">commit</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+		<span class="k">elif</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="n">location</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Room</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">location</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">location</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">set_location</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="n">commit</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ObjectBase.set_description"><a class="viewcode-back" href="../models.html#models.ObjectBase.set_description">[docs]</a>	<span class="k">def</span> <span class="nf">set_description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Sets the description of this object.</span>
+
+<span class="sd">		Sets the description of the calling object instance.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">commit</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ObjectBase.commit"><a class="viewcode-back" href="../models.html#models.ObjectBase.commit">[docs]</a>	<span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Commits any changes left in RAM to the database. &quot;&quot;&quot;</span>
+		<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ObjectBase.delete"><a class="viewcode-back" href="../models.html#models.ObjectBase.delete">[docs]</a>	<span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Deletes the object from the world. &quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Player</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+
+		<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+		<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</div></div>
+<div class="viewcode-block" id="Exit"><a class="viewcode-back" href="../models.html#models.Exit">[docs]</a><span class="k">class</span> <span class="nc">Exit</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">ObjectBase</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; </span>
+
+<span class="sd">	Exits are what the players use to exit and move into other rooms in the ScalyMUCK</span>
+<span class="sd">	world. They may only have one target room ID which is used to assign .target to them</span>
+<span class="sd">	when they are loaded or creates by the game.World instance. </span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;exits&#39;</span>
+
+	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
+	<span class="n">user_enter_message</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+	<span class="n">room_enter_message</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+	<span class="n">user_exit_message</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+	<span class="n">room_exit_message</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+	<span class="n">target_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
+	<span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;players.id&#39;</span><span class="p">))</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Initializes an instance of the Exit model.</span>
+
+<span class="sd">		The Exit is not constructed manually by any of the modifications, this should be</span>
+<span class="sd">		performed by calling the create_player function on the game.World instance provided</span>
+<span class="sd">		to every modification.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			target -- The ID or instance of a Room that this exit should be linking to.</span>
+<span class="sd">			owner -- The ID or instance of a Player that this should should belong to.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;No target was specified. (or it was None)&#39;</span><span class="p">)</span>
+
+		<span class="c"># Set the name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">target_id</span> <span class="o">=</span> <span class="n">target</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">target_id</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">id</span>
+
+		<span class="c"># Set the owner</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="n">id</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">user_enter_message</span> <span class="o">=</span> <span class="s">&#39;You move out.&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">room_enter_message</span> <span class="o">=</span> <span class="s">&#39;left.&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">user_exit_message</span> <span class="o">=</span> <span class="s">&#39;You arrive in the next room.&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">room_exit_message</span> <span class="o">=</span> <span class="s">&#39;arrived from another room.&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s">&#39;&lt;Unset&gt;&#39;</span>
+
+	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Produces a representation of the exit, as to be expected. &quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s">&quot;&lt;Exit(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%u</span><span class="s">&#39;&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_id</span><span class="p">)</span>
+		</div>
+<div class="viewcode-block" id="Player"><a class="viewcode-back" href="../models.html#models.Player">[docs]</a><span class="k">class</span> <span class="nc">Player</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">ObjectBase</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; </span>
+
+<span class="sd">	Players are well, the players that actually move and interact in the world. They</span>
+<span class="sd">	store their password hash and various other generic data that can be used across </span>
+<span class="sd">	just about anything. </span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;players&#39;</span>
+	
+	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="n">display_name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">200</span><span class="p">))</span>
+	<span class="nb">hash</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">128</span><span class="p">))</span>
+	
+	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
+	<span class="n">location</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="n">inventory_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+	
+	<span class="n">is_admin</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Boolean</span><span class="p">)</span>
+	<span class="n">is_sadmin</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Boolean</span><span class="p">)</span>
+	<span class="n">is_owner</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Boolean</span><span class="p">)</span>
+
+	<span class="n">connection</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="n">world</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="n">server</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="n">interface</span> <span class="o">=</span> <span class="bp">None</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">workfactor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">inventory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">admin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">sadmin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Initializes an instance of the Player model.</span>
+
+<span class="sd">		The Player is not constructed manually by any of the modifications, this should be</span>
+<span class="sd">		performed by calling the create_player function on the game.World instance provided</span>
+<span class="sd">		to every modification. When the instance is created, it automatically generates a salt</span>
+<span class="sd">		that the Player&#39;s password will be hashed with. This salt generation will cause a small</span>
+<span class="sd">		lockup as the calculations are pretty intense depending on the work factor.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			name -- The name of the Player that should be used.</span>
+<span class="sd">			password -- The password that should be used for this Player in the database.</span>
+<span class="sd">			workfactor -- The workfactor that should be used when generating this Player&#39;s hash salt.</span>
+<span class="sd">			location -- An ID or instance of Room that this Player should be created at.</span>
+<span class="sd">			inventory -- An ID or instance of Room that should represent this Player&#39;s inventory.</span>
+<span class="sd">			description -- A description that is shown when the player is looked at. Default: &lt;Unset&gt;</span>
+<span class="sd">			admin -- A boolean representing whether or not the player is an administrator or not. Default: False</span>
+<span class="sd">			sadmin -- A boolean representing whether or not the player is a super administrator or not. Default: False</span>
+<span class="sd">			owner -- A boolean representing whether or not the player is the owner of the server. Default: False</span>
+<span class="sd">			</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">work_factor</span> <span class="o">=</span> <span class="n">workfactor</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Room</span><span class="p">):</span>
+			<span class="n">location</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">id</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">location_id</span> <span class="o">=</span> <span class="n">location</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">inventory</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Room</span><span class="p">):</span>
+			<span class="n">inventory</span> <span class="o">=</span> <span class="n">inventory</span><span class="o">.</span><span class="n">id</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">inventory_id</span> <span class="o">=</span> <span class="n">inventory</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">hashpw</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">gensalt</span><span class="p">(</span><span class="n">workfactor</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span> <span class="o">=</span> <span class="n">admin</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="o">=</span> <span class="n">sadmin</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">is_owner</span> <span class="o">=</span> <span class="n">owner</span>
+
+	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Produces a representation of the player, as to be expected. &quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s">&quot;&lt;Player(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%u</span><span class="s">&#39;)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">location_id</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Player.send"><a class="viewcode-back" href="../models.html#models.Player.send">[docs]</a>	<span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Sends a message to this Player if they are connected.</span>
+
+<span class="sd">		This sends a message to the relevant connection if there happens to be one established</span>
+<span class="sd">		for this player object. If there is no active connection for this player, then the message</span>
+<span class="sd">		is simply dropped.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">find_connection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">message</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+			<span class="k">return</span> <span class="bp">True</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="Player.set_password"><a class="viewcode-back" href="../models.html#models.Player.set_password">[docs]</a>	<span class="k">def</span> <span class="nf">set_password</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Sets the password of this Player.</span>
+
+<span class="sd">		This sets the password of the Player in the database without any notification to the Player. This also</span>
+<span class="sd">		triggers the new password to be hashed with a randomly generated salt which means the current thread</span>
+<span class="sd">		of execution will probably hang for a few seconds unless the work factor is set just right.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">hashpw</span><span class="p">(</span><span class="n">password</span><span class="p">,</span> <span class="n">bcrypt</span><span class="o">.</span><span class="n">gensalt</span><span class="p">(</span><span class="n">server</span><span class="o">.</span><span class="n">work_factor</span><span class="p">))</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">commit</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Player.disconnect"><a class="viewcode-back" href="../models.html#models.Player.disconnect">[docs]</a>	<span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Drops the Player&#39;s connection from the server.</span>
+
+<span class="sd">		This drops the user&#39;s connection from the game, flushing any messages that</span>
+<span class="sd">		were destined for them before actually booting them out of the server. This triggers</span>
+<span class="sd">		the default disconnect message to be displayed by the ScalyMUCK core to whomever else</span>
+<span class="sd">		may be in the room with the user at the time of their disconnect. </span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">socket_send</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">deactivate</span><span class="p">()</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">sock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Player.set_is_admin"><a class="viewcode-back" href="../models.html#models.Player.set_is_admin">[docs]</a>	<span class="k">def</span> <span class="nf">set_is_admin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Sets the administrator status of this Player.</span>
+
+<span class="sd">		This sets the state as to whether or not the calling player instance is an administrator</span>
+<span class="sd">		of the server or not. This may mean different things to different mods but -generally- it</span>
+<span class="sd">		should just provide basic administrator privileges. The commit parameter is used if you don&#39;t</span>
+<span class="sd">		want to dump changes to the database yet; if you&#39;re changing multiple properties at once, it</span>
+<span class="sd">		doesn&#39;t hit the database as often then. </span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span> <span class="o">=</span> <span class="n">status</span>
+		<span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="n">status</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="o">=</span> <span class="bp">False</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">commit</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Player.set_is_super_admin"><a class="viewcode-back" href="../models.html#models.Player.set_is_super_admin">[docs]</a>	<span class="k">def</span> <span class="nf">set_is_super_admin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Sets the super administrator status of this Player.</span>
+
+<span class="sd">		This sets the state as to whether or not the calling player instance is a super administrator</span>
+<span class="sd">		of the server or not. This may mean different things to different mods but -generally- it</span>
+<span class="sd">		should provide administrator functionalities more akin to what the owner may have, things that</span>
+<span class="sd">		may break the server if used improperly. The commit parameter is used if you don&#39;t want to dump </span>
+<span class="sd">		changes to the database yet; if you&#39;re changing multiple properties at once, it doesn&#39;t hit the database as </span>
+<span class="sd">		often then. </span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="o">=</span> <span class="n">status</span>
+		<span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span> <span class="ow">is</span> <span class="bp">False</span> <span class="ow">and</span> <span class="n">status</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span> <span class="o">=</span> <span class="bp">True</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">commit</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Player.check_admin_trump"><a class="viewcode-back" href="../models.html#models.Player.check_admin_trump">[docs]</a>	<span class="k">def</span> <span class="nf">check_admin_trump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Checks whether or not this Player trumps the target Player administratively.</span>
+
+<span class="sd">		This returns True when the calling Player instance has greater privilege than that of the target they are being</span>
+<span class="sd">		compared against. It returns false in the opposite situation.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">Player</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;Target is not an instance of Player!&#39;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">is_admin</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">True</span>
+		<span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">True</span>
+		<span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_owner</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="n">target</span><span class="o">.</span><span class="n">is_owner</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">):</span>
+			<span class="k">return</span> <span class="bp">True</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+</div></div>
+<div class="viewcode-block" id="Bot"><a class="viewcode-back" href="../models.html#models.Bot">[docs]</a><span class="k">class</span> <span class="nc">Bot</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">ObjectBase</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">	Bots are basically just the AI&#39;s of the game. They&#39;re not items, but they&#39;re not players</span>
+<span class="sd">	either. They have the special property of being interchangable with player object instances</span>
+<span class="sd">	for the most part except when it comes to certain functions -- such as having a password</span>
+<span class="sd">	hash. </span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;bots&#39;</span>
+
+	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
+	<span class="n">display_name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">		The Bot is not constructed manually by any of the modifications, this should be</span>
+<span class="sd">		performed by calling the create_player function on the game.World instance provided</span>
+<span class="sd">		to every modification. </span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Room</span><span class="p">):</span>
+			<span class="n">location</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">id</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">location_id</span> <span class="o">=</span> <span class="n">location</span>
+
+<div class="viewcode-block" id="Bot.send"><a class="viewcode-back" href="../models.html#models.Bot.send">[docs]</a>	<span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; This is basically &#39;send&#39; like for players except it does NOTHING. &quot;&quot;&quot;</span>
+</div></div>
+<div class="viewcode-block" id="Item"><a class="viewcode-back" href="../models.html#models.Item">[docs]</a><span class="k">class</span> <span class="nc">Item</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">ObjectBase</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Base item model that ScalyMUCK uses.</span>
+
+<span class="sd">	Items are really a generic object in ScalyMUCK, they&#39;re not players nor rooms nor exits but</span>
+<span class="sd">	serve multiple purposes. They can quite literally be an item, stored in the player&#39;s inventory</span>
+<span class="sd">	to be used later (like a potion) or they may be used to decorate rooms with specific objects</span>
+<span class="sd">	such as furniture or they may even be used to represent dead bodies. </span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;items&#39;</span>
+	
+	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;players.id&#39;</span><span class="p">))</span>
+	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
+	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Constructor for the base item model.</span>
+
+<span class="sd">		The Item is not constructed manually by any of the modifications, this should be</span>
+<span class="sd">		performed by calling the create_player function on the game.World instance provided</span>
+<span class="sd">		to every modification. </span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			name -- The name of the item that should be used.</span>
+<span class="sd">			description -- The description of the item that should be displayed. Default: &lt;Unset&gt;</span>
+<span class="sd">			owner -- Whoever should become the owner of this item, by instance or ID. Default: 0</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;No name specified when attempting to create an instance of Item! (Or it is none)&#39;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="n">id</span>
+
+	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Produces a representation of the item, as to be expected. &quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s">&quot;&lt;Item(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Item.set_owner"><a class="viewcode-back" href="../models.html#models.Item.set_owner">[docs]</a>	<span class="k">def</span> <span class="nf">set_owner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Sets a new owner for this item. &quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Player</span><span class="p">):</span>
+			<span class="n">owner</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="n">id</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</div></div>
+<div class="viewcode-block" id="Room"><a class="viewcode-back" href="../models.html#models.Room">[docs]</a><span class="k">class</span> <span class="nc">Room</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">ObjectBase</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Base room model that ScalyMUCK uses.</span>
+
+<span class="sd">	Rooms are what make up the world inside of just about any MUCK really. Even if the rooms are not described as such, they still</span>
+<span class="sd">	must be used to contain players, dropped items, bots, etc.</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;rooms&#39;</span>
+	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
+	<span class="n">items</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Item&#39;</span><span class="p">)</span>
+	<span class="n">players</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Player&#39;</span><span class="p">)</span>
+	<span class="n">bots</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Bot&#39;</span><span class="p">)</span>
+	<span class="n">exits</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Exit&#39;</span><span class="p">)</span>
+	<span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Initiates an instance of the Room model.</span>
+
+<span class="sd">		The Room is not constructed manually by any of the modifications, this should be</span>
+<span class="sd">		performed by calling the create_player function on the game.World instance provided</span>
+<span class="sd">		to every modification.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			name -- The name of the room that should be used.</span>
+<span class="sd">			description -- The description of the room.</span>
+<span class="sd">			owner -- The instance or ID of the relevant Player instance that should own this room.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;The name was not specified. (or it is None)&#39;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">exits</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="n">id</span>
+
+	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Produces a representation of the room, as to be expected. &quot;&quot;&quot;</span>
+		<span class="k">return</span> <span class="s">&quot;&lt;Room(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Room.add_exit"><a class="viewcode-back" href="../models.html#models.Room.add_exit">[docs]</a>	<span class="k">def</span> <span class="nf">add_exit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Gives this Room instance an Exit linking to anywhere.</span>
+
+<span class="sd">		This produces an Exit link from the calling Room instance to another one elsewhere. The database</span>
+<span class="sd">		changes are automatically committed here due to the way the exit has to be created in the database</span>
+<span class="sd">		first for the changes to properly apply without any hackery to occur.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			name -- The name of the exit that should be used.</span>
+<span class="sd">			target -- The ID or instance of a Room that this exit should be linking to.</span>
+<span class="sd">			owner -- The ID or instance of a Player that should become the owner of this Exit.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;The name was not specified. (or it was None)&#39;</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;The target room was not specified. (or it was None)&#39;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="n">target</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">find_room</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">target</span><span class="p">)</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">add_exit</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+		<span class="k">elif</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Room</span><span class="p">):</span>
+			<span class="nb">exit</span> <span class="o">=</span> <span class="n">Exit</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">owner</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">exits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">exit</span><span class="p">)</span>
+			<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+			<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">exit</span><span class="p">)</span>
+			<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Room.broadcast"><a class="viewcode-back" href="../models.html#models.Room.broadcast">[docs]</a>	<span class="k">def</span> <span class="nf">broadcast</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="o">*</span><span class="n">exceptions</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Broadcasts a message to all inhabitants of the Room except those specified.</span>
+
+<span class="sd">		This broadcasts a set message to all inhabitants of the Room except those specified after the message:</span>
+<span class="sd">		some_room.broadcast(&#39;Dragons are best!&#39;, that_guy, this_guy, other_guy)</span>
+
+<span class="sd">		The exceptions may be an ID or an instance.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">:</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">player</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exceptions</span> <span class="ow">and</span> <span class="n">player</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">exceptions</span><span class="p">):</span>
+				<span class="n">player</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Room.find_player"><a class="viewcode-back" href="../models.html#models.Room.find_player">[docs]</a>	<span class="k">def</span> <span class="nf">find_player</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Locates a Player located in the calling instance of Room.</span>
+<span class="sd">		</span>
+<span class="sd">		This is a less computionally intensive version of the world&#39;s find_player as there is going to be much less data</span>
+<span class="sd">		to be sorting through since you actually know where the Player is located (otherwise you wouldn&#39;t be calling this!)</span>
+<span class="sd">		and all you need is the instance.</span>
+
+<span class="sd">		Keyword arguments (one or the other):</span>
+<span class="sd">			id -- The identification number of the Player to locate inside of this room. This overrides the name if</span>
+<span class="sd">			both are specified.</span>
+<span class="sd">			name -- The name of the Player to locate.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;No arguments specified (or were None)&#39;</span><span class="p">)</span>
+
+		<span class="n">player</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">for</span> <span class="n">test_player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="o">==</span> <span class="n">test_player</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+					<span class="n">player</span> <span class="o">=</span> <span class="n">test_player</span>
+					<span class="k">break</span>
+		<span class="k">elif</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">test_player</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">players</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="n">test_player</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+					<span class="n">player</span> <span class="o">=</span> <span class="n">test_player</span>
+					<span class="k">break</span>
+		<span class="k">return</span> <span class="n">player</span>
+</div>
+<div class="viewcode-block" id="Room.find_bot"><a class="viewcode-back" href="../models.html#models.Room.find_bot">[docs]</a>	<span class="k">def</span> <span class="nf">find_bot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Locates a Bot located in the calling instance of Room.</span>
+<span class="sd">		</span>
+<span class="sd">		This is a less computionally intensive version of the world&#39;s find_bot as there is going to be much less data</span>
+<span class="sd">		to be sorting through since you actually know where the Bot is located (otherwise you wouldn&#39;t be calling this!)</span>
+<span class="sd">		and all you need is the instance.</span>
+
+<span class="sd">		Keyword arguments (one or the other):</span>
+<span class="sd">			id -- The identification number of the Bot to locate inside of this room. This overrides the name if</span>
+<span class="sd">			both are specified.</span>
+<span class="sd">			name -- The name of the Bot to locate.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;No arguments specified (or were None)&#39;</span><span class="p">)</span>
+
+		<span class="n">bot</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">for</span> <span class="n">test_bot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bots</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="o">==</span> <span class="n">test_bot</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+					<span class="n">bot</span> <span class="o">=</span> <span class="n">test_bot</span>
+					<span class="k">break</span>
+		<span class="k">elif</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">test_bot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bots</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="n">test_bot</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+					<span class="n">bot</span> <span class="o">=</span> <span class="n">test_bot</span>
+					<span class="k">break</span>
+		<span class="k">return</span> <span class="n">bot</span>
+</div>
+<div class="viewcode-block" id="Room.get_exits"><a class="viewcode-back" href="../models.html#models.Room.get_exits">[docs]</a>	<span class="k">def</span> <span class="nf">get_exits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Return a list of all exits. &quot;&quot;&quot;</span>
+		<span class="k">for</span> <span class="nb">exit</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exits</span><span class="p">:</span>
+			<span class="nb">exit</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exits</span>
+</div>
+<div class="viewcode-block" id="Room.find_item"><a class="viewcode-back" href="../models.html#models.Room.find_item">[docs]</a>	<span class="k">def</span> <span class="nf">find_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Locates an Item located in the calling instance of Room.</span>
+<span class="sd">		</span>
+<span class="sd">		This is a less computionally intensive version of the world&#39;s find_item as there is going to be much less data</span>
+<span class="sd">		to be sorting through since you actually know where the Item is located (otherwise you wouldn&#39;t be calling this!)</span>
+<span class="sd">		and all you need is the instance.</span>
+
+<span class="sd">		Keyword arguments (one or the other):</span>
+<span class="sd">			id -- The identification number of the Item to locate inside of this room. This overrides the name if</span>
+<span class="sd">			both are specified.</span>
+<span class="sd">			name -- The name of the Item to locate.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;No arguments specified (or were None)&#39;</span><span class="p">)</span>
+
+		<span class="n">item</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">for</span> <span class="n">test_item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">test_item</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="nb">id</span><span class="p">):</span>
+					<span class="n">item</span> <span class="o">=</span> <span class="n">test_item</span>
+					<span class="k">break</span>
+		<span class="k">elif</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">test_item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="n">test_item</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+					<span class="n">item</span> <span class="o">=</span> <span class="n">test_item</span>
+					<span class="k">break</span>
+		<span class="k">return</span> <span class="n">item</span>
+</div>
+<div class="viewcode-block" id="Room.find_exit"><a class="viewcode-back" href="../models.html#models.Room.find_exit">[docs]</a>	<span class="k">def</span> <span class="nf">find_exit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Locates an Item located in the calling instance of Room.</span>
+<span class="sd">		</span>
+<span class="sd">		This is a less computionally intensive version of the world&#39;s find_item as there is going to be much less data</span>
+<span class="sd">		to be sorting through since you actually know where the Item is located (otherwise you wouldn&#39;t be calling this!)</span>
+<span class="sd">		and all you need is the instance.</span>
+
+<span class="sd">		Keyword arguments (one or the other):</span>
+<span class="sd">			id -- The identification number of the Item to locate inside of this room. This overrides the name if</span>
+<span class="sd">			both are specified.</span>
+<span class="sd">			name -- The name of the Item to locate.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">ModelArgumentError</span><span class="p">(</span><span class="s">&#39;No arguments specified (or were None)&#39;</span><span class="p">)</span>
+
+		<span class="nb">exit</span> <span class="o">=</span> <span class="bp">None</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">for</span> <span class="n">test_exit</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exits</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">test_exit</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="nb">id</span><span class="p">):</span>
+					<span class="nb">exit</span> <span class="o">=</span> <span class="n">test_exit</span>
+					<span class="k">break</span>
+		<span class="k">elif</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">test_exit</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exits</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="n">test_exit</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()):</span>
+					<span class="nb">exit</span> <span class="o">=</span> <span class="n">test_exit</span>
+					<span class="k">break</span>
+		<span class="k">return</span> <span class="nb">exit</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Robert MacGregor.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
