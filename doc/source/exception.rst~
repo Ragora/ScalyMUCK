@@ -1,9 +1,0 @@
-Exception Classes
-=====================================
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-.. automodule:: exception
-   :members:
