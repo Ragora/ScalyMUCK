@@ -1,15 +1,20 @@
-.. ScalyMUCK documentation master file, created by
-   sphinx-quickstart on Wed May 15 18:10:12 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to ScalyMUCK's documentation!
 =====================================
 
-Contents:
+Found here is the programmer's documentation for any version of ScalyMUCK that falls under the 3.0.0
+major version. 
 
+Core Functionality
+----------------------
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
+
+   server
+
+Modding API
+----------------------
+.. toctree::
+   :maxdepth: 5
 
    modloader
    exception
@@ -18,6 +23,7 @@ Contents:
    world
    permissions
    settings
+   scommands
 
 Indices and tables
 ==================  

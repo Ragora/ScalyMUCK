@@ -1,0 +1,10 @@
+Permission Repository Class
+=====================================
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+.. automodule:: permissions
+   :members:
+

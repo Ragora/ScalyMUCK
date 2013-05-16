@@ -12,10 +12,9 @@
 # serve to show the default.
 
 import sys, os
-paths = [ '/application', '/application/game' ]
-base_path = os.getcwd().replace('/doc/source','')
-for path in paths:
-	sys.path.append(base_path + path)
+sys.path.append(os.path.abspath('../../application'))
+sys.path.append(os.path.abspath('../../application/game/scommands'))
+sys.path.append(os.path.abspath('../../application/game'))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -250,3 +249,15 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+def process_docstring(app, what, name, obj, options, lines):
+	if (what == 'module'):
+		lines.pop(0)
+
+		size = len(lines)-1
+		for i in range(size-5, size):
+			lines.pop(len(lines)-1)
+
+def setup(app):
+	from sphinx.ext.autodoc import cut_lines
+	app.connect('autodoc-process-docstring', process_docstring)

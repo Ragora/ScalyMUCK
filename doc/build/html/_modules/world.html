@@ -78,11 +78,11 @@
 	<span class="n">engine</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">session</span> <span class="o">=</span> <span class="bp">None</span>
 	
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">):</span>
+<div class="viewcode-block" id="World.__init__"><a class="viewcode-back" href="../world.html#world.World.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Initializes an instance of the World with an SQLAlchemy engine. &quot;&quot;&quot;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">engine</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">scoped_session</span><span class="p">(</span><span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">))</span>
-	      
+	      </div>
 <div class="viewcode-block" id="World.create_room"><a class="viewcode-back" href="../world.html#world.World.create_room">[docs]</a>	<span class="k">def</span> <span class="nf">create_room</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Creates a new Room if the World.</span>
 

@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to ScalyMUCK’s documentation! &mdash; ScalyMUCK 3.0.0 documentation</title>
+    <title>World Class &mdash; ScalyMUCK 3.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -25,7 +25,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" /> 
+    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" />
+    <link rel="next" title="Permission Repository Class" href="permissions.html" />
+    <link rel="prev" title="Database Models" href="models.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,6 +39,12 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="permissions.html" title="Permission Repository Class"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Database Models"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -46,26 +54,31 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="welcome-to-scalymuck-s-documentation">
-<h1>Welcome to ScalyMUCK&#8217;s documentation!<a class="headerlink" href="#welcome-to-scalymuck-s-documentation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="world-class">
+<h1>World Class<a class="headerlink" href="#world-class" title="Permalink to this headline">¶</a></h1>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul class="simple">
 </ul>
 </div>
-<span class="target" id="module-world"></span><p>world.py</p>
-<p>Game world code for ScalyMUCK. This contains &#8220;global&#8221; functions that is to
+<span class="target" id="module-world"></span><p>Game world code for ScalyMUCK.</p>
+<p>This contains &#8220;global&#8221; functions that is to
 be called by the various mods of the MUCK to perform actions such as creating
 Players.</p>
 <p>Copyright (c) 2013 Robert MacGregor
-This software is licensed under the GNU General
-Public License version 3. Please refer to gpl.txt 
-for more information.</p>
+This software is licensed under the GNU General Public License version 3. 
+Please refer to gpl.txt for more information.</p>
 <dl class="class">
 <dt id="world.World">
 <em class="property">class </em><tt class="descclassname">world.</tt><tt class="descname">World</tt><big>(</big><em>engine</em><big>)</big><a class="reference internal" href="_modules/world.html#World"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#world.World" title="Permalink to this definition">¶</a></dt>
 <dd><p>The &#8220;singleton&#8221; class that represents the ScalyMUCK world in memory and is to
 be passed to every mod that actually manages to initialize when loaded.</p>
+<dl class="method">
+<dt id="world.World.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>engine</em><big>)</big><a class="reference internal" href="_modules/world.html#World.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#world.World.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes an instance of the World with an SQLAlchemy engine.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="world.World.create_bot">
 <tt class="descname">create_bot</tt><big>(</big><em>name=None</em>, <em>location=None</em><big>)</big><a class="reference internal" href="_modules/world.html#World.create_bot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#world.World.create_bot" title="Permalink to this definition">¶</a></dt>
@@ -182,14 +195,6 @@ name &#8211; The name of the requested room to return an instance of.</dd>
 </dd></dl>
 
 </div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
-<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
-<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
-</ul>
-</div>
 
 
           </div>
@@ -197,14 +202,12 @@ name &#8211; The name of the requested room to return an instance of.</dd>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Welcome to ScalyMUCK&#8217;s documentation!</a><ul>
-</ul>
-</li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
-
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="models.html"
+                        title="previous chapter">Database Models</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="permissions.html"
+                        title="next chapter">Permission Repository Class</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/world.txt"
@@ -236,6 +239,12 @@ name &#8211; The name of the requested room to return an instance of.</dd>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="permissions.html" title="Permission Repository Class"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Database Models"
+             >previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>

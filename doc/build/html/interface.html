@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to ScalyMUCK’s documentation! &mdash; ScalyMUCK 3.0.0 documentation</title>
+    <title>User Interface Class &mdash; ScalyMUCK 3.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -25,7 +25,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" /> 
+    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" />
+    <link rel="next" title="Database Models" href="models.html" />
+    <link rel="prev" title="Exception Classes" href="exception.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,6 +39,12 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Database Models"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="exception.html" title="Exception Classes"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -46,8 +54,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="welcome-to-scalymuck-s-documentation">
-<h1>Welcome to ScalyMUCK&#8217;s documentation!<a class="headerlink" href="#welcome-to-scalymuck-s-documentation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="user-interface-class">
+<h1>User Interface Class<a class="headerlink" href="#user-interface-class" title="Permalink to this headline">¶</a></h1>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul class="simple">
@@ -67,6 +75,26 @@ for more information.</p>
 with directly when connected to the ScalyMUCK server, with an exception being 
 the login screen for simplicity and security.</p>
 <dl class="method">
+<dt id="interface.Interface.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>config=None</em>, <em>world=None</em>, <em>workdir=''</em>, <em>session=None</em>, <em>server=None</em><big>)</big><a class="reference internal" href="_modules/interface.html#Interface.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#interface.Interface.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes an instance of the ScalyMUCK Client-Server interface class.</p>
+<p>The interface class is created internallu by the ScalyMUCK server.</p>
+<p>The server passes in an active instance of game.Settings and game.World
+for the interface to talk to when loading mods as the configuration is 
+used to load relevant config files for the mods and is passed in while
+the instance of game.World is assigned to each module so that they may
+access the game world.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd>config &#8211; An instance of Settings that is to be used to load relevant configuration data.
+world &#8211; An instance of the World to pass over to every initialized modification.
+workdir &#8211; The current working directory of the application. This should be an absolute path to application/.
+session &#8211; A working session object that points to the active database.
+server &#8211; The very instance of the ScalyMUCK server.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="interface.Interface.parse_command">
 <tt class="descname">parse_command</tt><big>(</big><em>sender=None</em>, <em>input=None</em><big>)</big><a class="reference internal" href="_modules/interface.html#Interface.parse_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#interface.Interface.parse_command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Called internally by the ScalyMUCK server.</p>
@@ -84,14 +112,6 @@ input &#8211; The text that the Player happened to send.</dd>
 </dd></dl>
 
 </div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
-<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
-<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
-</ul>
-</div>
 
 
           </div>
@@ -99,14 +119,12 @@ input &#8211; The text that the Player happened to send.</dd>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Welcome to ScalyMUCK&#8217;s documentation!</a><ul>
-</ul>
-</li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
-
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="exception.html"
+                        title="previous chapter">Exception Classes</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="models.html"
+                        title="next chapter">Database Models</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/interface.txt"
@@ -138,6 +156,12 @@ input &#8211; The text that the Player happened to send.</dd>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Database Models"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="exception.html" title="Exception Classes"
+             >previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>

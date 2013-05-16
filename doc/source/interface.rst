@@ -1,4 +1,4 @@
-Welcome to ScalyMUCK's documentation!
+User Interface Class
 =====================================
 
 Contents:
@@ -7,11 +7,5 @@ Contents:
    :maxdepth: 2
 .. automodule:: interface
    :members:
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   :special-members:
 

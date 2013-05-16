@@ -1,0 +1,409 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>API Documentation &mdash; Blinker v1.2 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '1.2',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Blinker v1.2 documentation" href="index.html" />
+    <link rel="prev" title="Signals" href="signals.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="signals.html" title="Signals"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Blinker v1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="api-documentation">
+<span id="api"></span><h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<p>All public API members can (and should) be imported from <tt class="docutils literal"><span class="pre">blinker</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">blinker</span> <span class="kn">import</span> <span class="n">ANY</span><span class="p">,</span> <span class="n">signal</span>
+</pre></div>
+</div>
+<div class="section" id="basic-signals">
+<h2>Basic Signals<a class="headerlink" href="#basic-signals" title="Permalink to this headline">¶</a></h2>
+<dl class="attribute">
+<dt id="blinker.base.ANY">
+<tt class="descclassname">base.</tt><tt class="descname">ANY</tt><a class="headerlink" href="#blinker.base.ANY" title="Permalink to this definition">¶</a></dt>
+<dd>Token for &#8220;any sender&#8221;.</dd></dl>
+
+<dl class="attribute">
+<dt id="blinker.base.receiver_connected">
+<tt class="descclassname">base.</tt><tt class="descname">receiver_connected</tt><a class="headerlink" href="#blinker.base.receiver_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sent by a <a title="blinker.base.Signal" class="reference internal" href="#blinker.base.Signal"><tt class="xref docutils literal"><span class="pre">Signal</span></tt></a> after a receiver connects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Argument:</th><td class="field-body"><p class="first">the Signal that was connected to</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>receiver_arg</em> &#8211; the connected receiver</li>
+<li><em>sender_arg</em> &#8211; the sender to connect to</li>
+<li><em>weak_arg</em> &#8211; true if the connection to receiver_arg is a weak reference</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="deprecated">
+<span class="versionmodified">Deprecated since version 1.2.</span></p>
+<p>As of 1.2, individual signals have their own private
+<a title="blinker.base.Signal.receiver_connected" class="reference internal" href="#blinker.base.Signal.receiver_connected"><tt class="xref docutils literal"><span class="pre">receiver_connected</span></tt></a> and
+<a title="blinker.base.Signal.receiver_disconnected" class="reference internal" href="#blinker.base.Signal.receiver_disconnected"><tt class="xref docutils literal"><span class="pre">receiver_disconnected</span></tt></a> signals with a slightly simplified
+call signature.  This global signal is planned to be removed in 1.6.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="blinker.base.Signal">
+<em class="property">class </em><tt class="descclassname">blinker.base.</tt><tt class="descname">Signal</tt><big>(</big><em>doc=None</em><big>)</big><a class="headerlink" href="#blinker.base.Signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>A notification emitter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameter:</th><td class="field-body"><em>doc</em> &#8211; optional.  If provided, will be assigned to the signal&#8217;s
+__doc__ attribute.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="blinker.base.Signal.ANY">
+<tt class="descname">ANY</tt><a class="headerlink" href="#blinker.base.Signal.ANY" title="Permalink to this definition">¶</a></dt>
+<dd>An <a title="blinker.base.ANY" class="reference internal" href="#blinker.base.ANY"><tt class="xref docutils literal"><span class="pre">ANY</span></tt></a> convenience synonym, allows <tt class="docutils literal"><span class="pre">Signal.ANY</span></tt>
+without an additional import.</dd></dl>
+
+<dl class="attribute">
+<dt id="blinker.base.Signal.receiver_connected">
+<tt class="descname">receiver_connected</tt><a class="headerlink" href="#blinker.base.Signal.receiver_connected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emitted after each <a title="blinker.base.Signal.connect" class="reference internal" href="#blinker.base.Signal.connect"><tt class="xref docutils literal"><span class="pre">connect()</span></tt></a>.</p>
+<p>The signal sender is the signal instance, and the <a title="blinker.base.Signal.connect" class="reference internal" href="#blinker.base.Signal.connect"><tt class="xref docutils literal"><span class="pre">connect()</span></tt></a>
+arguments are passed through: <em>receiver</em>, <em>sender</em>, and <em>weak</em>.</p>
+<p class="versionadded">
+<span class="versionmodified">New in version 1.2.</span></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="blinker.base.Signal.receiver_disconnected">
+<tt class="descname">receiver_disconnected</tt><a class="headerlink" href="#blinker.base.Signal.receiver_disconnected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emitted after <a title="blinker.base.Signal.disconnect" class="reference internal" href="#blinker.base.Signal.disconnect"><tt class="xref docutils literal"><span class="pre">disconnect()</span></tt></a>.</p>
+<p>The sender is the signal instance, and the <a title="blinker.base.Signal.disconnect" class="reference internal" href="#blinker.base.Signal.disconnect"><tt class="xref docutils literal"><span class="pre">disconnect()</span></tt></a> arguments
+are passed through: <em>receiver</em> and <em>sender</em>.</p>
+<p>Note, this signal is emitted <strong>only</strong> when <a title="blinker.base.Signal.disconnect" class="reference internal" href="#blinker.base.Signal.disconnect"><tt class="xref docutils literal"><span class="pre">disconnect()</span></tt></a> is
+called explicitly.</p>
+<p>The disconnect signal can not be emitted by an automatic disconnect
+(due to a weakly referenced receiver or sender going out of scope),
+as the receiver and/or sender instances are no longer available for
+use at the time this signal would be emitted.</p>
+<p>An alternative approach is available by subscribing to
+<a title="blinker.base.receiver_connected" class="reference internal" href="#blinker.base.receiver_connected"><tt class="xref docutils literal"><span class="pre">receiver_connected</span></tt></a> and setting up a custom weakref cleanup
+callback on weak receivers and senders.</p>
+<p class="versionadded">
+<span class="versionmodified">New in version 1.2.</span></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="blinker.base.Signal.receivers">
+<tt class="descname">receivers</tt><a class="headerlink" href="#blinker.base.Signal.receivers" title="Permalink to this definition">¶</a></dt>
+<dd><p>A mapping of connected receivers.</p>
+<p>The values of this mapping are not meaningful outside of the
+internal <a title="blinker.base.Signal" class="reference internal" href="#blinker.base.Signal"><tt class="xref docutils literal"><span class="pre">Signal</span></tt></a> implementation, however the boolean value
+of the mapping is useful as an extremely efficient check to see if
+any receivers are connected to the signal.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="blinker.base.Signal.connect">
+<tt class="descname">connect</tt><big>(</big><em>receiver</em>, <em>sender=ANY</em>, <em>weak=True</em><big>)</big><a class="headerlink" href="#blinker.base.Signal.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect <em>receiver</em> to signal events sent by <em>sender</em>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>receiver</em> &#8211; A callable.  Will be invoked by <a title="blinker.base.Signal.send" class="reference internal" href="#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a> with
+<cite>sender=</cite> as a single positional argument and any **kwargs that
+were provided to a call to <a title="blinker.base.Signal.send" class="reference internal" href="#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a>.</li>
+<li><em>sender</em> &#8211; Any object or <a title="blinker.base.ANY" class="reference internal" href="#blinker.base.ANY"><tt class="xref docutils literal"><span class="pre">ANY</span></tt></a>, defaults to <tt class="docutils literal"><span class="pre">ANY</span></tt>.
+Restricts notifications delivered to <em>receiver</em> to only those
+<a title="blinker.base.Signal.send" class="reference internal" href="#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a> emissions sent by <em>sender</em>.  If <tt class="docutils literal"><span class="pre">ANY</span></tt>, the receiver
+will always be notified.  A <em>receiver</em> may be connected to
+multiple <em>sender</em> values on the same Signal through multiple calls
+to <a title="blinker.base.Signal.connect" class="reference internal" href="#blinker.base.Signal.connect"><tt class="xref docutils literal"><span class="pre">connect()</span></tt></a>.</li>
+<li><em>weak</em> &#8211; If true, the Signal will hold a weakref to <em>receiver</em>
+and automatically disconnect when <em>receiver</em> goes out of scope or
+is garbage collected.  Defaults to True.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blinker.base.Signal.connect_via">
+<tt class="descname">connect_via</tt><big>(</big><em>sender</em>, <em>weak=False</em><big>)</big><a class="headerlink" href="#blinker.base.Signal.connect_via" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect the decorated function as a receiver for <em>sender</em>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>sender</em> &#8211; Any object or <a title="blinker.base.ANY" class="reference internal" href="#blinker.base.ANY"><tt class="xref docutils literal"><span class="pre">ANY</span></tt></a>.  The decorated function
+will only receive <a title="blinker.base.Signal.send" class="reference internal" href="#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a> emissions sent by <em>sender</em>.  If
+<tt class="docutils literal"><span class="pre">ANY</span></tt>, the receiver will always be notified.  A function may be
+decorated multiple times with differing <em>sender</em> values.</li>
+<li><em>weak</em> &#8211; If true, the Signal will hold a weakref to the
+decorated function and automatically disconnect when <em>receiver</em>
+goes out of scope or is garbage collected.  Unlike
+<a title="blinker.base.Signal.connect" class="reference internal" href="#blinker.base.Signal.connect"><tt class="xref docutils literal"><span class="pre">connect()</span></tt></a>, this defaults to False.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>The decorated function will be invoked by <a title="blinker.base.Signal.send" class="reference internal" href="#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a> with</dt>
+<dd><cite>sender=</cite> as a single positional argument and any **kwargs that
+were provided to the call to <a title="blinker.base.Signal.send" class="reference internal" href="#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a>.</dd>
+</dl>
+<p class="versionadded">
+<span class="versionmodified">New in version 1.1.</span></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="blinker.base.Signal.connected_to">
+<tt class="descname">connected_to</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#blinker.base.Signal.connected_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute a block with the signal temporarily connected to <em>receiver</em>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>receiver</em> &#8211; a receiver callable</li>
+<li><em>sender</em> &#8211; optional, a sender to filter on</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>This is a context manager for use in the <tt class="docutils literal"><span class="pre">with</span></tt> statement.  It can
+be useful in unit tests.  <em>receiver</em> is connected to the signal for
+the duration of the <tt class="docutils literal"><span class="pre">with</span></tt> block, and will be disconnected
+automatically when exiting the block:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">on_ready</span><span class="o">.</span><span class="n">connected_to</span><span class="p">(</span><span class="n">receiver</span><span class="p">):</span>
+   <span class="c"># do stuff</span>
+   <span class="n">on_ready</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="versionadded">
+<span class="versionmodified">New in version 1.1.</span></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="blinker.base.Signal.disconnect">
+<tt class="descname">disconnect</tt><big>(</big><em>receiver</em>, <em>sender=ANY</em><big>)</big><a class="headerlink" href="#blinker.base.Signal.disconnect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disconnect <em>receiver</em> from this signal&#8217;s events.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>receiver</em> &#8211; a previously <a title="blinker.base.Signal.connect" class="reference internal" href="#blinker.base.Signal.connect"><tt class="xref docutils literal"><span class="pre">connected</span></tt></a> callable</li>
+<li><em>sender</em> &#8211; a specific sender to disconnect from, or <a title="blinker.base.ANY" class="reference internal" href="#blinker.base.ANY"><tt class="xref docutils literal"><span class="pre">ANY</span></tt></a>
+to disconnect from all senders.  Defaults to <tt class="docutils literal"><span class="pre">ANY</span></tt>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blinker.base.Signal.has_receivers_for">
+<tt class="descname">has_receivers_for</tt><big>(</big><em>sender</em><big>)</big><a class="headerlink" href="#blinker.base.Signal.has_receivers_for" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if there is probably a receiver for <em>sender</em>.</p>
+<p>Performs an optimistic check only.  Does not guarantee that all
+weakly referenced receivers are still alive.  See
+<a title="blinker.base.Signal.receivers_for" class="reference internal" href="#blinker.base.Signal.receivers_for"><tt class="xref docutils literal"><span class="pre">receivers_for()</span></tt></a> for a stronger search.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="blinker.base.Signal.receivers_for">
+<tt class="descname">receivers_for</tt><big>(</big><em>sender</em><big>)</big><a class="headerlink" href="#blinker.base.Signal.receivers_for" title="Permalink to this definition">¶</a></dt>
+<dd>Iterate all live receivers listening for <em>sender</em>.</dd></dl>
+
+<dl class="method">
+<dt id="blinker.base.Signal.send">
+<tt class="descname">send</tt><big>(</big><em>*sender</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#blinker.base.Signal.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emit this signal on behalf of <em>sender</em>, passing on **kwargs.</p>
+<p>Returns a list of 2-tuples, pairing receivers with their return
+value. The ordering of receiver notification is undefined.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>*sender</em> &#8211; Any object or <tt class="xref docutils literal"><span class="pre">None</span></tt>.  If omitted, synonymous
+with <tt class="xref docutils literal"><span class="pre">None</span></tt>.  Only accepts one positional argument.</li>
+<li><em>**kwargs</em> &#8211; Data to be sent to receivers.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="blinker.base.Signal.temporarily_connected_to">
+<tt class="descname">temporarily_connected_to</tt><big>(</big><em>receiver</em>, <em>sender=ANY</em><big>)</big><a class="headerlink" href="#blinker.base.Signal.temporarily_connected_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>An alias for <a title="blinker.base.Signal.connected_to" class="reference internal" href="#blinker.base.Signal.connected_to"><tt class="xref docutils literal"><span class="pre">connected_to()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><em>receiver</em> &#8211; a receiver callable</li>
+<li><em>sender</em> &#8211; optional, a sender to filter on</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="versionadded">
+<span class="versionmodified">New in version 0.9.</span></p>
+<p class="versionchanged">
+<span class="versionmodified">Changed in version 1.1: </span>Renamed to <a title="blinker.base.Signal.connected_to" class="reference internal" href="#blinker.base.Signal.connected_to"><tt class="xref docutils literal"><span class="pre">connected_to()</span></tt></a>.  <tt class="docutils literal"><span class="pre">temporarily_connected_to</span></tt>
+was deprecated in 1.2 and removed in a subsequent version.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="named-signals">
+<h2>Named Signals<a class="headerlink" href="#named-signals" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="blinker.base.signal">
+<tt class="descclassname">blinker.base.</tt><tt class="descname">signal</tt><big>(</big><em>name</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#blinker.base.signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <a title="blinker.base.NamedSignal" class="reference internal" href="#blinker.base.NamedSignal"><tt class="xref docutils literal"><span class="pre">NamedSignal</span></tt></a> <em>name</em>, creating it if required.</p>
+<p>Repeated calls to this function will return the same signal object.
+Signals are created in a global <a title="blinker.base.Namespace" class="reference internal" href="#blinker.base.Namespace"><tt class="xref docutils literal"><span class="pre">Namespace</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="blinker.base.NamedSignal">
+<em class="property">class </em><tt class="descclassname">blinker.base.</tt><tt class="descname">NamedSignal</tt><big>(</big><em>name</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#blinker.base.NamedSignal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a title="blinker.base.Signal" class="reference internal" href="#blinker.base.Signal"><tt class="xref docutils literal"><span class="pre">blinker.base.Signal</span></tt></a></p>
+<p>A named generic notification emitter.</p>
+<dl class="attribute">
+<dt id="blinker.base.NamedSignal.name">
+<tt class="descname">name</tt><a class="headerlink" href="#blinker.base.NamedSignal.name" title="Permalink to this definition">¶</a></dt>
+<dd>The name of this signal.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="blinker.base.Namespace">
+<em class="property">class </em><tt class="descclassname">blinker.base.</tt><tt class="descname">Namespace</tt><big>(</big><em>*args</em>, <em>**kw</em><big>)</big><a class="headerlink" href="#blinker.base.Namespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref docutils literal"><span class="pre">weakref.WeakValueDictionary</span></tt></p>
+<p>A mapping of signal names to signals.</p>
+<dl class="method">
+<dt id="blinker.base.Namespace.signal">
+<tt class="descname">signal</tt><big>(</big><em>name</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#blinker.base.Namespace.signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the <a title="blinker.base.NamedSignal" class="reference internal" href="#blinker.base.NamedSignal"><tt class="xref docutils literal"><span class="pre">NamedSignal</span></tt></a> <em>name</em>, creating it if required.</p>
+<p>Repeated calls to this function will return the same signal object.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference external" href="#">API Documentation</a><ul>
+<li><a class="reference external" href="#basic-signals">Basic Signals</a></li>
+<li><a class="reference external" href="#named-signals">Named Signals</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="signals.html"
+                        title="previous chapter">Signals</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="signals.html" title="Signals"
+             >previous</a> |</li>
+        <li><a href="index.html">Blinker v1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Jason Kirtland.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.
+    </div>
+  </body>
+</html>

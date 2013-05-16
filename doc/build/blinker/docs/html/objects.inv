@@ -1,0 +1,23 @@
+# Sphinx inventory version 1
+# Project: Blinker
+# Version: tip
+blinker.base.Namespace class api.html
+blinker.base.NamedSignal.name attribute api.html
+blinker.base.Signal.send method api.html
+blinker.base.Signal.connected_to method api.html
+blinker.base.Signal.connect_via method api.html
+blinker.base.Signal.temporarily_connected_to method api.html
+blinker.base.signal function api.html
+blinker.base.ANY attribute api.html
+blinker.base.Signal.connect method api.html
+blinker.base.Signal.receivers attribute api.html
+blinker.base.NamedSignal class api.html
+blinker.base.receiver_connected attribute api.html
+blinker.base.Signal.disconnect method api.html
+blinker.base.Signal.receiver_connected attribute api.html
+blinker.base.Signal.receiver_disconnected attribute api.html
+blinker.base.Signal.has_receivers_for method api.html
+blinker.base.Signal.receivers_for method api.html
+blinker.base.Signal.ANY attribute api.html
+blinker.base.Namespace.signal method api.html
+blinker.base.Signal class api.html

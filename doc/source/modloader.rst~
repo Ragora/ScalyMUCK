@@ -1,0 +1,10 @@
+Welcome to ScalyMUCK's documentation!
+=====================================
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+.. automodule:: modloader
+   :members:
+

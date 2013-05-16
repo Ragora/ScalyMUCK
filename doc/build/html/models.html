@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to ScalyMUCK’s documentation! &mdash; ScalyMUCK 3.0.0 documentation</title>
+    <title>Database Models &mdash; ScalyMUCK 3.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -25,7 +25,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" /> 
+    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" />
+    <link rel="next" title="World Class" href="world.html" />
+    <link rel="prev" title="User Interface Class" href="interface.html" /> 
   </head>
   <body>
     <div class="related">
@@ -37,6 +39,12 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="world.html" title="World Class"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="interface.html" title="User Interface Class"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -46,8 +54,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="welcome-to-scalymuck-s-documentation">
-<h1>Welcome to ScalyMUCK&#8217;s documentation!<a class="headerlink" href="#welcome-to-scalymuck-s-documentation" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="database-models">
+<h1>Database Models<a class="headerlink" href="#database-models" title="Permalink to this headline">¶</a></h1>
 <p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul class="simple">
@@ -78,6 +86,14 @@ either. They have the special property of being interchangable with player objec
 for the most part except when it comes to certain functions &#8211; such as having a password
 hash.</p>
 <dl class="method">
+<dt id="models.Bot.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>name=None</em>, <em>description=None</em>, <em>location=None</em><big>)</big><a class="reference internal" href="_modules/models.html#Bot.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Bot.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Bot is not constructed manually by any of the modifications, this should be
+performed by calling the create_player function on the game.World instance provided
+to every modification.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="models.Bot.send">
 <tt class="descname">send</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/models.html#Bot.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Bot.send" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is basically &#8216;send&#8217; like for players except it does NOTHING.</p>
@@ -91,6 +107,26 @@ hash.</p>
 <dd><p>Exits are what the players use to exit and move into other rooms in the ScalyMUCK
 world. They may only have one target room ID which is used to assign .target to them
 when they are loaded or creates by the game.World instance.</p>
+<dl class="method">
+<dt id="models.Exit.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>name</em>, <em>target=None</em>, <em>owner=0</em><big>)</big><a class="reference internal" href="_modules/models.html#Exit.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Exit.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes an instance of the Exit model.</p>
+<p>The Exit is not constructed manually by any of the modifications, this should be
+performed by calling the create_player function on the game.World instance provided
+to every modification.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd>target &#8211; The ID or instance of a Room that this exit should be linking to.
+owner &#8211; The ID or instance of a Player that this should should belong to.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.Exit.__repr__">
+<tt class="descname">__repr__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/models.html#Exit.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Exit.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a representation of the exit, as to be expected.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -101,6 +137,27 @@ when they are loaded or creates by the game.World instance.</p>
 serve multiple purposes. They can quite literally be an item, stored in the player&#8217;s inventory
 to be used later (like a potion) or they may be used to decorate rooms with specific objects
 such as furniture or they may even be used to represent dead bodies.</p>
+<dl class="method">
+<dt id="models.Item.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>name=None</em>, <em>description='&lt;Unset&gt;'</em>, <em>owner=0</em><big>)</big><a class="reference internal" href="_modules/models.html#Item.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Item.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor for the base item model.</p>
+<p>The Item is not constructed manually by any of the modifications, this should be
+performed by calling the create_player function on the game.World instance provided
+to every modification.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd>name &#8211; The name of the item that should be used.
+description &#8211; The description of the item that should be displayed. Default: &lt;Unset&gt;
+owner &#8211; Whoever should become the owner of this item, by instance or ID. Default: 0</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.Item.__repr__">
+<tt class="descname">__repr__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/models.html#Item.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Item.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a representation of the item, as to be expected.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="models.Item.set_owner">
 <tt class="descname">set_owner</tt><big>(</big><em>owner</em><big>)</big><a class="reference internal" href="_modules/models.html#Item.set_owner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Item.set_owner" title="Permalink to this definition">¶</a></dt>
@@ -171,6 +228,35 @@ by any previous function calls thay may have set this to false. Default: True</d
 <dd><p>Players are well, the players that actually move and interact in the world. They
 store their password hash and various other generic data that can be used across 
 just about anything.</p>
+<dl class="method">
+<dt id="models.Player.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>name=None</em>, <em>password=None</em>, <em>workfactor=None</em>, <em>location=None</em>, <em>inventory=None</em>, <em>description='&lt;Unset&gt;'</em>, <em>admin=False</em>, <em>sadmin=False</em>, <em>owner=False</em><big>)</big><a class="reference internal" href="_modules/models.html#Player.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Player.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes an instance of the Player model.</p>
+<p>The Player is not constructed manually by any of the modifications, this should be
+performed by calling the create_player function on the game.World instance provided
+to every modification. When the instance is created, it automatically generates a salt
+that the Player&#8217;s password will be hashed with. This salt generation will cause a small
+lockup as the calculations are pretty intense depending on the work factor.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd>name &#8211; The name of the Player that should be used.
+password &#8211; The password that should be used for this Player in the database.
+workfactor &#8211; The workfactor that should be used when generating this Player&#8217;s hash salt.
+location &#8211; An ID or instance of Room that this Player should be created at.
+inventory &#8211; An ID or instance of Room that should represent this Player&#8217;s inventory.
+description &#8211; A description that is shown when the player is looked at. Default: &lt;Unset&gt;
+admin &#8211; A boolean representing whether or not the player is an administrator or not. Default: False
+sadmin &#8211; A boolean representing whether or not the player is a super administrator or not. Default: False
+owner &#8211; A boolean representing whether or not the player is the owner of the server. Default: False</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.Player.__repr__">
+<tt class="descname">__repr__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/models.html#Player.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Player.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a representation of the player, as to be expected.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="models.Player.check_admin_trump">
 <tt class="descname">check_admin_trump</tt><big>(</big><em>target</em><big>)</big><a class="reference internal" href="_modules/models.html#Player.check_admin_trump"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Player.check_admin_trump" title="Permalink to this definition">¶</a></dt>
@@ -253,6 +339,27 @@ by any previous function calls thay may have set this to false. Default: True</d
 <dd><p>Base room model that ScalyMUCK uses.</p>
 <p>Rooms are what make up the world inside of just about any MUCK really. Even if the rooms are not described as such, they still
 must be used to contain players, dropped items, bots, etc.</p>
+<dl class="method">
+<dt id="models.Room.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>name=None</em>, <em>description='&lt;Unset&gt;'</em>, <em>owner=0</em><big>)</big><a class="reference internal" href="_modules/models.html#Room.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Room.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initiates an instance of the Room model.</p>
+<p>The Room is not constructed manually by any of the modifications, this should be
+performed by calling the create_player function on the game.World instance provided
+to every modification.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd>name &#8211; The name of the room that should be used.
+description &#8211; The description of the room.
+owner &#8211; The instance or ID of the relevant Player instance that should own this room.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.Room.__repr__">
+<tt class="descname">__repr__</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/models.html#Room.__repr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Room.__repr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Produces a representation of the room, as to be expected.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="models.Room.add_exit">
 <tt class="descname">add_exit</tt><big>(</big><em>name=None</em>, <em>target=None</em>, <em>owner=0</em><big>)</big><a class="reference internal" href="_modules/models.html#Room.add_exit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Room.add_exit" title="Permalink to this definition">¶</a></dt>
@@ -346,14 +453,6 @@ name &#8211; The name of the Player to locate.</dd>
 </dd></dl>
 
 </div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
-<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
-<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
-<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
-</ul>
-</div>
 
 
           </div>
@@ -361,14 +460,12 @@ name &#8211; The name of the Player to locate.</dd>
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Welcome to ScalyMUCK&#8217;s documentation!</a><ul>
-</ul>
-</li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
-
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="interface.html"
+                        title="previous chapter">User Interface Class</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="world.html"
+                        title="next chapter">World Class</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/models.txt"
@@ -400,6 +497,12 @@ name &#8211; The name of the Player to locate.</dd>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="world.html" title="World Class"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="interface.html" title="User Interface Class"
+             >previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>

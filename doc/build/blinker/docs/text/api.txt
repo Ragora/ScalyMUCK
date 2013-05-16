@@ -1,0 +1,240 @@
+
+API Documentation
+*****************
+
+All public API members can (and should) be imported from ``blinker``:
+
+   from blinker import ANY, signal
+
+
+Basic Signals
+=============
+
+base.ANY
+
+   Token for "any sender".
+
+base.receiver_connected
+
+   Sent by a ``Signal`` after a receiver connects.
+
+   Argument:
+      the Signal that was connected to
+
+   Parameters:
+      * *receiver_arg* -- the connected receiver
+
+      * *sender_arg* -- the sender to connect to
+
+      * *weak_arg* -- true if the connection to receiver_arg is a weak
+        reference
+
+   Deprecated since version 1.2.
+
+   As of 1.2, individual signals have their own private
+   ``receiver_connected`` and ``receiver_disconnected`` signals with a
+   slightly simplified call signature.  This global signal is planned
+   to be removed in 1.6.
+
+class class blinker.base.Signal(doc=None)
+
+   A notification emitter.
+
+   Parameter:
+      *doc* -- optional.  If provided, will be assigned to the
+      signal's __doc__ attribute.
+
+   ANY
+
+      An ``ANY`` convenience synonym, allows ``Signal.ANY`` without an
+      additional import.
+
+   receiver_connected
+
+      Emitted after each ``connect()``.
+
+      The signal sender is the signal instance, and the ``connect()``
+      arguments are passed through: *receiver*, *sender*, and *weak*.
+
+      New in version 1.2.
+
+   receiver_disconnected
+
+      Emitted after ``disconnect()``.
+
+      The sender is the signal instance, and the ``disconnect()``
+      arguments are passed through: *receiver* and *sender*.
+
+      Note, this signal is emitted **only** when ``disconnect()`` is
+      called explicitly.
+
+      The disconnect signal can not be emitted by an automatic
+      disconnect (due to a weakly referenced receiver or sender going
+      out of scope), as the receiver and/or sender instances are no
+      longer available for use at the time this signal would be
+      emitted.
+
+      An alternative approach is available by subscribing to
+      ``receiver_connected`` and setting up a custom weakref cleanup
+      callback on weak receivers and senders.
+
+      New in version 1.2.
+
+   receivers
+
+      A mapping of connected receivers.
+
+      The values of this mapping are not meaningful outside of the
+      internal ``Signal`` implementation, however the boolean value of
+      the mapping is useful as an extremely efficient check to see if
+      any receivers are connected to the signal.
+
+   connect(receiver, sender=ANY, weak=True)
+
+      Connect *receiver* to signal events sent by *sender*.
+
+      Parameters:
+         * *receiver* -- A callable.  Will be invoked by ``send()``
+           with *sender=* as a single positional argument and any
+           **kwargs that were provided to a call to ``send()``.
+
+         * *sender* -- Any object or ``ANY``, defaults to ``ANY``.
+           Restricts notifications delivered to *receiver* to only
+           those ``send()`` emissions sent by *sender*.  If ``ANY``,
+           the receiver will always be notified.  A *receiver* may be
+           connected to multiple *sender* values on the same Signal
+           through multiple calls to ``connect()``.
+
+         * *weak* -- If true, the Signal will hold a weakref to
+           *receiver* and automatically disconnect when *receiver*
+           goes out of scope or is garbage collected.  Defaults to
+           True.
+
+   connect_via(sender, weak=False)
+
+      Connect the decorated function as a receiver for *sender*.
+
+      Parameters:
+         * *sender* -- Any object or ``ANY``.  The decorated function
+           will only receive ``send()`` emissions sent by *sender*.
+           If ``ANY``, the receiver will always be notified.  A
+           function may be decorated multiple times with differing
+           *sender* values.
+
+         * *weak* -- If true, the Signal will hold a weakref to the
+           decorated function and automatically disconnect when
+           *receiver* goes out of scope or is garbage collected.
+           Unlike ``connect()``, this defaults to False.
+
+      The decorated function will be invoked by ``send()`` with
+         *sender=* as a single positional argument and any **kwargs
+         that were provided to the call to ``send()``.
+
+      New in version 1.1.
+
+   connected_to(*args, **kwds)
+
+      Execute a block with the signal temporarily connected to
+      *receiver*.
+
+      Parameters:
+         * *receiver* -- a receiver callable
+
+         * *sender* -- optional, a sender to filter on
+
+      This is a context manager for use in the ``with`` statement.  It
+      can be useful in unit tests.  *receiver* is connected to the
+      signal for the duration of the ``with`` block, and will be
+      disconnected automatically when exiting the block:
+
+         with on_ready.connected_to(receiver):
+            # do stuff
+            on_ready.send(123)
+
+      New in version 1.1.
+
+   disconnect(receiver, sender=ANY)
+
+      Disconnect *receiver* from this signal's events.
+
+      Parameters:
+         * *receiver* -- a previously ``connected`` callable
+
+         * *sender* -- a specific sender to disconnect from, or
+           ``ANY`` to disconnect from all senders.  Defaults to
+           ``ANY``.
+
+   has_receivers_for(sender)
+
+      True if there is probably a receiver for *sender*.
+
+      Performs an optimistic check only.  Does not guarantee that all
+      weakly referenced receivers are still alive.  See
+      ``receivers_for()`` for a stronger search.
+
+   receivers_for(sender)
+
+      Iterate all live receivers listening for *sender*.
+
+   send(*sender, **kwargs)
+
+      Emit this signal on behalf of *sender*, passing on **kwargs.
+
+      Returns a list of 2-tuples, pairing receivers with their return
+      value. The ordering of receiver notification is undefined.
+
+      Parameters:
+         * **sender* -- Any object or ``None``.  If omitted,
+           synonymous with ``None``.  Only accepts one positional
+           argument.
+
+         * ***kwargs* -- Data to be sent to receivers.
+
+   temporarily_connected_to(receiver, sender=ANY)
+
+      An alias for ``connected_to()``.
+
+      Parameters:
+         * *receiver* -- a receiver callable
+
+         * *sender* -- optional, a sender to filter on
+
+      New in version 0.9.
+
+      Changed in version 1.1: Renamed to ``connected_to()``.
+      ``temporarily_connected_to`` was deprecated in 1.2 and removed
+      in a subsequent version.
+
+
+Named Signals
+=============
+
+blinker.base.signal(name, doc=None)
+
+   Return the ``NamedSignal`` *name*, creating it if required.
+
+   Repeated calls to this function will return the same signal object.
+   Signals are created in a global ``Namespace``.
+
+class class blinker.base.NamedSignal(name, doc=None)
+
+   Bases: ``blinker.base.Signal``
+
+   A named generic notification emitter.
+
+   name
+
+      The name of this signal.
+
+class class blinker.base.Namespace(*args, **kw)
+
+   Bases: ``weakref.WeakValueDictionary``
+
+   A mapping of signal names to signals.
+
+   signal(name, doc=None)
+
+      Return the ``NamedSignal`` *name*, creating it if required.
+
+      Repeated calls to this function will return the same signal
+      object.

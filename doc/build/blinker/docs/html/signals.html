@@ -1,0 +1,328 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Signals &mdash; Blinker v1.2 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '1.2',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Blinker v1.2 documentation" href="index.html" />
+    <link rel="next" title="API Documentation" href="api.html" />
+    <link rel="prev" title="Blinker Documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="api.html" title="API Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Blinker Documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Blinker v1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="signals">
+<h1>Signals<a class="headerlink" href="#signals" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="decoupling-with-named-signals">
+<h2>Decoupling With Named Signals<a class="headerlink" href="#decoupling-with-named-signals" title="Permalink to this headline">¶</a></h2>
+<p>Named signals are created with <a title="blinker.base.signal" class="reference external" href="api.html#blinker.base.signal"><tt class="xref docutils literal"><span class="pre">signal()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">blinker</span> <span class="kn">import</span> <span class="n">signal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">initialized</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;initialized&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">initialized</span> <span class="ow">is</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;initialized&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Every call to <tt class="docutils literal"><span class="pre">signal('name')</span></tt> returns the same signal object,
+allowing unconnected parts of code (different modules, plugins,
+anything) to all use the same signal without requiring any code
+sharing or special imports.</p>
+</div>
+<div class="section" id="subscribing-to-signals">
+<h2>Subscribing to Signals<a class="headerlink" href="#subscribing-to-signals" title="Permalink to this headline">¶</a></h2>
+<p><a title="blinker.base.Signal.connect" class="reference external" href="api.html#blinker.base.Signal.connect"><tt class="xref docutils literal"><span class="pre">Signal.connect()</span></tt></a> registers a function to be invoked each time
+the signal is emitted.  Connected functions are always passed the
+object that caused the signal to be emitted.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">subscriber</span><span class="p">(</span><span class="n">sender</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Got a signal sent by </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">sender</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ready</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;ready&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ready</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">subscriber</span><span class="p">)</span>
+<span class="go">&lt;function subscriber at 0x...&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="emitting-signals">
+<h2>Emitting Signals<a class="headerlink" href="#emitting-signals" title="Permalink to this headline">¶</a></h2>
+<p>Code producing events of interest can <a title="blinker.base.Signal.send" class="reference external" href="api.html#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">Signal.send()</span></tt></a>
+notifications to all connected receivers.</p>
+<p>Below, a simple <tt class="docutils literal"><span class="pre">Processor</span></tt> class emits a <tt class="docutils literal"><span class="pre">ready</span></tt> signal when it&#8217;s
+about to process something, and <tt class="docutils literal"><span class="pre">complete</span></tt> when it is done.  It
+passes <tt class="docutils literal"><span class="pre">self</span></tt> to the <a title="blinker.base.Signal.send" class="reference external" href="api.html#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a> method, signifying that
+that particular instance was responsible for emitting the signal.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Processor</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="n">ready</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;ready&#39;</span><span class="p">)</span>
+<span class="gp">... </span>       <span class="n">ready</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<span class="gp">... </span>       <span class="k">print</span><span class="p">(</span><span class="s">&quot;Processing.&quot;</span><span class="p">)</span>
+<span class="gp">... </span>       <span class="n">complete</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;complete&#39;</span><span class="p">)</span>
+<span class="gp">... </span>       <span class="n">complete</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="k">return</span> <span class="s">&#39;&lt;Processor </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">processor_a</span> <span class="o">=</span> <span class="n">Processor</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">processor_a</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+<span class="go">Got a signal sent by &lt;Processor a&gt;</span>
+<span class="go">Processing.</span>
+</pre></div>
+</div>
+<p>Notice the <tt class="docutils literal"><span class="pre">complete</span></tt> signal in <tt class="docutils literal"><span class="pre">go()</span></tt>?  No receivers have
+connected to <tt class="docutils literal"><span class="pre">complete</span></tt> yet, and that&#8217;s a-ok.  Calling
+<a title="blinker.base.Signal.send" class="reference external" href="api.html#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a> on a signal with no receivers will result in no
+notifications being sent, and these no-op sends are optimized to be as
+inexpensive as possible.</p>
+</div>
+<div class="section" id="subscribing-to-specific-senders">
+<h2>Subscribing to Specific Senders<a class="headerlink" href="#subscribing-to-specific-senders" title="Permalink to this headline">¶</a></h2>
+<p>The default connection to a signal invokes the receiver function when
+any sender emits it.  The <a title="blinker.base.Signal.connect" class="reference external" href="api.html#blinker.base.Signal.connect"><tt class="xref docutils literal"><span class="pre">Signal.connect()</span></tt></a> function accepts an
+optional argument to restrict the subscription to one specific sending
+object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">b_subscriber</span><span class="p">(</span><span class="n">sender</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Caught signal from processor_b.&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">assert</span> <span class="n">sender</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;b&#39;</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">processor_b</span> <span class="o">=</span> <span class="n">Processor</span><span class="p">(</span><span class="s">&#39;b&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ready</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">b_subscriber</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">processor_b</span><span class="p">)</span>
+<span class="go">&lt;function b_subscriber at 0x...&gt;</span>
+</pre></div>
+</div>
+<p>This function has been subscribed to <tt class="docutils literal"><span class="pre">ready</span></tt> but only when sent by
+<tt class="docutils literal"><span class="pre">processor_b</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">processor_a</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+<span class="go">Got a signal sent by &lt;Processor a&gt;</span>
+<span class="go">Processing.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">processor_b</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+<span class="go">Got a signal sent by &lt;Processor b&gt;</span>
+<span class="go">Caught signal from processor_b.</span>
+<span class="go">Processing.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sending-and-receiving-data-through-signals">
+<h2>Sending and Receiving Data Through Signals<a class="headerlink" href="#sending-and-receiving-data-through-signals" title="Permalink to this headline">¶</a></h2>
+<p>Additional keyword arguments can be passed to <a title="blinker.base.Signal.send" class="reference external" href="api.html#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a>.
+These will in turn be passed to the connected functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">send_data</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;send-data&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@send_data.connect</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">receive_data</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Caught signal from </span><span class="si">%r</span><span class="s">, data </span><span class="si">%r</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">kw</span><span class="p">))</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="s">&#39;received!&#39;</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">send_data</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;anonymous&#39;</span><span class="p">,</span> <span class="n">abc</span><span class="o">=</span><span class="mi">123</span><span class="p">)</span>
+<span class="go">Caught signal from &#39;anonymous&#39;, data {&#39;abc&#39;: 123}</span>
+</pre></div>
+</div>
+<p>The return value of <a title="blinker.base.Signal.send" class="reference external" href="api.html#blinker.base.Signal.send"><tt class="xref docutils literal"><span class="pre">send()</span></tt></a> collects the return values of
+each connected function as a list of (<tt class="docutils literal"><span class="pre">receiver</span> <span class="pre">function</span></tt>, <tt class="docutils literal"><span class="pre">return</span>
+<span class="pre">value</span></tt>) pairs:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span>
+<span class="go">[(&lt;function receive_data at 0x...&gt;, &#39;received!&#39;)]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="anonymous-signals">
+<h2>Anonymous Signals<a class="headerlink" href="#anonymous-signals" title="Permalink to this headline">¶</a></h2>
+<p>Signals need not be named.  The <a title="blinker.base.Signal" class="reference external" href="api.html#blinker.base.Signal"><tt class="xref docutils literal"><span class="pre">Signal</span></tt></a> constructor creates a
+unique signal each time it is invoked.  For example, an alternative
+implementation of the Processor from above might provide the
+processing signals as class attributes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">blinker</span> <span class="kn">import</span> <span class="n">Signal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">AltProcessor</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="n">on_ready</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+<span class="gp">... </span>   <span class="n">on_complete</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="bp">self</span><span class="o">.</span><span class="n">on_ready</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<span class="gp">... </span>       <span class="k">print</span><span class="p">(</span><span class="s">&quot;Alternate processing.&quot;</span><span class="p">)</span>
+<span class="gp">... </span>       <span class="bp">self</span><span class="o">.</span><span class="n">on_complete</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">... </span>   <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>       <span class="k">return</span> <span class="s">&#39;&lt;AltProcessor </span><span class="si">%s</span><span class="s">&gt;&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="connect-as-a-decorator">
+<h2><tt class="docutils literal"><span class="pre">connect</span></tt> as a Decorator<a class="headerlink" href="#connect-as-a-decorator" title="Permalink to this headline">¶</a></h2>
+<p>You may have noticed the return value of <a title="blinker.base.Signal.connect" class="reference external" href="api.html#blinker.base.Signal.connect"><tt class="xref docutils literal"><span class="pre">connect()</span></tt></a> in
+the console output in the sections above.  This allows <tt class="docutils literal"><span class="pre">connect</span></tt> to
+be used as a decorator on functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">apc</span> <span class="o">=</span> <span class="n">AltProcessor</span><span class="p">(</span><span class="s">&#39;c&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@apc.on_complete.connect</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">completed</span><span class="p">(</span><span class="n">sender</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="s">&quot;AltProcessor </span><span class="si">%s</span><span class="s"> completed!&quot;</span> <span class="o">%</span> <span class="n">sender</span><span class="o">.</span><span class="n">name</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">apc</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+<span class="go">Alternate processing.</span>
+<span class="go">AltProcessor c completed!</span>
+</pre></div>
+</div>
+<p>While convenient, this form unfortunately does not allow the
+<tt class="docutils literal"><span class="pre">sender</span></tt> or <tt class="docutils literal"><span class="pre">weak</span></tt> arguments to be customized for the connected
+function.  For this, <a title="blinker.base.Signal.connect_via" class="reference external" href="api.html#blinker.base.Signal.connect_via"><tt class="xref docutils literal"><span class="pre">connect_via()</span></tt></a> can be used:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dice_roll</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;dice_roll&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@dice_roll.connect_via</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">... </span><span class="nd">@dice_roll.connect_via</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">... </span><span class="nd">@dice_roll.connect_via</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">odd_subscriber</span><span class="p">(</span><span class="n">sender</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Observed dice roll </span><span class="si">%r</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="n">sender</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">dice_roll</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">Observed dice roll 3.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="optimizing-signal-sending">
+<h2>Optimizing Signal Sending<a class="headerlink" href="#optimizing-signal-sending" title="Permalink to this headline">¶</a></h2>
+<p>Signals are optimized to send very quickly, whether receivers are
+connected or not.  If the data to be sent down a signal is very
+expensive, it can be more efficient to check to see if any receivers
+are connected first by testing the <a title="blinker.base.Signal.receivers" class="reference external" href="api.html#blinker.base.Signal.receivers"><tt class="xref docutils literal"><span class="pre">receivers</span></tt></a> property:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">signal</span><span class="p">(</span><span class="s">&#39;ready&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">receivers</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">signal</span><span class="p">(</span><span class="s">&#39;complete&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">receivers</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">AltProcessor</span><span class="o">.</span><span class="n">on_complete</span><span class="o">.</span><span class="n">receivers</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Checking for a receiver listening for a particular sender is also
+possible:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">signal</span><span class="p">(</span><span class="s">&#39;ready&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">has_receivers_for</span><span class="p">(</span><span class="n">processor_a</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="documenting-signals">
+<h2>Documenting Signals<a class="headerlink" href="#documenting-signals" title="Permalink to this headline">¶</a></h2>
+<p>Both named and anonymous signals can be passed a <tt class="docutils literal"><span class="pre">doc</span></tt> argument at
+construction to set the pydoc help text for the signal.  This
+documentation will be picked up by most documentation generators (such
+as sphinx) and is nice for documenting any additional data parameters
+that will be sent down with the signal.</p>
+<p>See the documentation of the <a title="blinker.base.receiver_connected" class="reference external" href="api.html#blinker.base.receiver_connected"><tt class="xref docutils literal"><span class="pre">receiver_connected</span></tt></a> built-in signal
+for an example.</p>
+</div>
+<div class="section" id="more">
+<h2>More<a class="headerlink" href="#more" title="Permalink to this headline">¶</a></h2>
+<p>Disconnecting receivers from signals, introspection of connected
+receivers, private namespaces for named signals and more are discussed
+in the <a class="reference external" href="api.html#api"><em>API Documentation</em></a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference external" href="#">Signals</a><ul>
+<li><a class="reference external" href="#decoupling-with-named-signals">Decoupling With Named Signals</a></li>
+<li><a class="reference external" href="#subscribing-to-signals">Subscribing to Signals</a></li>
+<li><a class="reference external" href="#emitting-signals">Emitting Signals</a></li>
+<li><a class="reference external" href="#subscribing-to-specific-senders">Subscribing to Specific Senders</a></li>
+<li><a class="reference external" href="#sending-and-receiving-data-through-signals">Sending and Receiving Data Through Signals</a></li>
+<li><a class="reference external" href="#anonymous-signals">Anonymous Signals</a></li>
+<li><a class="reference external" href="#connect-as-a-decorator"><tt class="docutils literal"><span class="pre">connect</span></tt> as a Decorator</a></li>
+<li><a class="reference external" href="#optimizing-signal-sending">Optimizing Signal Sending</a></li>
+<li><a class="reference external" href="#documenting-signals">Documenting Signals</a></li>
+<li><a class="reference external" href="#more">More</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Blinker Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api.html"
+                        title="next chapter">API Documentation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/signals.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="api.html" title="API Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Blinker Documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">Blinker v1.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Jason Kirtland.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.
+    </div>
+  </body>
+</html>

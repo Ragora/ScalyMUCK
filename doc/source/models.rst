@@ -1,4 +1,4 @@
-Welcome to ScalyMUCK's documentation!
+Database Models
 =====================================
 
 Contents:
@@ -7,11 +7,5 @@ Contents:
    :maxdepth: 2
 .. automodule:: models
    :members:
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   :special-members:
 

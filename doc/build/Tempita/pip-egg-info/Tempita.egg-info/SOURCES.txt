@@ -1,0 +1,9 @@
+setup.cfg
+pip-egg-info/Tempita.egg-info/PKG-INFO
+pip-egg-info/Tempita.egg-info/SOURCES.txt
+pip-egg-info/Tempita.egg-info/dependency_links.txt
+pip-egg-info/Tempita.egg-info/top_level.txt
+pip-egg-info/Tempita.egg-info/zip-safe
+tempita/__init__.py
+tempita/_looper.py
+tempita/compat3.py

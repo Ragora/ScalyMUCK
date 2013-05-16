@@ -181,7 +181,7 @@
 	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
 	<span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;players.id&#39;</span><span class="p">))</span>
 
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="Exit.__init__"><a class="viewcode-back" href="../models.html#models.Exit.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Initializes an instance of the Exit model.</span>
 
 <span class="sd">		The Exit is not constructed manually by any of the modifications, this should be</span>
@@ -214,11 +214,11 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">user_exit_message</span> <span class="o">=</span> <span class="s">&#39;You arrive in the next room.&#39;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">room_exit_message</span> <span class="o">=</span> <span class="s">&#39;arrived from another room.&#39;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s">&#39;&lt;Unset&gt;&#39;</span>
-
-	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</div>
+<div class="viewcode-block" id="Exit.__repr__"><a class="viewcode-back" href="../models.html#models.Exit.__repr__">[docs]</a>	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Produces a representation of the exit, as to be expected. &quot;&quot;&quot;</span>
 		<span class="k">return</span> <span class="s">&quot;&lt;Exit(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%u</span><span class="s">&#39;&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_id</span><span class="p">)</span>
-		</div>
+		</div></div>
 <div class="viewcode-block" id="Player"><a class="viewcode-back" href="../models.html#models.Player">[docs]</a><span class="k">class</span> <span class="nc">Player</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">ObjectBase</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot; </span>
 
@@ -248,7 +248,7 @@
 	<span class="n">server</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">interface</span> <span class="o">=</span> <span class="bp">None</span>
 
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">workfactor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">inventory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">admin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">sadmin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Player.__init__"><a class="viewcode-back" href="../models.html#models.Player.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">workfactor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">inventory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">admin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">sadmin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Initializes an instance of the Player model.</span>
 
 <span class="sd">		The Player is not constructed manually by any of the modifications, this should be</span>
@@ -285,11 +285,11 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span> <span class="o">=</span> <span class="n">admin</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="o">=</span> <span class="n">sadmin</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">is_owner</span> <span class="o">=</span> <span class="n">owner</span>
-
-	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</div>
+<div class="viewcode-block" id="Player.__repr__"><a class="viewcode-back" href="../models.html#models.Player.__repr__">[docs]</a>	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Produces a representation of the player, as to be expected. &quot;&quot;&quot;</span>
 		<span class="k">return</span> <span class="s">&quot;&lt;Player(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%u</span><span class="s">&#39;)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">location_id</span><span class="p">)</span>
-
+</div>
 <div class="viewcode-block" id="Player.send"><a class="viewcode-back" href="../models.html#models.Player.send">[docs]</a>	<span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Sends a message to this Player if they are connected.</span>
 
@@ -410,7 +410,7 @@
 	<span class="n">display_name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
 	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
 
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Bot.__init__"><a class="viewcode-back" href="../models.html#models.Bot.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">		The Bot is not constructed manually by any of the modifications, this should be</span>
@@ -426,7 +426,7 @@
 		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Room</span><span class="p">):</span>
 			<span class="n">location</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">id</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">location_id</span> <span class="o">=</span> <span class="n">location</span>
-
+</div>
 <div class="viewcode-block" id="Bot.send"><a class="viewcode-back" href="../models.html#models.Bot.send">[docs]</a>	<span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; This is basically &#39;send&#39; like for players except it does NOTHING. &quot;&quot;&quot;</span>
 </div></div>
@@ -447,7 +447,7 @@
 	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
 	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
 
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="Item.__init__"><a class="viewcode-back" href="../models.html#models.Item.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Constructor for the base item model.</span>
 
 <span class="sd">		The Item is not constructed manually by any of the modifications, this should be</span>
@@ -469,11 +469,11 @@
 			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="n">id</span>
-
-	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</div>
+<div class="viewcode-block" id="Item.__repr__"><a class="viewcode-back" href="../models.html#models.Item.__repr__">[docs]</a>	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Produces a representation of the item, as to be expected. &quot;&quot;&quot;</span>
 		<span class="k">return</span> <span class="s">&quot;&lt;Item(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-
+</div>
 <div class="viewcode-block" id="Item.set_owner"><a class="viewcode-back" href="../models.html#models.Item.set_owner">[docs]</a>	<span class="k">def</span> <span class="nf">set_owner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Sets a new owner for this item. &quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Player</span><span class="p">):</span>
@@ -499,7 +499,7 @@
 	<span class="n">exits</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Exit&#39;</span><span class="p">)</span>
 	<span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
 
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="Room.__init__"><a class="viewcode-back" href="../models.html#models.Room.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Initiates an instance of the Room model.</span>
 
 <span class="sd">		The Room is not constructed manually by any of the modifications, this should be</span>
@@ -522,11 +522,11 @@
 			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="n">id</span>
-
-	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</div>
+<div class="viewcode-block" id="Room.__repr__"><a class="viewcode-back" href="../models.html#models.Room.__repr__">[docs]</a>	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Produces a representation of the room, as to be expected. &quot;&quot;&quot;</span>
 		<span class="k">return</span> <span class="s">&quot;&lt;Room(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-
+</div>
 <div class="viewcode-block" id="Room.add_exit"><a class="viewcode-back" href="../models.html#models.Room.add_exit">[docs]</a>	<span class="k">def</span> <span class="nf">add_exit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Gives this Room instance an Exit linking to anywhere.</span>
 
