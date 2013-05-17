@@ -1,6 +1,4 @@
 """
-	ScalyMUCK base modification.
-
 	Found here is a great example of how modifications are implemented inside of ScalyMUCK. All modifications that
 	are intended to be loaded into ScalyMUCK must be provided in the form of a module you can merely drag and drop
 	into application/game/ and from there the server host can modify their server_config.cfg file to add the modification

@@ -50,9 +50,10 @@
             
   <h1>Source code for scommands</h1><div class="highlight"><pre>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	scommands.py</span>
-
-<span class="sd">	ScalyMUCK generic commands.</span>
+<span class="sd">	Found here is a great example of how modifications are implemented inside of ScalyMUCK. All modifications that</span>
+<span class="sd">	are intended to be loaded into ScalyMUCK must be provided in the form of a module you can merely drag and drop</span>
+<span class="sd">	into application/game/ and from there the server host can modify their server_config.cfg file to add the modification</span>
+<span class="sd">	to the loaded modification listing.</span>
 
 <span class="sd">	Copyright (c) 2013 Robert MacGregor</span>
 <span class="sd">	This software is licensed under the GNU General</span>
@@ -62,12 +63,34 @@
 
 <span class="kn">import</span> <span class="nn">string</span>
 
-<span class="kn">import</span> <span class="nn">game.models</span>
-
 <span class="kn">from</span> <span class="nn">blinker</span> <span class="kn">import</span> <span class="n">signal</span>
 
+<span class="kn">import</span> <span class="nn">game.models</span>
+
 <div class="viewcode-block" id="Modification"><a class="viewcode-back" href="../scommands.html#scommands.Modification">[docs]</a><span class="k">class</span> <span class="nc">Modification</span><span class="p">:</span>
-	<span class="sd">&quot;&quot;&quot; Main class object to load and initialize the scommands modification. &quot;&quot;&quot;</span>
+	<span class="sd">&quot;&quot;&quot; Main class object to load and initialize the scommands modification.</span>
+
+<span class="sd">	This modification class is what the modloader searches for when it imports</span>
+<span class="sd">	the module that this modification is contained in. The modloader will initialize</span>
+<span class="sd">	this class with the normal :meth:`__init__` constructor and it will remain loaded in memory</span>
+<span class="sd">	until the server owner either unloads it or reloads it which therefore will reset</span>
+<span class="sd">	any associated data unless the data had been defined on the class definition itself</span>
+<span class="sd">	rather than being initialized in the __init__ function. </span>
+
+<span class="sd">	Along with initializing the modification, __init__ acts as a gateway for other important</span>
+<span class="sd">	data passed in by the modloader under the **kwargs argument.</span>
+
+<span class="sd">	Keyword arguments:</span>
+<span class="sd">		config -- This is the instance of Settings that contains all loaded configuration </span>
+<span class="sd">	settings available for this modification, if the file exists. If the file does not exist, </span>
+<span class="sd">	then this will simply be None.</span>
+<span class="sd">		interface -- This is the instance of the user interface used internally by ScalyMUCK. Generally,</span>
+<span class="sd">	you won&#39;t need access to this for any reason and is currently deprecated for later removal.</span>
+
+<span class="sd">	Actions such as binding your Blinker signals should be performed here so that events will be</span>
+<span class="sd">	received properly when they occur.</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">world</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">interface</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">session</span> <span class="o">=</span> <span class="bp">None</span>
@@ -88,7 +111,6 @@
 	<span class="n">pre_show_description</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_show_description&#39;</span><span class="p">)</span>
 
 	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot; Initializes an instance of the modification. &quot;&quot;&quot;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">]</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;interface&#39;</span><span class="p">]</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;session&#39;</span><span class="p">]</span>
@@ -443,9 +465,28 @@
 
 	<span class="c"># Callbacks</span>
 <div class="viewcode-block" id="Modification.callback_client_authenticated"><a class="viewcode-back" href="../scommands.html#scommands.Modification.callback_client_authenticated">[docs]</a>	<span class="k">def</span> <span class="nf">callback_client_authenticated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trigger</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Callback that is bound to the &quot;post_client_authenticated&quot; event.</span>
+
+<span class="sd">		Callbacks like this one are helpful in cases that if you want to initialize</span>
+<span class="sd">		certain data upon the authentication of a certain client -- perhaps you&#39;re loading</span>
+<span class="sd">		mod data that is related to this client.</span>
+
+<span class="sd">		Refer to the __init__ function.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">command_look</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Modification.callback_message_sent"><a class="viewcode-back" href="../scommands.html#scommands.Modification.callback_message_sent">[docs]</a>	<span class="k">def</span> <span class="nf">callback_message_sent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trigger</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Callback that is bound to the &quot;pre_message_sent&quot; event.</span>
+
+<span class="sd">		Callbacks like this one are helpful in cases that if you want to intercept</span>
+<span class="sd">		input for any reason, such as an interactive menu that will handle it&#39;s own</span>
+<span class="sd">		text parsing for handling menu functions as that if the callback at any point</span>
+<span class="sd">		returns true, the server will not pass the input text into the core parser.</span>
+
+<span class="sd">		Refer to the __init__ function.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
 			<span class="k">if</span> <span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;:&#39;</span><span class="p">):</span>		
 				<span class="bp">self</span><span class="o">.</span><span class="n">command_pose</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">())</span>

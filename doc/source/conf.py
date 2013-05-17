@@ -252,8 +252,6 @@ texinfo_documents = [
 
 def process_docstring(app, what, name, obj, options, lines):
 	if (what == 'module'):
-		lines.pop(0)
-
 		size = len(lines)-1
 		for i in range(size-5, size):
 			lines.pop(len(lines)-1)

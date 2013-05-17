@@ -1,6 +1,4 @@
 """
-	permissions.py
-
 	Permission handler for the ScalyMUCK server.
 
 	Copyright (c) 2013 Robert MacGregor

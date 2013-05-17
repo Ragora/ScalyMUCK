@@ -1,9 +1,0 @@
-README
-blinker/__init__.py
-blinker/_saferef.py
-blinker/_utilities.py
-blinker/base.py
-pip-egg-info/blinker.egg-info/PKG-INFO
-pip-egg-info/blinker.egg-info/SOURCES.txt
-pip-egg-info/blinker.egg-info/dependency_links.txt
-pip-egg-info/blinker.egg-info/top_level.txt

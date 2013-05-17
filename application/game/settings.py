@@ -1,6 +1,4 @@
 """
-	settings.py
-
 	Basic settings loader that provides easy to use functionality to load from simple
 	configuration files that are formatted as such:
 	

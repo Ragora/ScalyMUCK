@@ -1,6 +1,4 @@
 """
-	modloader.py
-
 	Modification loader for ScalyMUCK.
 
 	Copyright (c) 2013 Robert MacGregor

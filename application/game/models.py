@@ -1,6 +1,4 @@
 """
-	models.py
-
 	This is where all of ScalyMUCK's model definitions are located,
 	save for the modifications that may extend the software in such
 	a way that it demands for extra models but that is beyond the

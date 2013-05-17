@@ -1,6 +1,4 @@
 """
-	server.py
-
 	This is the main ScalyMUCK server code,
 	it performs the initialisation of various
 	systems and is the binding of everything.

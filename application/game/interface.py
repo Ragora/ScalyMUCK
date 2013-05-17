@@ -1,6 +1,4 @@
 """
-	interface.py
-
 	Basically the user interface for ScalyMUCK.
 
 	Copyright (c) 2013 Robert MacGregor
