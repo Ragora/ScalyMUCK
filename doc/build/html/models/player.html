@@ -92,6 +92,12 @@ just about anything.</p>
 compared against. It returns false in the opposite situation.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="models.Player.description">
+<tt class="descname">description</tt><a class="headerlink" href="#models.Player.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 2000 character string representing the description of the Player.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="models.Player.disconnect">
 <tt class="descname">disconnect</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/models.html#Player.disconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Player.disconnect" title="Permalink to this definition">¶</a></dt>
@@ -100,6 +106,60 @@ compared against. It returns false in the opposite situation.</p>
 were destined for them before actually booting them out of the server. This triggers
 the default disconnect message to be displayed by the ScalyMUCK core to whomever else
 may be in the room with the user at the time of their disconnect.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.display_name">
+<tt class="descname">display_name</tt><a class="headerlink" href="#models.Player.display_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>A short 25 character string representing the name of the Player that is displayed to other users.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.hash">
+<tt class="descname">hash</tt><a class="headerlink" href="#models.Player.hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 128 character string representing the password hash of the Player.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.id">
+<tt class="descname">id</tt><a class="headerlink" href="#models.Player.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable is the database number of the Player.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.inventory_id">
+<tt class="descname">inventory_id</tt><a class="headerlink" href="#models.Player.inventory_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable is the database id of the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> that represents the Player&#8217;s inventory.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.is_admin">
+<tt class="descname">is_admin</tt><a class="headerlink" href="#models.Player.is_admin" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean representing whether or not this Player is a server administrator.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.is_owner">
+<tt class="descname">is_owner</tt><a class="headerlink" href="#models.Player.is_owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean representing whether or not this Player is a server owner.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.is_sadmin">
+<tt class="descname">is_sadmin</tt><a class="headerlink" href="#models.Player.is_sadmin" title="Permalink to this definition">¶</a></dt>
+<dd><p>A boolean representing whether or not this Player is a server super administrator.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.location_id">
+<tt class="descname">location_id</tt><a class="headerlink" href="#models.Player.location_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable is the database id of the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> this Player is located in.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.name">
+<tt class="descname">name</tt><a class="headerlink" href="#models.Player.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>A short 25 character string representing the name of the Player. It should be all lower case.</p>
 </dd></dl>
 
 <dl class="method">

@@ -55,12 +55,14 @@
 <span class="sd">	a way that it demands for extra models but that is beyond the</span>
 <span class="sd">	point. </span>
 
-<span class="sd">	The &quot;base&quot; definitions located here are:</span>
-<span class="sd">		Exit</span>
-<span class="sd">		Player</span>
-<span class="sd">		Room</span>
-<span class="sd">		Item</span>
-<span class="sd">		Bot</span>
+<span class="sd">	The &quot;base&quot; definitions located in models.py are:</span>
+<span class="sd">		* :class:`Exit`</span>
+<span class="sd">		* :class:`Player`</span>
+<span class="sd">		* :class:`Room`</span>
+<span class="sd">		* :class:`Item`</span>
+<span class="sd">		* :class:`Bot`</span>
+
+<span class="sd">	All of the above classes inherit a few functions from :class:`ObjectBase` as well.</span>
 
 <span class="sd">	Copyright (c) 2013 Robert MacGregor</span>
 <span class="sd">	This software is licensed under the GNU General</span>
@@ -83,7 +85,7 @@
 <span class="n">Base</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">()</span>
 
 <div class="viewcode-block" id="ObjectBase"><a class="viewcode-back" href="../models/common.html#models.ObjectBase">[docs]</a><span class="k">class</span> <span class="nc">ObjectBase</span><span class="p">:</span>
-	<span class="sd">&quot;&quot;&quot; Base class for the inheritance of useful member functions that work accross all models. &quot;&quot;&quot;</span>
+	<span class="sd">&quot;&quot;&quot; Base class used for the inheritance of useful member functions that work accross all models. &quot;&quot;&quot;</span>
 	<span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Deletes the object from the world. &quot;&quot;&quot;</span>
 		<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -95,7 +97,7 @@
 <span class="sd">		This sets the name of the object that is displayed and used to process requests towards it.</span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
 <span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
@@ -116,7 +118,7 @@
 <span class="sd">		That is the calling modification&#39;s job to provide any relevant messages.</span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
 <span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
@@ -138,7 +140,7 @@
 <span class="sd">		Sets the description of the calling object instance.</span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
 <span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
@@ -151,7 +153,8 @@
 		<span class="n">world</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="ObjectBase.delete"><a class="viewcode-back" href="../models/common.html#models.ObjectBase.delete">[docs]</a>	<span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot; Deletes the object from the world. &quot;&quot;&quot;</span>
+		<span class="sd">&quot;&quot;&quot; Deletes the object from the world. If it is a :class:`Player` instance, the related</span>
+<span class="sd">		connection is dropped from the server. &quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Player</span><span class="p">):</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
 
@@ -166,18 +169,29 @@
 <span class="sd">	when they are loaded or creates by the game.World instance. </span>
 
 <span class="sd">	&quot;&quot;&quot;</span>
+
 	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;exits&#39;</span>
 
 	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database number of the Exit. &quot;&quot;&quot;</span>
 	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A short 25 character string that should be used for the name of the Exit. &quot;&quot;&quot;</span>
 	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 2000 character string that is used to describe the Exit if it ever happens to be needed. &quot;&quot;&quot;</span>
 	<span class="n">user_enter_message</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 100 character string that represents the message displayed to the :class:`Player` using this exit. &quot;&quot;&quot;</span>
 	<span class="n">room_enter_message</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 100 character string that represents the message displayed to the user upon entering the target :class:`Room`. &quot;&quot;&quot;</span>
 	<span class="n">user_exit_message</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 100 character string that represents the message displayed to the :class:`Player` using this exit. &quot;&quot;&quot;</span>
 	<span class="n">room_exit_message</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 100 character string that is displayed to the inhabitants of the :class:`Room` this Exit is located in upon use. &quot;&quot;&quot;</span>
 	<span class="n">target_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database number of the :class:`Room` that this Exit points to. &quot;&quot;&quot;</span>
 	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database number of the :class:`Room` this Exit is in. &quot;&quot;&quot;</span>
 	<span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;players.id&#39;</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database number of the :class:`Player` this Exit belongs to. &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Exit.__init__"><a class="viewcode-back" href="../models/exit.html#models.Exit.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Initializes an instance of the Exit model.</span>
@@ -187,8 +201,8 @@
 <span class="sd">		to every modification.</span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			target -- The ID or instance of a Room that this exit should be linking to.</span>
-<span class="sd">			owner -- The ID or instance of a Player that this should should belong to.</span>
+<span class="sd">			* target -- The ID or instance of a Room that this exit should be linking to.</span>
+<span class="sd">			* owner -- The ID or instance of a Player that this should should belong to.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
@@ -228,25 +242,35 @@
 	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;players&#39;</span>
 	
 	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database number of the Player. &quot;&quot;&quot;</span>
 	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A short 25 character string representing the name of the Player. It should be all lower case. &quot;&quot;&quot;</span>
 	<span class="n">display_name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
-	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">200</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A short 25 character string representing the name of the Player that is displayed to other users. &quot;&quot;&quot;</span>
+	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 2000 character string representing the description of the Player. &quot;&quot;&quot;</span>
 	<span class="nb">hash</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">128</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 128 character string representing the password hash of the Player. &quot;&quot;&quot;</span>
 	
 	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database id of the :class:`Room` this Player is located in. &quot;&quot;&quot;</span>
 	<span class="n">location</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">inventory_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database id of the :class:`Room` that represents the Player&#39;s inventory. &quot;&quot;&quot;</span>
 	
 	<span class="n">is_admin</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Boolean</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; A boolean representing whether or not this Player is a server administrator. &quot;&quot;&quot;</span>
 	<span class="n">is_sadmin</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Boolean</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; A boolean representing whether or not this Player is a server super administrator. &quot;&quot;&quot;</span>
 	<span class="n">is_owner</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Boolean</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; A boolean representing whether or not this Player is a server owner. &quot;&quot;&quot;</span>
 
 	<span class="n">connection</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">world</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">server</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">interface</span> <span class="o">=</span> <span class="bp">None</span>
 
-<div class="viewcode-block" id="Player.__init__"><a class="viewcode-back" href="../models.html#models.Player.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">workfactor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">inventory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">admin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">sadmin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">workfactor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">inventory</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">admin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">sadmin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Initializes an instance of the Player model.</span>
 
 <span class="sd">		The Player is not constructed manually by any of the modifications, this should be</span>
@@ -256,15 +280,15 @@
 <span class="sd">		lockup as the calculations are pretty intense depending on the work factor.</span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			name -- The name of the Player that should be used.</span>
-<span class="sd">			password -- The password that should be used for this Player in the database.</span>
-<span class="sd">			workfactor -- The workfactor that should be used when generating this Player&#39;s hash salt.</span>
-<span class="sd">			location -- An ID or instance of Room that this Player should be created at.</span>
-<span class="sd">			inventory -- An ID or instance of Room that should represent this Player&#39;s inventory.</span>
-<span class="sd">			description -- A description that is shown when the player is looked at. Default: &lt;Unset&gt;</span>
-<span class="sd">			admin -- A boolean representing whether or not the player is an administrator or not. Default: False</span>
-<span class="sd">			sadmin -- A boolean representing whether or not the player is a super administrator or not. Default: False</span>
-<span class="sd">			owner -- A boolean representing whether or not the player is the owner of the server. Default: False</span>
+<span class="sd">			* name -- The name of the Player that should be used.</span>
+<span class="sd">			* password -- The password that should be used for this Player in the database.</span>
+<span class="sd">			* workfactor -- The workfactor that should be used when generating this Player&#39;s hash salt.</span>
+<span class="sd">			* location -- An ID or instance of Room that this Player should be created at.</span>
+<span class="sd">			* inventory -- An ID or instance of Room that should represent this Player&#39;s inventory.</span>
+<span class="sd">			* description -- A description that is shown when the player is looked at. Default: &lt;Unset&gt;</span>
+<span class="sd">			* admin -- A boolean representing whether or not the player is an administrator or not. Default: False</span>
+<span class="sd">			* sadmin -- A boolean representing whether or not the player is a super administrator or not. Default: False</span>
+<span class="sd">			* owner -- A boolean representing whether or not the player is the owner of the server. Default: False</span>
 <span class="sd">			</span>
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
@@ -283,11 +307,11 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">is_admin</span> <span class="o">=</span> <span class="n">admin</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="o">=</span> <span class="n">sadmin</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">is_owner</span> <span class="o">=</span> <span class="n">owner</span>
-</div>
-<div class="viewcode-block" id="Player.__repr__"><a class="viewcode-back" href="../models.html#models.Player.__repr__">[docs]</a>	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Produces a representation of the player, as to be expected. &quot;&quot;&quot;</span>
 		<span class="k">return</span> <span class="s">&quot;&lt;Player(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%u</span><span class="s">&#39;)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">location_id</span><span class="p">)</span>
-</div>
+
 <div class="viewcode-block" id="Player.send"><a class="viewcode-back" href="../models/player.html#models.Player.send">[docs]</a>	<span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Sends a message to this Player if they are connected.</span>
 
@@ -344,7 +368,7 @@
 <span class="sd">		doesn&#39;t hit the database as often then. </span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
 <span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
@@ -364,7 +388,7 @@
 <span class="sd">		often then. </span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
+<span class="sd">			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made</span>
 <span class="sd">			by any previous function calls thay may have set this to false. Default: True</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
@@ -403,12 +427,17 @@
 	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;bots&#39;</span>
 
 	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database number of the Bot. &quot;&quot;&quot;</span>
 	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A short 25 character string representing the name of the Bot. It should be all lowercase. &quot;&quot;&quot;</span>
 	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 2000 character string representing the description of the Bot. &quot;&quot;&quot;</span>
 	<span class="n">display_name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 25 character string representing the name of the Bot displayed to Players. &quot;&quot;&quot;</span>
 	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database number of the :class:`Room` this Bot is located in. &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Bot.__init__"><a class="viewcode-back" href="../models.html#models.Bot.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">		The Bot is not constructed manually by any of the modifications, this should be</span>
@@ -424,7 +453,7 @@
 		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Room</span><span class="p">):</span>
 			<span class="n">location</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">id</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">location_id</span> <span class="o">=</span> <span class="n">location</span>
-</div>
+
 <div class="viewcode-block" id="Bot.send"><a class="viewcode-back" href="../models/bot.html#models.Bot.send">[docs]</a>	<span class="k">def</span> <span class="nf">send</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; This is basically &#39;send&#39; like for players except it does NOTHING. &quot;&quot;&quot;</span>
 </div></div>
@@ -440,12 +469,18 @@
 	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;items&#39;</span>
 	
 	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; This variable is the database number of this Item. &quot;&quot;&quot;</span>
 	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A short 25 character string representing the name of the Item that is displayed to every connection</span>
+<span class="sd">	related to a :class:`Player`. &quot;&quot;&quot;</span>
 	<span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;players.id&#39;</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; This is the database number of the :class:`Player` that this Item belongs to. &quot;&quot;&quot;</span>
 	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 2000 character string representing the description of this Item. &quot;&quot;&quot;</span>
 	<span class="n">location_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="s">&#39;rooms.id&#39;</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; This is the database number of the :class:`Room` that this Item is located in. &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Item.__init__"><a class="viewcode-back" href="../models.html#models.Item.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Constructor for the base item model.</span>
 
 <span class="sd">		The Item is not constructed manually by any of the modifications, this should be</span>
@@ -453,9 +488,9 @@
 <span class="sd">		to every modification. </span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			name -- The name of the item that should be used.</span>
-<span class="sd">			description -- The description of the item that should be displayed. Default: &lt;Unset&gt;</span>
-<span class="sd">			owner -- Whoever should become the owner of this item, by instance or ID. Default: 0</span>
+<span class="sd">			* name -- The name of the item that should be used.</span>
+<span class="sd">			* description -- The description of the item that should be displayed. Default: &lt;Unset&gt;</span>
+<span class="sd">			* owner -- Whoever should become the owner of this item, by instance or ID. Default: 0</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
@@ -467,11 +502,11 @@
 			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="n">id</span>
-</div>
-<div class="viewcode-block" id="Item.__repr__"><a class="viewcode-back" href="../models.html#models.Item.__repr__">[docs]</a>	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Produces a representation of the item, as to be expected. &quot;&quot;&quot;</span>
 		<span class="k">return</span> <span class="s">&quot;&lt;Item(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-</div>
+
 <div class="viewcode-block" id="Item.set_owner"><a class="viewcode-back" href="../models/item.html#models.Item.set_owner">[docs]</a>	<span class="k">def</span> <span class="nf">set_owner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">owner</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Sets a new owner for this item. &quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">owner</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Player</span><span class="p">):</span>
@@ -488,16 +523,25 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">__tablename__</span> <span class="o">=</span> <span class="s">&#39;rooms&#39;</span>
 	<span class="nb">id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; This is the database number of the Room. &quot;&quot;&quot;</span>
 
 	<span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">25</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A short 25 character string representing the name of this Room that is displayed to every connection related to</span>
+<span class="sd">	an instance of :class:`Player`. &quot;&quot;&quot;</span>
 	<span class="n">description</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">2000</span><span class="p">))</span>
+	<span class="sd">&quot;&quot;&quot; A 2000 character string representing the description of this Room. &quot;&quot;&quot;</span>
 	<span class="n">items</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Item&#39;</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; An array that contains all instances of :class:`Item` contained in this Room. &quot;&quot;&quot;</span>
 	<span class="n">players</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Player&#39;</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; An array that contains all instances of :class:`Player` contained in this Room. &quot;&quot;&quot;</span>
 	<span class="n">bots</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Bot&#39;</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; An array that contains all instances of :class:`Bot` contained in this Room. &quot;&quot;&quot;</span>
 	<span class="n">exits</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s">&#39;Exit&#39;</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; An array that contains all instances of :class:`Exit` contained in this Room. &quot;&quot;&quot;</span>
 	<span class="n">owner_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+	<span class="sd">&quot;&quot;&quot; This is the database number of the :class:`Player` that this Room belongs to. &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Room.__init__"><a class="viewcode-back" href="../models.html#models.Room.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Initiates an instance of the Room model.</span>
 
 <span class="sd">		The Room is not constructed manually by any of the modifications, this should be</span>
@@ -505,9 +549,9 @@
 <span class="sd">		to every modification.</span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			name -- The name of the room that should be used.</span>
-<span class="sd">			description -- The description of the room.</span>
-<span class="sd">			owner -- The instance or ID of the relevant Player instance that should own this room.</span>
+<span class="sd">			* name -- The name of the room that should be used.</span>
+<span class="sd">			* description -- The description of the room.</span>
+<span class="sd">			* owner -- The instance or ID of the relevant Player instance that should own this room.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
@@ -520,11 +564,11 @@
 			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">=</span> <span class="n">owner</span><span class="o">.</span><span class="n">id</span>
-</div>
-<div class="viewcode-block" id="Room.__repr__"><a class="viewcode-back" href="../models.html#models.Room.__repr__">[docs]</a>	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+	<span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Produces a representation of the room, as to be expected. &quot;&quot;&quot;</span>
 		<span class="k">return</span> <span class="s">&quot;&lt;Room(&#39;</span><span class="si">%s</span><span class="s">&#39;,&#39;</span><span class="si">%s</span><span class="s">&#39;)&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-</div>
+
 <div class="viewcode-block" id="Room.add_exit"><a class="viewcode-back" href="../models/room.html#models.Room.add_exit">[docs]</a>	<span class="k">def</span> <span class="nf">add_exit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Gives this Room instance an Exit linking to anywhere.</span>
 
@@ -533,9 +577,9 @@
 <span class="sd">		first for the changes to properly apply without any hackery to occur.</span>
 
 <span class="sd">		Keyword arguments:</span>
-<span class="sd">			name -- The name of the exit that should be used.</span>
-<span class="sd">			target -- The ID or instance of a Room that this exit should be linking to.</span>
-<span class="sd">			owner -- The ID or instance of a Player that should become the owner of this Exit.</span>
+<span class="sd">			* name -- The name of the exit that should be used.</span>
+<span class="sd">			* target -- The ID or instance of a Room that this exit should be linking to.</span>
+<span class="sd">			* owner -- The ID or instance of a Player that should become the owner of this Exit.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
@@ -575,9 +619,9 @@
 <span class="sd">		and all you need is the instance.</span>
 
 <span class="sd">		Keyword arguments (one or the other):</span>
-<span class="sd">			id -- The identification number of the Player to locate inside of this room. This overrides the name if</span>
-<span class="sd">			both are specified.</span>
-<span class="sd">			name -- The name of the Player to locate.</span>
+<span class="sd">			* id -- The identification number of the Player to locate inside of this room. This overrides the name if</span>
+<span class="sd">			* both are specified.</span>
+<span class="sd">			* name -- The name of the Player to locate.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
@@ -605,9 +649,9 @@
 <span class="sd">		and all you need is the instance.</span>
 
 <span class="sd">		Keyword arguments (one or the other):</span>
-<span class="sd">			id -- The identification number of the Bot to locate inside of this room. This overrides the name if</span>
-<span class="sd">			both are specified.</span>
-<span class="sd">			name -- The name of the Bot to locate.</span>
+<span class="sd">			* id -- The identification number of the Bot to locate inside of this room. This overrides the name if</span>
+<span class="sd">			* both are specified.</span>
+<span class="sd">			* name -- The name of the Bot to locate.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
@@ -641,9 +685,9 @@
 <span class="sd">		and all you need is the instance.</span>
 
 <span class="sd">		Keyword arguments (one or the other):</span>
-<span class="sd">			id -- The identification number of the Item to locate inside of this room. This overrides the name if</span>
-<span class="sd">			both are specified.</span>
-<span class="sd">			name -- The name of the Item to locate.</span>
+<span class="sd">			* id -- The identification number of the Item to locate inside of this room. This overrides the name if</span>
+<span class="sd">			* both are specified.</span>
+<span class="sd">			* name -- The name of the Item to locate.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
@@ -671,9 +715,9 @@
 <span class="sd">		and all you need is the instance.</span>
 
 <span class="sd">		Keyword arguments (one or the other):</span>
-<span class="sd">			id -- The identification number of the Item to locate inside of this room. This overrides the name if</span>
-<span class="sd">			both are specified.</span>
-<span class="sd">			name -- The name of the Item to locate.</span>
+<span class="sd">			* id -- The identification number of the Item to locate inside of this room. This overrides the name if</span>
+<span class="sd">			* both are specified.</span>
+<span class="sd">			* name -- The name of the Item to locate.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="nb">id</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
