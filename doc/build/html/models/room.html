@@ -102,6 +102,12 @@ first for the changes to properly apply without any hackery to occur.</p>
 </dl>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="models.Room.bots">
+<tt class="descname">bots</tt><a class="headerlink" href="#models.Room.bots" title="Permalink to this definition">¶</a></dt>
+<dd><p>An array that contains all instances of <a class="reference internal" href="bot.html#models.Bot" title="models.Bot"><tt class="xref py py-class docutils literal"><span class="pre">Bot</span></tt></a> contained in this Room.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="models.Room.broadcast">
 <tt class="descname">broadcast</tt><big>(</big><em>message</em>, <em>*exceptions</em><big>)</big><a class="reference internal" href="../_modules/models.html#Room.broadcast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Room.broadcast" title="Permalink to this definition">¶</a></dt>
@@ -109,6 +115,18 @@ first for the changes to properly apply without any hackery to occur.</p>
 <p>This broadcasts a set message to all inhabitants of the Room except those specified after the message:
 some_room.broadcast(&#8216;Dragons are best!&#8217;, that_guy, this_guy, other_guy)</p>
 <p>The exceptions may be an ID or an instance.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Room.description">
+<tt class="descname">description</tt><a class="headerlink" href="#models.Room.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 2000 character string representing the description of this Room.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Room.exits">
+<tt class="descname">exits</tt><a class="headerlink" href="#models.Room.exits" title="Permalink to this definition">¶</a></dt>
+<dd><p>An array that contains all instances of <a class="reference internal" href="exit.html#models.Exit" title="models.Exit"><tt class="xref py py-class docutils literal"><span class="pre">Exit</span></tt></a> contained in this Room.</p>
 </dd></dl>
 
 <dl class="method">
@@ -187,6 +205,37 @@ and all you need is the instance.</p>
 <dt id="models.Room.get_exits">
 <tt class="descname">get_exits</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/models.html#Room.get_exits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Room.get_exits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a list of all exits.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Room.id">
+<tt class="descname">id</tt><a class="headerlink" href="#models.Room.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the database number of the Room.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Room.items">
+<tt class="descname">items</tt><a class="headerlink" href="#models.Room.items" title="Permalink to this definition">¶</a></dt>
+<dd><p>An array that contains all instances of <a class="reference internal" href="item.html#models.Item" title="models.Item"><tt class="xref py py-class docutils literal"><span class="pre">Item</span></tt></a> contained in this Room.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Room.name">
+<tt class="descname">name</tt><a class="headerlink" href="#models.Room.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>A short 25 character string representing the name of this Room that is displayed to every connection related to
+an instance of <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Room.owner_id">
+<tt class="descname">owner_id</tt><a class="headerlink" href="#models.Room.owner_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the database number of the <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a> that this Room belongs to.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Room.players">
+<tt class="descname">players</tt><a class="headerlink" href="#models.Room.players" title="Permalink to this definition">¶</a></dt>
+<dd><p>An array that contains all instances of <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a> contained in this Room.</p>
 </dd></dl>
 
 </dd></dl>

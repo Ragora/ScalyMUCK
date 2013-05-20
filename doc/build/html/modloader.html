@@ -102,6 +102,13 @@ are in use by the server application</p>
 <dd><p>Internal command to unload mods.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="modloader.ModLoader.commands">
+<tt class="descname">commands</tt><em class="property"> = {}</em><a class="headerlink" href="#modloader.ModLoader.commands" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary of all loaded commands. The keys are the actual name a command is referred to by and said keys point to
+Python functions to be called upon use.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="modloader.ModLoader.find_command">
 <tt class="descname">find_command</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/modloader.html#ModLoader.find_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modloader.ModLoader.find_command" title="Permalink to this definition">¶</a></dt>
@@ -122,6 +129,13 @@ application will merely crash as of the moment. Same goes for any internal error
 code base that happen to raise an exception that is not derived from one of the exception
 classes in game.Exception.</p>
 </div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="modloader.ModLoader.modifications">
+<tt class="descname">modifications</tt><em class="property"> = {}</em><a class="headerlink" href="#modloader.ModLoader.modifications" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dictionary of all loaded modifications. The keys are the internal name of the mod and each key refers to a tuple
+with the following format: (instance, module).</p>
 </dd></dl>
 
 <dl class="method">

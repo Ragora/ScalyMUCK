@@ -24,7 +24,11 @@ class ModLoader:
 	session = None
 	permissions = None
 	commands = { }
+	""" A dictionary of all loaded commands. The keys are the actual name a command is referred to by and said keys point to
+	Python functions to be called upon use. """
 	modifications = { }
+	""" A dictionary of all loaded modifications. The keys are the internal name of the mod and each key refers to a tuple
+	with the following format: (instance, module). """
 
 	def __init__(self, world=None, interface=None, session=None, workdir=None, permissions=None):
 		""" Initializes an instance of the ScalyMUCK mod loader. 

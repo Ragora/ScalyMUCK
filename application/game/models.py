@@ -191,18 +191,28 @@ class Player(Base, ObjectBase):
 	__tablename__ = 'players'
 	
 	id = Column(Integer, primary_key=True)
+	""" This variable is the database number of the Player. """
 	name = Column(String(25))
+	""" A short 25 character string representing the name of the Player. It should be all lower case. """
 	display_name = Column(String(25))
-	description = Column(String(200))
+	""" A short 25 character string representing the name of the Player that is displayed to other users. """
+	description = Column(String(2000))
+	""" A 2000 character string representing the description of the Player. """
 	hash = Column(String(128))
+	""" A 128 character string representing the password hash of the Player. """
 	
 	location_id = Column(Integer, ForeignKey('rooms.id'))
+	""" This variable is the database id of the :class:`Room` this Player is located in. """
 	location = None
 	inventory_id = Column(Integer)
+	""" This variable is the database id of the :class:`Room` that represents the Player's inventory. """
 	
 	is_admin = Column(Boolean)
+	""" A boolean representing whether or not this Player is a server administrator. """
 	is_sadmin = Column(Boolean)
+	""" A boolean representing whether or not this Player is a server super administrator. """
 	is_owner = Column(Boolean)
+	""" A boolean representing whether or not this Player is a server owner. """
 
 	connection = None
 	world = None
@@ -366,10 +376,15 @@ class Bot(Base, ObjectBase):
 	__tablename__ = 'bots'
 
 	id = Column(Integer, primary_key=True)
+	""" This variable is the database number of the Bot. """
 	name = Column(String(25))
+	""" A short 25 character string representing the name of the Bot. It should be all lowercase. """
 	description = Column(String(2000))
+	""" A 2000 character string representing the description of the Bot. """
 	display_name = Column(String(25))
+	""" A 25 character string representing the name of the Bot displayed to Players. """
 	location_id = Column(Integer, ForeignKey('rooms.id'))
+	""" This variable is the database number of the :class:`Room` this Bot is located in. """
 
 	def __init__(self, name=None, description=None, location=None):
 		"""
@@ -403,10 +418,16 @@ class Item(Base, ObjectBase):
 	__tablename__ = 'items'
 	
 	id = Column(Integer, primary_key=True)
+	""" This variable is the database number of this Item. """
 	name = Column(String(25))
+	""" A short 25 character string representing the name of the Item that is displayed to every connection
+	related to a :class:`Player`. """
 	owner_id = Column(Integer, ForeignKey('players.id'))
+	""" This is the database number of the :class:`Player` that this Item belongs to. """
 	description = Column(String(2000))
+	""" A 2000 character string representing the description of this Item. """
 	location_id = Column(Integer, ForeignKey('rooms.id'))
+	""" This is the database number of the :class:`Room` that this Item is located in. """
 
 	def __init__(self, name=None, description='<Unset>', owner=0):
 		""" Constructor for the base item model.
@@ -451,14 +472,23 @@ class Room(Base, ObjectBase):
 	"""
 	__tablename__ = 'rooms'
 	id = Column(Integer, primary_key=True)
+	""" This is the database number of the Room. """
 
 	name = Column(String(25))
+	""" A short 25 character string representing the name of this Room that is displayed to every connection related to
+	an instance of :class:`Player`. """
 	description = Column(String(2000))
+	""" A 2000 character string representing the description of this Room. """
 	items = relationship('Item')
+	""" An array that contains all instances of :class:`Item` contained in this Room. """
 	players = relationship('Player')
+	""" An array that contains all instances of :class:`Player` contained in this Room. """
 	bots = relationship('Bot')
+	""" An array that contains all instances of :class:`Bot` contained in this Room. """
 	exits = relationship('Exit')
+	""" An array that contains all instances of :class:`Exit` contained in this Room. """
 	owner_id = Column(Integer)
+	""" This is the database number of the :class:`Player` that this Room belongs to. """
 
 	def __init__(self, name=None, description='<Unset>', owner=0):
 		""" Initiates an instance of the Room model.

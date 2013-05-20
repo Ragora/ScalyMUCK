@@ -68,29 +68,7 @@
 <span class="kn">import</span> <span class="nn">game.models</span>
 
 <div class="viewcode-block" id="Modification"><a class="viewcode-back" href="../scommands.html#scommands.Modification">[docs]</a><span class="k">class</span> <span class="nc">Modification</span><span class="p">:</span>
-	<span class="sd">&quot;&quot;&quot; Main class object to load and initialize the scommands modification.</span>
-
-<span class="sd">	This modification class is what the modloader searches for when it imports</span>
-<span class="sd">	the module that this modification is contained in. The modloader will initialize</span>
-<span class="sd">	this class with the normal :meth:`__init__` constructor and it will remain loaded in memory</span>
-<span class="sd">	until the server owner either unloads it or reloads it which therefore will reset</span>
-<span class="sd">	any associated data unless the data had been defined on the class definition itself</span>
-<span class="sd">	rather than being initialized in the __init__ function. </span>
-
-<span class="sd">	Along with initializing the modification, __init__ acts as a gateway for other important</span>
-<span class="sd">	data passed in by the modloader under the **kwargs argument.</span>
-
-<span class="sd">	Keyword arguments:</span>
-<span class="sd">		config -- This is the instance of Settings that contains all loaded configuration </span>
-<span class="sd">	settings available for this modification, if the file exists. If the file does not exist, </span>
-<span class="sd">	then this will simply be None.</span>
-<span class="sd">		interface -- This is the instance of the user interface used internally by ScalyMUCK. Generally,</span>
-<span class="sd">	you won&#39;t need access to this for any reason and is currently deprecated for later removal.</span>
-
-<span class="sd">	Actions such as binding your Blinker signals should be performed here so that events will be</span>
-<span class="sd">	received properly when they occur.</span>
-
-<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="sd">&quot;&quot;&quot; Main class object to load and initialize the scommands modification. &quot;&quot;&quot;</span>
 	<span class="n">world</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">interface</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">session</span> <span class="o">=</span> <span class="bp">None</span>
@@ -111,6 +89,25 @@
 	<span class="n">pre_show_description</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_show_description&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Modification.__init__"><a class="viewcode-back" href="../scommands.html#scommands.Modification.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; </span>
+
+<span class="sd">		This initializes an instance of the scommands modification and it will remain loaded in memory</span>
+<span class="sd">		until the server owner either unloads it or reloads it which therefore will reset</span>
+<span class="sd">		any associated data unless the data had been defined on the class definition itself</span>
+<span class="sd">		rather than being initialized in this function. </span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			* config -- This is the instance of Settings that contains all loaded configuration settings available for this modification, if the file exists. If the file does not exist, then this will simply be None.</span>
+<span class="sd">			* interface -- This is the instance of the user interface used internally by ScalyMUCK. Generally, you won&#39;t need access to this for any reason and is currently deprecated for later removal.</span>
+
+<span class="sd">		Actions such as binding your Blinker signals should be performed here so that events will be</span>
+<span class="sd">		received properly when they occur.</span>
+
+<span class="sd">		Along with initializing the modification, __init__ acts as a gateway for other important</span>
+<span class="sd">		data passed in by the modloader under the **kwargs argument.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		
 		<span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">]</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;interface&#39;</span><span class="p">]</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;session&#39;</span><span class="p">]</span>
@@ -471,7 +468,7 @@
 <span class="sd">		certain data upon the authentication of a certain client -- perhaps you&#39;re loading</span>
 <span class="sd">		mod data that is related to this client.</span>
 
-<span class="sd">		Refer to the __init__ function.</span>
+<span class="sd">		Refer to the :command:`__init__` function.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">command_look</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
@@ -484,7 +481,7 @@
 <span class="sd">		text parsing for handling menu functions as that if the callback at any point</span>
 <span class="sd">		returns true, the server will not pass the input text into the core parser.</span>
 
-<span class="sd">		Refer to the __init__ function.</span>
+<span class="sd">		Refer to the :command:`__init__` function.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
@@ -503,7 +500,7 @@
 <span class="sd">		This is a function call merely for the purpose of being able to provide variable</span>
 <span class="sd">		output, so that if the modification has an accompanying configuration file it can</span>
 <span class="sd">		omit or include certain commands based on the configuration settings loaded in the</span>
-<span class="sd">		modification&#39;s __init__ function.</span>
+<span class="sd">		modification&#39;s :command:`__init__` function.</span>
 
 <span class="sd">		&quot;&quot;&quot;</span>
 		<span class="n">command_dict</span> <span class="o">=</span> <span class="p">{</span>

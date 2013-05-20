@@ -86,6 +86,37 @@ point.</p>
 serve multiple purposes. They can quite literally be an item, stored in the player&#8217;s inventory
 to be used later (like a potion) or they may be used to decorate rooms with specific objects
 such as furniture or they may even be used to represent dead bodies.</p>
+<dl class="attribute">
+<dt id="models.Item.description">
+<tt class="descname">description</tt><a class="headerlink" href="#models.Item.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>A 2000 character string representing the description of this Item.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Item.id">
+<tt class="descname">id</tt><a class="headerlink" href="#models.Item.id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable is the database number of this Item.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Item.location_id">
+<tt class="descname">location_id</tt><a class="headerlink" href="#models.Item.location_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the database number of the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> that this Item is located in.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Item.name">
+<tt class="descname">name</tt><a class="headerlink" href="#models.Item.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>A short 25 character string representing the name of the Item that is displayed to every connection
+related to a <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Item.owner_id">
+<tt class="descname">owner_id</tt><a class="headerlink" href="#models.Item.owner_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the database number of the <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a> that this Item belongs to.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="models.Item.set_owner">
 <tt class="descname">set_owner</tt><big>(</big><em>owner</em><big>)</big><a class="reference internal" href="../_modules/models.html#Item.set_owner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Item.set_owner" title="Permalink to this definition">¶</a></dt>
