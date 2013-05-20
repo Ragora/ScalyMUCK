@@ -50,7 +50,9 @@
             
   <h1>Source code for modloader</h1><div class="highlight"><pre>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Modification loader for ScalyMUCK.</span>
+<span class="sd">	Modification loader class code for ScalyMUCK. This class</span>
+<span class="sd">	is used to store and track loaded modifications that</span>
+<span class="sd">	are in use by the server application</span>
 
 <span class="sd">	Copyright (c) 2013 Robert MacGregor</span>
 <span class="sd">	This software is licensed under the GNU General</span>
@@ -73,10 +75,23 @@
 	<span class="n">session</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">permissions</span> <span class="o">=</span> <span class="bp">None</span>
 	<span class="n">commands</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
+	<span class="sd">&quot;&quot;&quot; A dictionary of all loaded commands. The keys are the actual name a command is referred to by and said keys point to</span>
+<span class="sd">	Python functions to be called upon use. &quot;&quot;&quot;</span>
 	<span class="n">modifications</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
+	<span class="sd">&quot;&quot;&quot; A dictionary of all loaded modifications. The keys are the internal name of the mod and each key refers to a tuple</span>
+<span class="sd">	with the following format: (instance, module). &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="ModLoader.__init__"><a class="viewcode-back" href="../modloader.html#modloader.ModLoader.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">workdir</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">permissions</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot; Initializes an instance of the ScalyMUCK mod loader. &quot;&quot;&quot;</span>
+		<span class="sd">&quot;&quot;&quot; Initializes an instance of the ScalyMUCK mod loader. </span>
+
+<span class="sd">		There are several keyword arguments that should be used with this __init__ command:</span>
+<span class="sd">			* world -- An instance of the game.World object to be used with this ModLoader.</span>
+<span class="sd">			* interface -- An instance of the game.Interface object to be used with this ModLoader.</span>
+<span class="sd">			* session -- An active database session from SQLAlchemy to be used with this ModLoader.</span>
+<span class="sd">			* workdir -- The work directory of the current running application.</span>
+<span class="sd">			* permissions -- An instance of the game.Permissions object to be used with this ModLoader.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">workdir</span> <span class="o">=</span> <span class="n">workdir</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">world</span> <span class="o">=</span> <span class="n">world</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">interface</span>
@@ -85,7 +100,19 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="ModLoader.load"><a class="viewcode-back" href="../modloader.html#modloader.ModLoader.load">[docs]</a>	<span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modifications</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot; Loads a semicolon deliminated list of modifications from application/game &quot;&quot;&quot;</span>
+		<span class="sd">&quot;&quot;&quot; Loads a semicolon deliminated list of modifications from application/game.</span>
+
+<span class="sd">		If any of the specified modifications happen to already be loaded into ScalyMUCK,</span>
+<span class="sd">		they are merely reloaded so that any changes made since the last load will be applied</span>
+<span class="sd">		and take affect.</span>
+
+<span class="sd">		NOTE:</span>
+<span class="sd">			If there happens to be a low-level Python error (IE: SyntaxError) then the server</span>
+<span class="sd">			application will merely crash as of the moment. Same goes for any internal errors in a mod</span>
+<span class="sd">			code base that happen to raise an exception that is not derived from one of the exception</span>
+<span class="sd">			classes in game.Exception.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
 		<span class="k">for</span> <span class="n">mod_name</span> <span class="ow">in</span> <span class="n">modifications</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">):</span>
 			<span class="n">mod_name</span> <span class="o">=</span> <span class="n">mod_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 			<span class="k">if</span> <span class="p">(</span><span class="n">mod_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modifications</span><span class="p">):</span>
@@ -128,7 +155,13 @@
 		<span class="k">return</span> <span class="bp">True</span>
 </div>
 <div class="viewcode-block" id="ModLoader.set_defaults"><a class="viewcode-back" href="../modloader.html#modloader.ModLoader.set_defaults">[docs]</a>	<span class="k">def</span> <span class="nf">set_defaults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-		<span class="sd">&quot;&quot;&quot; This command merely makes sure that the core commands are loaded. &quot;&quot;&quot;</span>
+		<span class="sd">&quot;&quot;&quot; This command merely makes sure that the core commands are loaded. </span>
+
+<span class="sd">		It should be called everytime a modification is loaded in order to guarantee</span>
+<span class="sd">		that a modification doesn&#39;t attempt to overwrite the core commands, even though</span>
+<span class="sd">		by standard they shouldn&#39;t be defining these commands in the first place.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="p">[</span><span class="s">&#39;mods&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="p">[</span><span class="s">&#39;mods&#39;</span><span class="p">][</span><span class="s">&#39;command&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_mods</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">commands</span><span class="p">[</span><span class="s">&#39;mods&#39;</span><span class="p">][</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;Lists all loaded mods.&#39;</span>
