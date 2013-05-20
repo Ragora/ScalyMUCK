@@ -1,7 +1,5 @@
-"""
-	world.py
-
-	Game world code for ScalyMUCK. This contains "global" functions that is to
+""" 
+	This contains "global" functions that is to
 	be called by the various mods of the MUCK to perform actions such as creating
 	Players.
 

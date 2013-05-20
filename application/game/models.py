@@ -1,17 +1,17 @@
 """
-	models.py
-
 	This is where all of ScalyMUCK's model definitions are located,
 	save for the modifications that may extend the software in such
 	a way that it demands for extra models but that is beyond the
 	point. 
 
-	The "base" definitions located here are:
-		Exit
-		Player
-		Room
-		Item
-		Bot
+	The "base" definitions located in models.py are:
+		* :class:`Exit`
+		* :class:`Player`
+		* :class:`Room`
+		* :class:`Item`
+		* :class:`Bot`
+
+	All of the above classes inherit a few functions from :class:`ObjectBase` as well.
 
 	Copyright (c) 2013 Robert MacGregor
 	This software is licensed under the GNU General
@@ -34,7 +34,7 @@ world = None
 Base = declarative_base()
 
 class ObjectBase:
-	""" Base class for the inheritance of useful member functions that work accross all models. """
+	""" Base class used for the inheritance of useful member functions that work accross all models. """
 	def delete(self):
 		""" Deletes the object from the world. """
 		world.session.delete(self)
@@ -46,7 +46,7 @@ class ObjectBase:
 		This sets the name of the object that is displayed and used to process requests towards it.
 
 		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
@@ -67,7 +67,7 @@ class ObjectBase:
 		That is the calling modification's job to provide any relevant messages.
 
 		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
@@ -89,7 +89,7 @@ class ObjectBase:
 		Sets the description of the calling object instance.
 
 		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
@@ -102,7 +102,8 @@ class ObjectBase:
 		world.session.commit()
 
 	def delete(self):
-		""" Deletes the object from the world. """
+		""" Deletes the object from the world. If it is a :class:`Player` instance, the related
+		connection is dropped from the server. """
 		if (type(self) is Player):
 			self.disconnect()
 
@@ -117,18 +118,29 @@ class Exit(Base, ObjectBase):
 	when they are loaded or creates by the game.World instance. 
 
 	"""
+
 	__tablename__ = 'exits'
 
 	id = Column(Integer, primary_key=True)
+	""" This variable is the database number of the Exit. """
 	name = Column(String(25))
+	""" A short 25 character string that should be used for the name of the Exit. """
 	description = Column(String(2000))
+	""" A 2000 character string that is used to describe the Exit if it ever happens to be needed. """
 	user_enter_message = Column(String(100))
+	""" A 100 character string that represents the message displayed to the :class:`Player` using this exit. """
 	room_enter_message = Column(String(100))
+	""" A 100 character string that represents the message displayed to the user upon entering the target :class:`Room`. """
 	user_exit_message = Column(String(100))
+	""" A 100 character string that represents the message displayed to the :class:`Player` using this exit. """
 	room_exit_message = Column(String(100))
+	""" A 100 character string that is displayed to the inhabitants of the :class:`Room` this Exit is located in upon use. """
 	target_id = Column(Integer)
+	""" This variable is the database number of the :class:`Room` that this Exit points to. """
 	location_id = Column(Integer, ForeignKey('rooms.id'))
+	""" This variable is the database number of the :class:`Room` this Exit is in. """
 	owner_id = Column(Integer, ForeignKey('players.id'))
+	""" This variable is the database number of the :class:`Player` this Exit belongs to. """
 
 	def __init__(self, name, target=None, owner=0):
 		""" Initializes an instance of the Exit model.
@@ -138,8 +150,8 @@ class Exit(Base, ObjectBase):
 		to every modification.
 
 		Keyword arguments:
-			target -- The ID or instance of a Room that this exit should be linking to.
-			owner -- The ID or instance of a Player that this should should belong to.
+			* target -- The ID or instance of a Room that this exit should be linking to.
+			* owner -- The ID or instance of a Player that this should should belong to.
 
 		"""
 		if (target is None):
@@ -207,15 +219,15 @@ class Player(Base, ObjectBase):
 		lockup as the calculations are pretty intense depending on the work factor.
 
 		Keyword arguments:
-			name -- The name of the Player that should be used.
-			password -- The password that should be used for this Player in the database.
-			workfactor -- The workfactor that should be used when generating this Player's hash salt.
-			location -- An ID or instance of Room that this Player should be created at.
-			inventory -- An ID or instance of Room that should represent this Player's inventory.
-			description -- A description that is shown when the player is looked at. Default: <Unset>
-			admin -- A boolean representing whether or not the player is an administrator or not. Default: False
-			sadmin -- A boolean representing whether or not the player is a super administrator or not. Default: False
-			owner -- A boolean representing whether or not the player is the owner of the server. Default: False
+			* name -- The name of the Player that should be used.
+			* password -- The password that should be used for this Player in the database.
+			* workfactor -- The workfactor that should be used when generating this Player's hash salt.
+			* location -- An ID or instance of Room that this Player should be created at.
+			* inventory -- An ID or instance of Room that should represent this Player's inventory.
+			* description -- A description that is shown when the player is looked at. Default: <Unset>
+			* admin -- A boolean representing whether or not the player is an administrator or not. Default: False
+			* sadmin -- A boolean representing whether or not the player is a super administrator or not. Default: False
+			* owner -- A boolean representing whether or not the player is the owner of the server. Default: False
 			
 		"""
 		self.name = string.lower(name)
@@ -295,7 +307,7 @@ class Player(Base, ObjectBase):
 		doesn't hit the database as often then. 
 
 		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
@@ -315,7 +327,7 @@ class Player(Base, ObjectBase):
 		often then. 
 
 		Keyword arguments:
-			commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
@@ -404,9 +416,9 @@ class Item(Base, ObjectBase):
 		to every modification. 
 
 		Keyword arguments:
-			name -- The name of the item that should be used.
-			description -- The description of the item that should be displayed. Default: <Unset>
-			owner -- Whoever should become the owner of this item, by instance or ID. Default: 0
+			* name -- The name of the item that should be used.
+			* description -- The description of the item that should be displayed. Default: <Unset>
+			* owner -- Whoever should become the owner of this item, by instance or ID. Default: 0
 
 		"""
 		if (name is None):
@@ -456,9 +468,9 @@ class Room(Base, ObjectBase):
 		to every modification.
 
 		Keyword arguments:
-			name -- The name of the room that should be used.
-			description -- The description of the room.
-			owner -- The instance or ID of the relevant Player instance that should own this room.
+			* name -- The name of the room that should be used.
+			* description -- The description of the room.
+			* owner -- The instance or ID of the relevant Player instance that should own this room.
 
 		"""
 		if (name is None):
@@ -484,9 +496,9 @@ class Room(Base, ObjectBase):
 		first for the changes to properly apply without any hackery to occur.
 
 		Keyword arguments:
-			name -- The name of the exit that should be used.
-			target -- The ID or instance of a Room that this exit should be linking to.
-			owner -- The ID or instance of a Player that should become the owner of this Exit.
+			* name -- The name of the exit that should be used.
+			* target -- The ID or instance of a Room that this exit should be linking to.
+			* owner -- The ID or instance of a Player that should become the owner of this Exit.
 
 		"""
 		if (name is None):
@@ -526,9 +538,9 @@ class Room(Base, ObjectBase):
 		and all you need is the instance.
 
 		Keyword arguments (one or the other):
-			id -- The identification number of the Player to locate inside of this room. This overrides the name if
-			both are specified.
-			name -- The name of the Player to locate.
+			* id -- The identification number of the Player to locate inside of this room. This overrides the name if
+			* both are specified.
+			* name -- The name of the Player to locate.
 
 		"""
 		if (id is None and name is None):
@@ -556,9 +568,9 @@ class Room(Base, ObjectBase):
 		and all you need is the instance.
 
 		Keyword arguments (one or the other):
-			id -- The identification number of the Bot to locate inside of this room. This overrides the name if
-			both are specified.
-			name -- The name of the Bot to locate.
+			* id -- The identification number of the Bot to locate inside of this room. This overrides the name if
+			* both are specified.
+			* name -- The name of the Bot to locate.
 
 		"""
 		if (id is None and name is None):
@@ -592,9 +604,9 @@ class Room(Base, ObjectBase):
 		and all you need is the instance.
 
 		Keyword arguments (one or the other):
-			id -- The identification number of the Item to locate inside of this room. This overrides the name if
-			both are specified.
-			name -- The name of the Item to locate.
+			* id -- The identification number of the Item to locate inside of this room. This overrides the name if
+			* both are specified.
+			* name -- The name of the Item to locate.
 
 		"""
 		if (id is None and name is None):
@@ -622,9 +634,9 @@ class Room(Base, ObjectBase):
 		and all you need is the instance.
 
 		Keyword arguments (one or the other):
-			id -- The identification number of the Item to locate inside of this room. This overrides the name if
-			both are specified.
-			name -- The name of the Item to locate.
+			* id -- The identification number of the Item to locate inside of this room. This overrides the name if
+			* both are specified.
+			* name -- The name of the Item to locate.
 
 		"""
 		if (id is None and name is None):

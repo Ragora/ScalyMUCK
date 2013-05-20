@@ -1,0 +1,174 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>ScalyMUCK Base Modification &mdash; ScalyMUCK 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" />
+    <link rel="prev" title="Settings File Loading Class" href="settings.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="settings.html" title="Settings File Loading Class"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="scalymuck-base-modification">
+<h1>ScalyMUCK Base Modification<a class="headerlink" href="#scalymuck-base-modification" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<span class="target" id="module-scommands"></span><p>Found here is a great example of how modifications are implemented inside of ScalyMUCK. All modifications that
+are intended to be loaded into ScalyMUCK must be provided in the form of a module you can merely drag and drop
+into application/game/ and from there the server host can modify their server_config.cfg file to add the modification
+to the loaded modification listing.</p>
+<dl class="class">
+<dt id="scommands.Modification">
+<em class="property">class </em><tt class="descclassname">scommands.</tt><tt class="descname">Modification</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/scommands.html#Modification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scommands.Modification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main class object to load and initialize the scommands modification.</p>
+<dl class="method">
+<dt id="scommands.Modification.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/scommands.html#Modification.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scommands.Modification.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>This initializes an instance of the scommands modification and it will remain loaded in memory
+until the server owner either unloads it or reloads it which therefore will reset
+any associated data unless the data had been defined on the class definition itself
+rather than being initialized in this function.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd><ul class="first last simple">
+<li>config &#8211; This is the instance of Settings that contains all loaded configuration settings available for this modification, if the file exists. If the file does not exist, then this will simply be None.</li>
+<li>interface &#8211; This is the instance of the user interface used internally by ScalyMUCK. Generally, you won&#8217;t need access to this for any reason and is currently deprecated for later removal.</li>
+</ul>
+</dd>
+</dl>
+<p>Actions such as binding your Blinker signals should be performed here so that events will be
+received properly when they occur.</p>
+<p>Along with initializing the modification, __init__ acts as a gateway for other important
+data passed in by the modloader under the <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs argument.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scommands.Modification.callback_client_authenticated">
+<tt class="descname">callback_client_authenticated</tt><big>(</big><em>trigger</em>, <em>sender</em><big>)</big><a class="reference internal" href="_modules/scommands.html#Modification.callback_client_authenticated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scommands.Modification.callback_client_authenticated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback that is bound to the &#8220;post_client_authenticated&#8221; event.</p>
+<p>Callbacks like this one are helpful in cases that if you want to initialize
+certain data upon the authentication of a certain client &#8211; perhaps you&#8217;re loading
+mod data that is related to this client.</p>
+<p>Refer to the <strong class="command">__init__</strong> function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scommands.Modification.callback_message_sent">
+<tt class="descname">callback_message_sent</tt><big>(</big><em>trigger</em>, <em>sender</em>, <em>input</em><big>)</big><a class="reference internal" href="_modules/scommands.html#Modification.callback_message_sent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scommands.Modification.callback_message_sent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback that is bound to the &#8220;pre_message_sent&#8221; event.</p>
+<p>Callbacks like this one are helpful in cases that if you want to intercept
+input for any reason, such as an interactive menu that will handle it&#8217;s own
+text parsing for handling menu functions as that if the callback at any point
+returns true, the server will not pass the input text into the core parser.</p>
+<p>Refer to the <strong class="command">__init__</strong> function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="scommands.Modification.get_commands">
+<tt class="descname">get_commands</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/scommands.html#Modification.get_commands"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#scommands.Modification.get_commands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary mapping the available commands in this modification.</p>
+<p>This is a function call merely for the purpose of being able to provide variable
+output, so that if the modification has an accompanying configuration file it can
+omit or include certain commands based on the configuration settings loaded in the
+modification&#8217;s <strong class="command">__init__</strong> function.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="settings.html"
+                        title="previous chapter">Settings File Loading Class</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/scommands.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="settings.html" title="Settings File Loading Class"
+             >previous</a> |</li>
+        <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Robert MacGregor.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
