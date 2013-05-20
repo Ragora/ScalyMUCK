@@ -27,7 +27,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" />
     <link rel="next" title="ScalyMUCK Base Modification" href="scommands.html" />
-    <link rel="prev" title="Permission Repository Class" href="permissions.html" /> 
+    <link rel="prev" title="Allow Owner Permission Override" href="permissions/allowowneroverride.html" /> 
   </head>
   <body>
     <div class="related">
@@ -43,7 +43,7 @@
           <a href="scommands.html" title="ScalyMUCK Base Modification"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="permissions.html" title="Permission Repository Class"
+          <a href="permissions/allowowneroverride.html" title="Allow Owner Permission Override"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>
@@ -56,23 +56,21 @@
             
   <div class="section" id="settings-file-loading-class">
 <h1>Settings File Loading Class<a class="headerlink" href="#settings-file-loading-class" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul class="simple">
 </ul>
 </div>
 <span class="target" id="module-settings"></span><p>Basic settings loader that provides easy to use functionality to load from simple
-configuration files that are formatted as such:</p>
-<p>Option=Yes
-Number=20
-String=Whatever</p>
-<p>When loading the above data, you would specify the datatype that it should be loaded as:
-some_number = config.get_index(&#8216;Number&#8217;, int)</p>
+configuration files that have take the following form on every line:</p>
+<ul class="simple">
+<li>Option=Yes</li>
+<li>Number=20</li>
+<li>String=Whatever</li>
+</ul>
 <dl class="class">
 <dt id="settings.Settings">
 <em class="property">class </em><tt class="descclassname">settings.</tt><tt class="descname">Settings</tt><big>(</big><em>target_file</em><big>)</big><a class="reference internal" href="_modules/settings.html#Settings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#settings.Settings" title="Permalink to this definition">¶</a></dt>
-<dd><p>The Settings loader class provides simple functionality to load from simple configuration
-files.</p>
+<dd><p>The Settings loader class provides simple functionality to load from simple configuration files.</p>
 <dl class="method">
 <dt id="settings.Settings.__init__">
 <tt class="descname">__init__</tt><big>(</big><em>target_file</em><big>)</big><a class="reference internal" href="_modules/settings.html#Settings.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#settings.Settings.__init__" title="Permalink to this definition">¶</a></dt>
@@ -85,15 +83,18 @@ files.</p>
 <dd><p>Returns a loaded configuration setting from the Settings loader.</p>
 <dl class="docutils">
 <dt>Keyword arguments:</dt>
-<dd>index &#8211; The name of the setting that is to be loaded from the file.
-datatype &#8211; The datatype that is supposed to be used to represent this setting.</dd>
+<dd><ul class="first last simple">
+<li>index &#8211; The name of the setting that is to be loaded from the file.</li>
+<li>datatype &#8211; The datatype that is supposed to be used to represent this setting in the return value.</li>
+</ul>
+</dd>
 </dl>
 </dd></dl>
 
 <dl class="method">
 <dt id="settings.Settings.get_indices">
 <tt class="descname">get_indices</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/settings.html#Settings.get_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#settings.Settings.get_indices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns all known indices.</p>
+<dd><p>Returns all known indices. This is a list of the indices you would use in <a class="reference internal" href="#settings.Settings.get_index" title="settings.Settings.get_index"><tt class="xref py py-func docutils literal"><span class="pre">get_index()</span></tt></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -113,8 +114,8 @@ datatype &#8211; The datatype that is supposed to be used to represent this sett
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="permissions.html"
-                        title="previous chapter">Permission Repository Class</a></p>
+  <p class="topless"><a href="permissions/allowowneroverride.html"
+                        title="previous chapter">Allow Owner Permission Override</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="scommands.html"
                         title="next chapter">ScalyMUCK Base Modification</a></p>
@@ -153,7 +154,7 @@ datatype &#8211; The datatype that is supposed to be used to represent this sett
           <a href="scommands.html" title="ScalyMUCK Base Modification"
              >next</a> |</li>
         <li class="right" >
-          <a href="permissions.html" title="Permission Repository Class"
+          <a href="permissions/allowowneroverride.html" title="Allow Owner Permission Override"
              >previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>

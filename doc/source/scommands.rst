@@ -5,3 +5,4 @@ ScalyMUCK Base Modification
    :maxdepth: 2  
 .. automodule:: scommands  
    :members: Modification
+   :special-members:

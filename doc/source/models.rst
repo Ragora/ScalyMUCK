@@ -1,11 +1,13 @@
 Database Models
 =====================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
-.. automodule:: models
-   :members:
-   :special-members:
+
+   models/player
+   models/room
+   models/bot
+   models/item
+   models/exit
+   models/common
 

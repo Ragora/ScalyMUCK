@@ -110,7 +110,7 @@
 	<span class="n">post_exit_room</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_exit_room&#39;</span><span class="p">)</span>
 	<span class="n">pre_show_description</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_show_description&#39;</span><span class="p">)</span>
 
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Modification.__init__"><a class="viewcode-back" href="../scommands.html#scommands.Modification.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">]</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;interface&#39;</span><span class="p">]</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;session&#39;</span><span class="p">]</span>
@@ -120,7 +120,7 @@
 		<span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_client_authenticated&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callback_client_authenticated</span><span class="p">)</span>
 		<span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_message_sent&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callback_message_sent</span><span class="p">)</span>
 
-	<span class="c"># Commands</span>
+	<span class="c"># Commands</span></div>
 	<span class="k">def</span> <span class="nf">command_say</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
 		<span class="nb">input</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">]</span>

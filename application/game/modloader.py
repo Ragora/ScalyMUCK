@@ -1,5 +1,7 @@
 """
-	Modification loader for ScalyMUCK.
+	Modification loader class code for ScalyMUCK. This class
+	is used to store and track loaded modifications that
+	are in use by the server application
 
 	Copyright (c) 2013 Robert MacGregor
 	This software is licensed under the GNU General
@@ -25,7 +27,16 @@ class ModLoader:
 	modifications = { }
 
 	def __init__(self, world=None, interface=None, session=None, workdir=None, permissions=None):
-		""" Initializes an instance of the ScalyMUCK mod loader. """
+		""" Initializes an instance of the ScalyMUCK mod loader. 
+
+		There are several keyword arguments that should be used with this __init__ command:
+			* world -- An instance of the game.World object to be used with this ModLoader.
+			* interface -- An instance of the game.Interface object to be used with this ModLoader.
+			* session -- An active database session from SQLAlchemy to be used with this ModLoader.
+			* workdir -- The work directory of the current running application.
+			* permissions -- An instance of the game.Permissions object to be used with this ModLoader.
+
+		"""
 		self.workdir = workdir
 		self.world = world
 		self.interface = interface
@@ -34,7 +45,19 @@ class ModLoader:
 		self.set_defaults()
 
 	def load(self, modifications):
-		""" Loads a semicolon deliminated list of modifications from application/game """
+		""" Loads a semicolon deliminated list of modifications from application/game.
+
+		If any of the specified modifications happen to already be loaded into ScalyMUCK,
+		they are merely reloaded so that any changes made since the last load will be applied
+		and take affect.
+
+		NOTE:
+			If there happens to be a low-level Python error (IE: SyntaxError) then the server
+			application will merely crash as of the moment. Same goes for any internal errors in a mod
+			code base that happen to raise an exception that is not derived from one of the exception
+			classes in game.Exception.
+
+		"""
 		for mod_name in modifications.split(';'):
 			mod_name = mod_name.lower()
 			if (mod_name in self.modifications):
@@ -77,7 +100,13 @@ class ModLoader:
 		return True
 
 	def set_defaults(self):
-		""" This command merely makes sure that the core commands are loaded. """
+		""" This command merely makes sure that the core commands are loaded. 
+
+		It should be called everytime a modification is loaded in order to guarantee
+		that a modification doesn't attempt to overwrite the core commands, even though
+		by standard they shouldn't be defining these commands in the first place.
+
+		"""
 		self.commands['mods'] = { }
 		self.commands['mods']['command'] = self.command_mods
 		self.commands['mods']['description'] = 'Lists all loaded mods.'

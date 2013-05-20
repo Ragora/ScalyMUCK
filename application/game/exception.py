@@ -1,6 +1,6 @@
 """
-	Exceptions for ScalyMUCK core and ScalyMUCK modifications that
-	may be loaded into the MUCK server.
+	ScalyMUCK has several base exceptions for the ScalyMUCK core and 
+	ScalyMUCK modifications that may be loaded into the MUCK server.
 
 	Copyright (c) 2013 Robert MacGregor
 	This software is licensed under the GNU General
@@ -9,14 +9,17 @@
 """
 
 class ModApplicationError(Exception):
-	""" Generic """
+	""" Generic exception for ScalyMUCK modifications to subclass in order
+	to report errors to the error reporting mechanism.
+
+	NOTE:
+		This should never be explictely raised by any code. This
+		is designed to be subclassed for proper exception support.
+
+	"""
 
 class WorldArgumentError(ModApplicationError):
-	""" Raised when using the world API and an invalid
-	argument is specified. 
-
-	"""
+	""" Raised when using the world API and an invalid argument is specified. """
 
 class ModelArgumentError(ModApplicationError):
-	""" Raised when a model function is used improperly.
-	"""
+	""" Raised when a model function is used improperly. """

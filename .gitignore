@@ -3,3 +3,4 @@
 *.cfg~
 *.txt~
 *.rst~
+doc/build/doctrees

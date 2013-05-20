@@ -1,5 +1,8 @@
 """
-	Permission handler for the ScalyMUCK server.
+	Permission handler for the ScalyMUCK server. It
+	employs a sort of repository system used for storing
+	and evaluating permissions with variable terms and
+	exceptions.
 
 	Copyright (c) 2013 Robert MacGregor
 	This software is licensed under the GNU General
@@ -18,6 +21,13 @@ class Permissions:
 	workdir = None
 
 	def __init__(self, workdir=None):
+		""" Initializes a new instance of the permissions repository class.
+
+		NOTE:
+			You must pass in a good work directory in order for the permissions repository
+			class to be able to load the server global config/permissions.cfg file.
+
+		"""
 		self.workdir = workdir
 		permission_settings = settings.Settings('%s/config/permissions.cfg' % (self.workdir))
 		for index in permission_settings.get_indices():
@@ -43,7 +53,14 @@ class Permissions:
 			return evaluator(name, player, value)
 
 	def standard_evaluator(self, name=None, player=None, value=None):
-		""" Tests all standard permissions built into the server. """
+		""" Tests all standard permissions built into the server. 
+
+		Keyword arguments:
+			* name -- The name of the permission to attempt to evaluate.
+			* player -- An instance of game.models.Player to evaluate against.
+			* value -- The specific variable used to configure this permission setting.
+
+		"""
 		if (name == 'AllowAdminOverride'):
 			return value
 		elif (name == 'AllowSuperAdminOverride'):

@@ -17,29 +17,7 @@ from blinker import signal
 import game.models
 
 class Modification:
-	""" Main class object to load and initialize the scommands modification.
-
-	This modification class is what the modloader searches for when it imports
-	the module that this modification is contained in. The modloader will initialize
-	this class with the normal :meth:`__init__` constructor and it will remain loaded in memory
-	until the server owner either unloads it or reloads it which therefore will reset
-	any associated data unless the data had been defined on the class definition itself
-	rather than being initialized in the __init__ function. 
-
-	Along with initializing the modification, __init__ acts as a gateway for other important
-	data passed in by the modloader under the **kwargs argument.
-
-	Keyword arguments:
-		config -- This is the instance of Settings that contains all loaded configuration 
-	settings available for this modification, if the file exists. If the file does not exist, 
-	then this will simply be None.
-		interface -- This is the instance of the user interface used internally by ScalyMUCK. Generally,
-	you won't need access to this for any reason and is currently deprecated for later removal.
-
-	Actions such as binding your Blinker signals should be performed here so that events will be
-	received properly when they occur.
-
-	"""
+	""" Main class object to load and initialize the scommands modification. """
 	world = None
 	interface = None
 	session = None
@@ -60,6 +38,25 @@ class Modification:
 	pre_show_description = signal('pre_show_description')
 
 	def __init__(self, **kwargs):
+		""" 
+
+		This initializes an instance of the scommands modification and it will remain loaded in memory
+		until the server owner either unloads it or reloads it which therefore will reset
+		any associated data unless the data had been defined on the class definition itself
+		rather than being initialized in this function. 
+
+		Keyword arguments:
+			* config -- This is the instance of Settings that contains all loaded configuration settings available for this modification, if the file exists. If the file does not exist, then this will simply be None.
+			* interface -- This is the instance of the user interface used internally by ScalyMUCK. Generally, you won't need access to this for any reason and is currently deprecated for later removal.
+
+		Actions such as binding your Blinker signals should be performed here so that events will be
+		received properly when they occur.
+
+		Along with initializing the modification, __init__ acts as a gateway for other important
+		data passed in by the modloader under the **kwargs argument.
+
+		"""
+		
 		self.config = kwargs['config']
 		self.interface = kwargs['interface']
 		self.session = kwargs['session']
@@ -420,7 +417,7 @@ class Modification:
 		certain data upon the authentication of a certain client -- perhaps you're loading
 		mod data that is related to this client.
 
-		Refer to the __init__ function.
+		Refer to the :command:`__init__` function.
 
 		"""
 		self.command_look(sender=sender, input='')
@@ -433,7 +430,7 @@ class Modification:
 		text parsing for handling menu functions as that if the callback at any point
 		returns true, the server will not pass the input text into the core parser.
 
-		Refer to the __init__ function.
+		Refer to the :command:`__init__` function.
 
 		"""
 		if (len(input) != 0):
@@ -452,7 +449,7 @@ class Modification:
 		This is a function call merely for the purpose of being able to provide variable
 		output, so that if the modification has an accompanying configuration file it can
 		omit or include certain commands based on the configuration settings loaded in the
-		modification's __init__ function.
+		modification's :command:`__init__` function.
 
 		"""
 		command_dict = {

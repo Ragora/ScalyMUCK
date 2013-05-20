@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" />
-    <link rel="next" title="Settings File Loading Class" href="settings.html" />
+    <link rel="next" title="Allow Admin Permission Override" href="permissions/allowadminoverride.html" />
     <link rel="prev" title="World Class" href="world.html" /> 
   </head>
   <body>
@@ -40,7 +40,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="settings.html" title="Settings File Loading Class"
+          <a href="permissions/allowadminoverride.html" title="Allow Admin Permission Override"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="world.html" title="World Class"
@@ -56,16 +56,32 @@
             
   <div class="section" id="permission-repository-class">
 <h1>Permission Repository Class<a class="headerlink" href="#permission-repository-class" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
 <div class="toctree-wrapper compound">
-<ul class="simple">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="permissions/allowadminoverride.html">Allow Admin Permission Override</a></li>
+<li class="toctree-l1"><a class="reference internal" href="permissions/allowsuperadminoverride.html">Allow Super Admin Permission Override</a></li>
+<li class="toctree-l1"><a class="reference internal" href="permissions/allowowneroverride.html">Allow Owner Permission Override</a></li>
 </ul>
 </div>
-<span class="target" id="module-permissions"></span><p>Permission handler for the ScalyMUCK server.</p>
+<span class="target" id="module-permissions"></span><p>Permission handler for the ScalyMUCK server. It
+employs a sort of repository system used for storing
+and evaluating permissions with variable terms and
+exceptions.</p>
 <dl class="class">
 <dt id="permissions.Permissions">
 <em class="property">class </em><tt class="descclassname">permissions.</tt><tt class="descname">Permissions</tt><big>(</big><em>workdir=None</em><big>)</big><a class="reference internal" href="_modules/permissions.html#Permissions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#permissions.Permissions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Main class for permission handling in ScalyMUCK.</p>
+<dl class="method">
+<dt id="permissions.Permissions.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>workdir=None</em><big>)</big><a class="reference internal" href="_modules/permissions.html#Permissions.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#permissions.Permissions.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a new instance of the permissions repository class.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must pass in a good work directory in order for the permissions repository
+class to be able to load the server global config/permissions.cfg file.</p>
+</div>
+</dd></dl>
+
 <dl class="method">
 <dt id="permissions.Permissions.has_permission">
 <tt class="descname">has_permission</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/permissions.html#Permissions.has_permission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#permissions.Permissions.has_permission" title="Permalink to this definition">¶</a></dt>
@@ -82,6 +98,15 @@
 <dt id="permissions.Permissions.standard_evaluator">
 <tt class="descname">standard_evaluator</tt><big>(</big><em>name=None</em>, <em>player=None</em>, <em>value=None</em><big>)</big><a class="reference internal" href="_modules/permissions.html#Permissions.standard_evaluator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#permissions.Permissions.standard_evaluator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tests all standard permissions built into the server.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd><ul class="first last simple">
+<li>name &#8211; The name of the permission to attempt to evaluate.</li>
+<li>player &#8211; An instance of game.models.Player to evaluate against.</li>
+<li>value &#8211; The specific variable used to configure this permission setting.</li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -104,8 +129,8 @@
   <p class="topless"><a href="world.html"
                         title="previous chapter">World Class</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="settings.html"
-                        title="next chapter">Settings File Loading Class</a></p>
+  <p class="topless"><a href="permissions/allowadminoverride.html"
+                        title="next chapter">Allow Admin Permission Override</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/permissions.txt"
@@ -138,7 +163,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="settings.html" title="Settings File Loading Class"
+          <a href="permissions/allowadminoverride.html" title="Allow Admin Permission Override"
              >next</a> |</li>
         <li class="right" >
           <a href="world.html" title="World Class"

@@ -27,7 +27,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="index.html" />
     <link rel="next" title="Exception Classes" href="exception.html" />
-    <link rel="prev" title="Server Instance Class" href="server.html" /> 
+    <link rel="prev" title="User Interface Class" href="interface.html" /> 
   </head>
   <body>
     <div class="related">
@@ -43,7 +43,7 @@
           <a href="exception.html" title="Exception Classes"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="server.html" title="Server Instance Class"
+          <a href="interface.html" title="User Interface Class"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>
@@ -56,16 +56,34 @@
             
   <div class="section" id="mod-loading-class">
 <h1>Mod Loading Class<a class="headerlink" href="#mod-loading-class" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
 <div class="toctree-wrapper compound">
 <ul class="simple">
 </ul>
 </div>
-<span class="target" id="module-modloader"></span><p>Modification loader for ScalyMUCK.</p>
+<span class="target" id="module-modloader"></span><p>Modification loader class code for ScalyMUCK. This class
+is used to store and track loaded modifications that
+are in use by the server application</p>
 <dl class="class">
 <dt id="modloader.ModLoader">
 <em class="property">class </em><tt class="descclassname">modloader.</tt><tt class="descname">ModLoader</tt><big>(</big><em>world=None</em>, <em>interface=None</em>, <em>session=None</em>, <em>workdir=None</em>, <em>permissions=None</em><big>)</big><a class="reference internal" href="_modules/modloader.html#ModLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modloader.ModLoader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Mod loading class for ScalyMUCK.</p>
+<dl class="method">
+<dt id="modloader.ModLoader.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>world=None</em>, <em>interface=None</em>, <em>session=None</em>, <em>workdir=None</em>, <em>permissions=None</em><big>)</big><a class="reference internal" href="_modules/modloader.html#ModLoader.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modloader.ModLoader.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes an instance of the ScalyMUCK mod loader.</p>
+<dl class="docutils">
+<dt>There are several keyword arguments that should be used with this __init__ command:</dt>
+<dd><ul class="first last simple">
+<li>world &#8211; An instance of the game.World object to be used with this ModLoader.</li>
+<li>interface &#8211; An instance of the game.Interface object to be used with this ModLoader.</li>
+<li>session &#8211; An active database session from SQLAlchemy to be used with this ModLoader.</li>
+<li>workdir &#8211; The work directory of the current running application.</li>
+<li>permissions &#8211; An instance of the game.Permissions object to be used with this ModLoader.</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="modloader.ModLoader.command_load">
 <tt class="descname">command_load</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/modloader.html#ModLoader.command_load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modloader.ModLoader.command_load" title="Permalink to this definition">¶</a></dt>
@@ -93,13 +111,26 @@
 <dl class="method">
 <dt id="modloader.ModLoader.load">
 <tt class="descname">load</tt><big>(</big><em>modifications</em><big>)</big><a class="reference internal" href="_modules/modloader.html#ModLoader.load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modloader.ModLoader.load" title="Permalink to this definition">¶</a></dt>
-<dd><p>Loads a semicolon deliminated list of modifications from application/game</p>
+<dd><p>Loads a semicolon deliminated list of modifications from application/game.</p>
+<p>If any of the specified modifications happen to already be loaded into ScalyMUCK,
+they are merely reloaded so that any changes made since the last load will be applied
+and take affect.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If there happens to be a low-level Python error (IE: SyntaxError) then the server
+application will merely crash as of the moment. Same goes for any internal errors in a mod
+code base that happen to raise an exception that is not derived from one of the exception
+classes in game.Exception.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
 <dt id="modloader.ModLoader.set_defaults">
 <tt class="descname">set_defaults</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/modloader.html#ModLoader.set_defaults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#modloader.ModLoader.set_defaults" title="Permalink to this definition">¶</a></dt>
 <dd><p>This command merely makes sure that the core commands are loaded.</p>
+<p>It should be called everytime a modification is loaded in order to guarantee
+that a modification doesn&#8217;t attempt to overwrite the core commands, even though
+by standard they shouldn&#8217;t be defining these commands in the first place.</p>
 </dd></dl>
 
 </dd></dl>
@@ -113,8 +144,8 @@
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="server.html"
-                        title="previous chapter">Server Instance Class</a></p>
+  <p class="topless"><a href="interface.html"
+                        title="previous chapter">User Interface Class</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="exception.html"
                         title="next chapter">Exception Classes</a></p>
@@ -153,7 +184,7 @@
           <a href="exception.html" title="Exception Classes"
              >next</a> |</li>
         <li class="right" >
-          <a href="server.html" title="Server Instance Class"
+          <a href="interface.html" title="User Interface Class"
              >previous</a> |</li>
         <li><a href="index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li> 
       </ul>

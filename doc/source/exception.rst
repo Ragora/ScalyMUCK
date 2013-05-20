@@ -1,10 +1,9 @@
 Exception Classes
 =====================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
-.. automodule:: exception
-   :members:
-   :special-members:
+
+   exceptions/modapplicationerror
+   exceptions/worldargumenterror
+   exceptions/modelargumenterror

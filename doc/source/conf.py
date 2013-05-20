@@ -256,6 +256,10 @@ def process_docstring(app, what, name, obj, options, lines):
 		for i in range(size-5, size):
 			lines.pop(len(lines)-1)
 
+	# Perform any known replacements to their reStructuredText equivalents
+	for index, line in enumerate(lines):
+		lines[index] = line.replace('NOTE:','.. note::')
+
 def setup(app):
 	from sphinx.ext.autodoc import cut_lines
 	app.connect('autodoc-process-docstring', process_docstring)

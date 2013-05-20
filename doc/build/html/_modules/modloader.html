@@ -75,7 +75,7 @@
 	<span class="n">commands</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
 	<span class="n">modifications</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
 
-	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">workdir</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">permissions</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ModLoader.__init__"><a class="viewcode-back" href="../modloader.html#modloader.ModLoader.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">interface</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">workdir</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">permissions</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Initializes an instance of the ScalyMUCK mod loader. &quot;&quot;&quot;</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">workdir</span> <span class="o">=</span> <span class="n">workdir</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">world</span> <span class="o">=</span> <span class="n">world</span>
@@ -83,7 +83,7 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">session</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">permissions</span> <span class="o">=</span> <span class="n">permissions</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">set_defaults</span><span class="p">()</span>
-
+</div>
 <div class="viewcode-block" id="ModLoader.load"><a class="viewcode-back" href="../modloader.html#modloader.ModLoader.load">[docs]</a>	<span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modifications</span><span class="p">):</span>
 		<span class="sd">&quot;&quot;&quot; Loads a semicolon deliminated list of modifications from application/game &quot;&quot;&quot;</span>
 		<span class="k">for</span> <span class="n">mod_name</span> <span class="ow">in</span> <span class="n">modifications</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">):</span>

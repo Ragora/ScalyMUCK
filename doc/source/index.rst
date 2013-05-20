@@ -10,6 +10,7 @@ Core Functionality
    :maxdepth: 5
 
    server
+   interface
 
 Modding API
 ----------------------
@@ -18,7 +19,6 @@ Modding API
 
    modloader
    exception
-   interface
    models
    world
    permissions

@@ -1,6 +1,4 @@
 """
-	main.py
-
 	Main file for ScalyMUCK -- you just run this file!
 
 	Copyright (c) 2013 Robert MacGregor

@@ -1,8 +1,6 @@
 Settings File Loading Class
 =====================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
 .. automodule:: settings
