@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>world &mdash; ScalyMUCK 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for world</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">	This contains &quot;global&quot; functions that is to</span>
+<span class="sd">	be called by the various mods of the MUCK to perform actions such as creating</span>
+<span class="sd">	Players.</span>
+
+<span class="sd">	Copyright (c) 2013 Robert MacGregor</span>
+<span class="sd">	This software is licensed under the GNU General</span>
+<span class="sd">	Public License version 3. Please refer to gpl.txt </span>
+<span class="sd">	for more information.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">sessionmaker</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">scoped_session</span>
+
+<span class="kn">from</span> <span class="nn">models</span> <span class="kn">import</span> <span class="n">Room</span><span class="p">,</span> <span class="n">Player</span><span class="p">,</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Bot</span>
+<span class="kn">import</span> <span class="nn">exception</span>
+
+<div class="viewcode-block" id="World"><a class="viewcode-back" href="../world.html#world.World">[docs]</a><span class="k">class</span> <span class="nc">World</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">	The &quot;singleton&quot; class that represents the ScalyMUCK world in memory and is to</span>
+<span class="sd">	be passed to every mod that actually manages to initialize when loaded.</span>
+<span class="sd">	</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">engine</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="n">session</span> <span class="o">=</span> <span class="bp">None</span>
+	
+<div class="viewcode-block" id="World.__init__"><a class="viewcode-back" href="../world.html#world.World.__init__">[docs]</a>	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">engine</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Initializes an instance of the World with an SQLAlchemy engine. &quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">engine</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">scoped_session</span><span class="p">(</span><span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">))</span>
+	      </div>
+<div class="viewcode-block" id="World.create_room"><a class="viewcode-back" href="../world.html#world.World.create_room">[docs]</a>	<span class="k">def</span> <span class="nf">create_room</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Creates a new Room if the World.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			description -- The description that is to be used with the new Room instance.</span>
+<span class="sd">			owner -- The ID or instance of Player that is to become the owner of this Room.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">room</span> <span class="o">=</span> <span class="n">Room</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">owner</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">room</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">room</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">room</span>
+	      </div>
+<div class="viewcode-block" id="World.find_room"><a class="viewcode-back" href="../world.html#world.World.find_room">[docs]</a>	<span class="k">def</span> <span class="nf">find_room</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Locates the specified Room in the ScalyMUCK world.</span>
+
+<span class="sd">		This can be a bit computionally intense if you are running a very large world.</span>
+
+<span class="sd">		Keyword arguments (one or the other):</span>
+<span class="sd">			id -- The id of the requested room to return an instance of. This overrides the name if both are specified.</span>
+<span class="sd">			name -- The name of the requested room to return an instance of.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">target_room</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Room</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+		<span class="k">return</span> <span class="n">target_room</span>
+	</div>
+<div class="viewcode-block" id="World.create_player"><a class="viewcode-back" href="../world.html#world.World.create_player">[docs]</a>	<span class="k">def</span> <span class="nf">create_player</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">workfactor</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">admin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">sadmin</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Creates a new instance of a Player.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			name -- The name of the new Player instance to be used.</span>
+<span class="sd">			password -- The password that is to be used for the Player.</span>
+<span class="sd">			workfactor -- The work factor # to be used when hasing the Player&#39;s password.</span>
+<span class="sd">			location -- The ID or instance of Room that the new Player is to be created at.</span>
+<span class="sd">			admin -- A boolean representing whether or not this new Player is an administrator.</span>
+<span class="sd">			sadmin -- A boolean representing whether or not this new Player is a super administrator.</span>
+<span class="sd">			owner -- A boolean representing whether or not this new Player is an owner.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">password</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">workfactor</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">location</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">WorldArgumentError</span><span class="p">(</span><span class="s">&#39;All of the arguments to create_player are mandatory! (or None was passed in)&#39;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_room</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">location</span><span class="p">)</span>
+
+		<span class="n">player_inventory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_room</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="se">\&#39;</span><span class="s">s Inventory&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">))</span>				
+		<span class="n">player</span> <span class="o">=</span> <span class="n">Player</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">workfactor</span><span class="p">,</span> <span class="n">location</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">admin</span><span class="o">=</span><span class="n">admin</span><span class="p">,</span> <span class="n">sadmin</span><span class="o">=</span><span class="n">sadmin</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">owner</span><span class="p">)</span>
+		<span class="n">player</span><span class="o">.</span><span class="n">inventory_id</span> <span class="o">=</span> <span class="n">player_inventory</span><span class="o">.</span><span class="n">id</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">player</span><span class="p">)</span>
+
+		<span class="n">location</span><span class="o">.</span><span class="n">players</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">player</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">player_inventory</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">player</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">player_inventory</span><span class="p">)</span>
+		
+		<span class="n">player</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span>
+		<span class="n">player</span><span class="o">.</span><span class="n">inventory</span> <span class="o">=</span> <span class="n">player_inventory</span>
+		<span class="k">return</span> <span class="n">player</span>
+</div>
+<div class="viewcode-block" id="World.create_bot"><a class="viewcode-back" href="../world.html#world.World.create_bot">[docs]</a>	<span class="k">def</span> <span class="nf">create_bot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Creates a new instance of a Bot.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			name -- The name of the new Player instance to be used.</span>
+<span class="sd">			location -- The ID or instance of Room that the new Player is to be created at.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">location</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">WorldArgumentError</span><span class="p">(</span><span class="s">&#39;All of the arguments to create_bot are mandatory! (or None was passed in)&#39;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_room</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">location</span><span class="p">)</span>
+			
+		<span class="n">bot</span> <span class="o">=</span> <span class="n">bot</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">location</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bot</span><span class="p">)</span>
+		<span class="n">location</span><span class="o">.</span><span class="n">bots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bot</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">bot</span><span class="p">)</span>
+		
+		<span class="n">bot</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span>
+		<span class="k">return</span> <span class="n">bot</span>
+</div>
+<div class="viewcode-block" id="World.find_player"><a class="viewcode-back" href="../world.html#world.World.find_player">[docs]</a>	<span class="k">def</span> <span class="nf">find_player</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Locates a Player inside of the ScalyMUCK world.</span>
+
+<span class="sd">		This searches the entire WORLD for the specified Player so if you happen to be running a very, very</span>
+<span class="sd">		large world this search will end up getting slow and it is recommended in that case that you try and</span>
+<span class="sd">		use the Room level find_player function whenever possible.</span>
+
+<span class="sd">		Keyword arguments (one or the other):</span>
+<span class="sd">			id -- The ID of the Player to locate. This overrides the name if both are specified.</span>
+<span class="sd">			name -- The name of the Player to locate.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">target_player</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Player</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">target_player</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">target_player</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_room</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">target_player</span><span class="o">.</span><span class="n">location_id</span><span class="p">)</span>
+			<span class="n">target_player</span><span class="o">.</span><span class="n">inventory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_room</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">target_player</span><span class="o">.</span><span class="n">inventory_id</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">target_player</span>
+</div>
+<div class="viewcode-block" id="World.find_bot"><a class="viewcode-back" href="../world.html#world.World.find_bot">[docs]</a>	<span class="k">def</span> <span class="nf">find_bot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Locates a Bot inside of the ScalyMUCK world.</span>
+
+<span class="sd">		This searches the entire WORLD for the specified Bot so if you happen to be running a very, very</span>
+<span class="sd">		large world this search will end up getting slow and it is recommended in that case that you try and</span>
+<span class="sd">		use the Room level find_player function whenever possible.</span>
+
+<span class="sd">		Keyword arguments (one or the other):</span>
+<span class="sd">			id -- The ID of the Bot to locate. This overrides the name if both are specified.</span>
+<span class="sd">		</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">target_bot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Bot</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">target_bot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">target_bot</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_room</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">target_bot</span><span class="o">.</span><span class="n">location_id</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">target_bot</span>
+</div>
+<div class="viewcode-block" id="World.get_players"><a class="viewcode-back" href="../world.html#world.World.get_players">[docs]</a>	<span class="k">def</span> <span class="nf">get_players</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Returns a list of all Players in the ScalyMUCK world. &quot;&quot;&quot;</span>
+		<span class="nb">list</span> <span class="o">=</span> <span class="p">[</span> <span class="p">]</span>
+		<span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Player</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">()</span>
+		<span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+			<span class="n">load_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_player</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">player</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">load_test</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+				<span class="nb">list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">find_player</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">player</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="nb">list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">load_test</span><span class="p">)</span>
+		<span class="k">return</span> <span class="nb">list</span>
+</div>
+<div class="viewcode-block" id="World.find_item"><a class="viewcode-back" href="../world.html#world.World.find_item">[docs]</a>	<span class="k">def</span> <span class="nf">find_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Locates an item by any specifications.</span>
+
+<span class="sd">		If the ID number does not exist then None is returned.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">target_item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Item</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">target_item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">target_item</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_room</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">target_item</span><span class="o">.</span><span class="n">location_id</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="n">target_item</span>
+</div>
+<div class="viewcode-block" id="World.create_item"><a class="viewcode-back" href="../world.html#world.World.create_item">[docs]</a>	<span class="k">def</span> <span class="nf">create_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&lt;Unset&gt;&#39;</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Creates a new item in the ScalyMUCK world.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			name -- The name of the Item that is to be used.</span>
+<span class="sd">			description -- The description of the Item that is to be used. Default: &lt;Unset&gt;</span>
+<span class="sd">			owner -- The ID or instance of Player that is to become the owner of this Item.</span>
+<span class="sd">			location -- The ID or instance of Room that is to become the location of this Item.</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">location</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">raise</span> <span class="n">exception</span><span class="o">.</span><span class="n">WorldArgumentError</span><span class="p">(</span><span class="s">&#39;Either the name or location was not specified. (or they were None)&#39;</span><span class="p">)</span>
+
+		<span class="n">item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">owner</span><span class="p">)</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">location</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">):</span>
+			<span class="n">item</span><span class="o">.</span><span class="n">location_id</span> <span class="o">=</span> <span class="n">location</span>
+			<span class="n">item</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_room</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">location</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">item</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span>
+			<span class="n">item</span><span class="o">.</span><span class="n">location_id</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">id</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">item</span>
+</div>
+<div class="viewcode-block" id="World.get_rooms"><a class="viewcode-back" href="../world.html#world.World.get_rooms">[docs]</a>	<span class="k">def</span> <span class="nf">get_rooms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Returns all rooms in the database that meet the specified criterion.</span>
+
+<span class="sd">		Keyword arguments:</span>
+<span class="sd">			owner -- The owner we are to filter by. If not specified, this filter is not used.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">rooms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Room</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+		<span class="k">return</span> <span class="n">rooms</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Robert MacGregor.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

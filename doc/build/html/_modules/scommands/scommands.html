@@ -1,0 +1,658 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>scommands.scommands &mdash; ScalyMUCK 3.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '3.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="ScalyMUCK 3.0.0 documentation" href="../../index.html" />
+    <link rel="up" title="scommands" href="../scommands.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../scommands.html" accesskey="U">scommands</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for scommands.scommands</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	scommands.py</span>
+
+<span class="sd">	ScalyMUCK generic commands.</span>
+
+<span class="sd">	Copyright (c) 2013 Robert MacGregor</span>
+<span class="sd">	This software is licensed under the GNU General</span>
+<span class="sd">	Public License version 3. Please refer to gpl.txt </span>
+<span class="sd">	for more information.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">string</span>
+
+<span class="kn">import</span> <span class="nn">game.models</span>
+
+<span class="kn">from</span> <span class="nn">blinker</span> <span class="kn">import</span> <span class="n">signal</span>
+
+<div class="viewcode-block" id="Modification"><a class="viewcode-back" href="../../scommands.html#scommands.scommands.Modification">[docs]</a><span class="k">class</span> <span class="nc">Modification</span><span class="p">:</span>
+	<span class="sd">&quot;&quot;&quot; Main class object to load and initialize the scommands modification. &quot;&quot;&quot;</span>
+	<span class="n">world</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="n">interface</span> <span class="o">=</span> <span class="bp">None</span>
+	<span class="n">session</span> <span class="o">=</span> <span class="bp">None</span>
+
+	<span class="n">pre_user_look</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_user_look&#39;</span><span class="p">)</span>
+	<span class="n">post_user_look</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_user_look&#39;</span><span class="p">)</span>
+	<span class="n">pre_user_say</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_user_say&#39;</span><span class="p">)</span>
+	<span class="n">post_user_say</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_user_say&#39;</span><span class="p">)</span>
+	<span class="n">pre_user_pose</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_user_pose&#39;</span><span class="p">)</span>
+	<span class="n">post_user_pose</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_user_pose&#39;</span><span class="p">)</span>
+	<span class="n">pre_item_pickup</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_item_pickup&#39;</span><span class="p">)</span>
+	<span class="n">post_item_pickup</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_item_pickup&#39;</span><span class="p">)</span>
+	<span class="n">pre_item_drop</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_item_drop&#39;</span><span class="p">)</span>
+	<span class="n">post_item_drop</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_item_drop&#39;</span><span class="p">)</span>
+	<span class="n">post_user_create</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_user_create&#39;</span><span class="p">)</span>
+	<span class="n">pre_exit_room</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_exit_room&#39;</span><span class="p">)</span>
+	<span class="n">post_exit_room</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_exit_room&#39;</span><span class="p">)</span>
+	<span class="n">pre_show_description</span> <span class="o">=</span> <span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_show_description&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Initializes an instance of the modification. &quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;config&#39;</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">interface</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;interface&#39;</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;session&#39;</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">world</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;world&#39;</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">permissions</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;permissions&#39;</span><span class="p">]</span>
+
+		<span class="n">signal</span><span class="p">(</span><span class="s">&#39;post_client_authenticated&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callback_client_authenticated</span><span class="p">)</span>
+		<span class="n">signal</span><span class="p">(</span><span class="s">&#39;pre_message_sent&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">callback_message_sent</span><span class="p">)</span>
+
+	<span class="c"># Commands</span>
+	<span class="k">def</span> <span class="nf">command_say</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="nb">input</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">]</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">input</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: say &lt;message&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_user_say</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+				<span class="k">return</span>
+
+		<span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> says, &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="nb">input</span><span class="p">),</span> <span class="n">sender</span><span class="p">)</span>
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;You say, &quot;</span><span class="si">%s</span><span class="s">&quot;&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">input</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">post_user_say</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="nb">input</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">]</span>
+		<span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_user_pose</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+				<span class="k">return</span>
+
+		<span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">]))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">post_user_pose</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_look</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="nb">input</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">]</span>
+		<span class="n">target</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">location</span>
+		<span class="n">name</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">name</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">pre_user_look</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">input</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span><span class="p">):</span>
+			<span class="n">target</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">find_player</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+				<span class="n">target</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">find_bot</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+
+			<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+				<span class="n">name</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">display_name</span>
+				<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="n">game</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Player</span><span class="p">):</span>
+					<span class="n">target</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;++++++++ </span><span class="si">%s</span><span class="s"> is looking at you!&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">target</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">find_item</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+					<span class="n">target</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">inventory</span><span class="o">.</span><span class="n">find_item</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+
+				<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+					<span class="n">name</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">name</span>
+				<span class="k">else</span><span class="p">:</span>
+					<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;I do not see that.&#39;</span><span class="p">)</span>
+					<span class="k">return</span>
+
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;&lt;&#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&#39;&gt;&#39;</span><span class="p">)</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="n">game</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Room</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Obvious Exits: &#39;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">exits</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+				<span class="k">for</span> <span class="nb">exit</span> <span class="ow">in</span> <span class="n">target</span><span class="o">.</span><span class="n">exits</span><span class="p">:</span>
+					<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">exit</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	None&#39;</span><span class="p">)</span>
+
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;People: &#39;</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="n">target</span><span class="o">.</span><span class="n">players</span><span class="p">:</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">player</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Bots: &#39;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">bots</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+				<span class="k">for</span> <span class="n">bot</span> <span class="ow">in</span> <span class="n">target</span><span class="o">.</span><span class="n">bots</span><span class="p">:</span>
+					<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">bot</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	None&#39;</span><span class="p">)</span>
+
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Items: &#39;</span><span class="p">)</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">items</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+				<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">target</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+					<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	None&#39;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">pre_show_description</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">)</span>
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Description:&#39;</span><span class="p">)</span>
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">post_user_look</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="nb">input</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">]</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">input</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: move &lt;name of exit&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="nb">exit</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">find_exit</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">exit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">exit</span><span class="o">.</span><span class="n">user_enter_message</span><span class="p">)</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="nb">exit</span><span class="o">.</span><span class="n">room_enter_message</span><span class="p">),</span> <span class="n">sender</span><span class="p">)</span>
+			<span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_exit_room</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="nb">exit</span><span class="o">.</span><span class="n">target_id</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+					<span class="k">return</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">set_location</span><span class="p">(</span><span class="nb">exit</span><span class="o">.</span><span class="n">target_id</span><span class="p">)</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="nb">exit</span><span class="o">.</span><span class="n">room_exit_message</span><span class="p">),</span> <span class="n">sender</span><span class="p">)</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="nb">exit</span><span class="o">.</span><span class="n">user_exit_message</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">command_look</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">post_exit_room</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;I do not see that.&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Items:&#39;</span><span class="p">)</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">inventory</span><span class="o">.</span><span class="n">items</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+			<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sender</span><span class="o">.</span><span class="n">inventory</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	None&#39;</span><span class="p">)</span>
+
+		<span class="c"># Pocket dimension anybody?</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">inventory</span><span class="o">.</span><span class="n">players</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;People: &#39;</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="n">sender</span><span class="o">.</span><span class="n">inventory</span><span class="o">.</span><span class="n">players</span><span class="p">:</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;	</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">player</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+
+	<span class="k">def</span> <span class="nf">command_take</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="nb">input</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">]</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">input</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: take &lt;object name&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">item</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">find_item</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_item_pickup</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+					<span class="k">return</span>
+
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Taken.&#39;</span><span class="p">)</span>
+
+			<span class="n">item</span><span class="o">.</span><span class="n">set_location</span><span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">inventory</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">post_item_pickup</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;I do not see that.&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_passwd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="nb">input</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">]</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">input</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: passwd &lt;password&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">sender</span><span class="o">.</span><span class="n">set_password</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Your password has been changed. Remember it well.&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_drop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="nb">input</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">]</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">input</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: drop &lt;item name&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">item</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">inventory</span><span class="o">.</span><span class="n">find_item</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="nb">input</span><span class="p">)</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre_item_drop</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">)</span>
+			<span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+				<span class="k">if</span> <span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+					<span class="k">return</span>
+
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;You dropped a/an </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="p">))</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> drops a/an </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="p">,</span><span class="n">sender</span><span class="p">)</span>
+			<span class="n">item</span><span class="o">.</span><span class="n">set_location</span><span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">post_item_drop</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="n">item</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;I see no such item.&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_help</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="nb">input</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;input&#39;</span><span class="p">])</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">input</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">commands</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;For more information, type: help &lt;command&gt;&#39;</span><span class="p">)</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Command listing: &#39;</span><span class="p">)</span>
+			<span class="n">out</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+			<span class="k">for</span> <span class="n">command</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">commands</span><span class="p">:</span>
+				<span class="n">privilege</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">commands</span><span class="p">[</span><span class="n">command</span><span class="p">][</span><span class="s">&#39;privilege&#39;</span><span class="p">]</span>
+				<span class="k">if</span> <span class="p">((</span><span class="n">privilege</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">sender</span><span class="o">.</span><span class="n">is_admin</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">privilege</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">sender</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">privilege</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">sender</span><span class="o">.</span><span class="n">is_owner</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">)):</span>
+					<span class="k">continue</span>
+				<span class="n">out</span> <span class="o">+=</span> <span class="n">command</span> <span class="o">+</span> <span class="s">&#39;, &#39;</span>
+			<span class="c"># Cheap trick to strip off the last comma (and space) but eh!</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">out</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> 
+			<span class="k">return</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;From: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">commands</span><span class="p">[</span><span class="nb">input</span><span class="p">][</span><span class="s">&#39;modification&#39;</span><span class="p">]))</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">commands</span><span class="p">[</span><span class="nb">input</span><span class="p">][</span><span class="s">&#39;usage&#39;</span><span class="p">]))</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">commands</span><span class="p">[</span><span class="nb">input</span><span class="p">][</span><span class="s">&#39;description&#39;</span><span class="p">])</span>
+
+	<span class="k">def</span> <span class="nf">command_quit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="n">sender</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+
+	<span class="k">def</span> <span class="nf">command_froguser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;arguments&#39;</span><span class="p">]</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: frog &lt;name&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">find_player</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="n">sender</span><span class="p">):</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;That is yourself!&#39;</span><span class="p">)</span>
+				<span class="k">return</span>
+			<span class="k">elif</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="o">==</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">target</span><span class="o">.</span><span class="n">is_owner</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;You cannot do that, they are too powerful.&#39;</span><span class="p">)</span>
+				<span class="k">return</span>
+
+			<span class="n">item</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">create_item</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">sender</span><span class="o">.</span><span class="n">inventory</span><span class="p">)</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;User &quot;</span><span class="si">%s</span><span class="s">&quot; frogged. Check your inventory.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+			<span class="n">target</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> has turned you into a small plastic figurine, never to move again and discreetly places you in their inventory.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> has turned </span><span class="si">%s</span><span class="s"> into a small plastic figurine, never to move again.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">display_name</span><span class="p">),</span> <span class="n">sender</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+			<span class="n">target</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;User &quot;</span><span class="si">%s</span><span class="s">&quot; does not exist anywhere.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+	<span class="k">def</span> <span class="nf">command_adduser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;arguments&#39;</span><span class="p">]</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: adduser &lt;name&gt; &lt;password&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">password</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">find_player</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;User already exists.&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="c"># TODO: Make this take server prefs into consideration, and also let this have a default location ...</span>
+		<span class="n">player</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">create_player</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">game</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">work_factor</span><span class="p">,</span> <span class="n">sender</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;User &quot;</span><span class="si">%s</span><span class="s">&quot; created.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">post_user_create</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">creator</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">player</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_admin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;arguments&#39;</span><span class="p">]</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: admin &lt;name&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+		<span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">find_player</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="n">sender</span><span class="p">):</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;That is yourself!&#39;</span><span class="p">)</span>
+				<span class="k">return</span>
+			<span class="k">elif</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">check_admin_trump</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">):</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;You cannot do that. They are too strong.&#39;</span><span class="p">)</span>
+				<span class="n">target</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> tried to take your administrator privileges away.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="k">return</span>
+
+			<span class="n">target</span><span class="o">.</span><span class="n">set_is_admin</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">is_admin</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">)</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">is_admin</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is no longer an administrator.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="n">target</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> took your adminship.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="k">return</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is now an administrator.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="n">target</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> gave you adminship rights.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="k">return</span>
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Unknown user.&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_sadmin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;arguments&#39;</span><span class="p">]</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: sadmin &lt;name&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+		<span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">find_player</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">target</span> <span class="ow">is</span> <span class="n">sender</span><span class="p">):</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;That is yourself!&#39;</span><span class="p">)</span>
+				<span class="k">return</span>
+			<span class="k">elif</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">check_admin_trump</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">):</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;You cannot do that. They are too strong.&#39;</span><span class="p">)</span>
+				<span class="n">target</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> tried to take your super administrator privileges away.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="k">return</span>
+
+			<span class="n">target</span><span class="o">.</span><span class="n">set_is_super_admin</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">)</span>
+			<span class="k">if</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">is_sadmin</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">):</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is no longer a super administrator.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="n">target</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> took your super adminship.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="k">return</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is now a super administrator.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="n">target</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> gave you super adminship rights.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+				<span class="k">return</span>
+		<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Unknown user.&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">command_chown</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">sender</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span>
+		<span class="n">args</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;arguments&#39;</span><span class="p">]</span>
+
+		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Usage: chown &lt;item name&gt; &lt;new owner&gt;&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">item_name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">owner_name</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+		<span class="n">item</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">inventory</span><span class="o">.</span><span class="n">find_item</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">item_name</span><span class="p">)</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">!=</span> <span class="n">sender</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;This is not your item.&#39;</span><span class="p">)</span>
+			<span class="k">return</span>
+
+		<span class="n">player</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">world</span><span class="o">.</span><span class="n">find_player</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">owner_name</span><span class="p">)</span>
+		<span class="k">if</span> <span class="p">(</span><span class="n">player</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;There is no such player.&#39;</span><span class="p">)</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">item</span><span class="o">.</span><span class="n">set_owner</span><span class="p">(</span><span class="n">player</span><span class="p">)</span>
+			<span class="n">sender</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> now owns that item.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">player</span><span class="o">.</span><span class="n">display_name</span><span class="p">))</span>
+			<span class="n">player</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> has given you a </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">display_name</span><span class="p">,</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+	<span class="k">def</span> <span class="nf">command_ping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;sender&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s">&#39;Pong.&#39;</span><span class="p">)</span>
+
+	<span class="c"># Callbacks</span>
+	<span class="k">def</span> <span class="nf">callback_client_authenticated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trigger</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">command_look</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">)</span>
+
+	<span class="k">def</span> <span class="nf">callback_message_sent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trigger</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+		<span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+			<span class="k">if</span> <span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;:&#39;</span><span class="p">):</span>		
+				<span class="bp">self</span><span class="o">.</span><span class="n">command_pose</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">())</span>
+				<span class="k">return</span> <span class="bp">True</span>
+			<span class="k">elif</span> <span class="p">(</span><span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;&quot;&#39;</span><span class="p">):</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">command_say</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">sender</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="nb">input</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">())</span>
+				<span class="k">return</span> <span class="bp">True</span>
+
+		<span class="k">return</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="Modification.get_commands"><a class="viewcode-back" href="../../scommands.html#scommands.scommands.Modification.get_commands">[docs]</a>	<span class="k">def</span> <span class="nf">get_commands</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Returns a dictionary mapping the available commands in this modification.</span>
+
+<span class="sd">		This is a function call merely for the purpose of being able to provide variable</span>
+<span class="sd">		output, so that if the modification has an accompanying configuration file it can</span>
+<span class="sd">		omit or include certain commands based on the configuration settings loaded in the</span>
+<span class="sd">		modification&#39;s __init__ function.</span>
+
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">command_dict</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s">&#39;say&#39;</span><span class="p">:</span> 
+			<span class="p">{</span> 
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_say</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Makes you say something. Only visible to the current room you</span><span class="se">\&#39;</span><span class="s">re in.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;say &lt;arbitrary text&gt; | &quot;&lt;arbitrary text&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="s">&#39;speak&#39;</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;pose&#39;</span><span class="p">:</span> 
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_pose</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Used to show arbitrary action. Only visible to the current room you</span><span class="se">\&#39;</span><span class="s">re in.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;pose &lt;arbitrary pose&gt; | :&lt;arbitrary pose&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;look&#39;</span><span class="p">:</span> 
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_look</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Get your bearings. Look around in the local area to see what you can see.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;look [room name | item name | player name]&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+		
+			<span class="s">&#39;move&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_move</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Moves to a new location.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;move &lt;exit name&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="s">&#39;go&#39;</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;inventory&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_inventory</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;View your inventory.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;inventory&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;take&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_take</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Take an item from the current room.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;take &lt;item&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="s">&#39;get&#39;</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;passwd&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_passwd</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Changes your password.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;passwd &lt;new password&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;drop&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_drop</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Drops an item from your inventory.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;drop &lt;item name&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;help&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_help</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Displays the help text.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;help [command name]&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;quit&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_quit</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Drops your connection from the server.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;quit&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="s">&#39;leave&#39;</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;frog&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_froguser</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Super Admin only: Deletes a user from the world -- making them an item in your inventory to with as you please.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;frog &lt;player name&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">2</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;adduser&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_adduser</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Creates a new player in the world.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;adduser &lt;name&gt; &lt;password&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">2</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;admin&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_admin</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Admin only: Toggles the admin status of a specified player.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;admin &lt;name&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">1</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;sadmin&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_sadmin</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Super Admin only: Toggles the super admin status of a specified player.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;sadmin &lt;name&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">2</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;chown&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_chown</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Transfers ownership of an item in your inventory or in the room to a specified player providied you are the original owner.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;chown &lt;item name&gt; &lt;new owner name&gt;&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">},</span>
+
+			<span class="s">&#39;ping&#39;</span><span class="p">:</span>
+			<span class="p">{</span>
+				<span class="s">&#39;command&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">command_ping</span><span class="p">,</span>
+				<span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;Ping-Pong.&#39;</span><span class="p">,</span>
+				<span class="s">&#39;usage&#39;</span><span class="p">:</span> <span class="s">&#39;ping&#39;</span><span class="p">,</span>
+				<span class="s">&#39;aliases&#39;</span><span class="p">:</span> <span class="p">[</span> <span class="p">],</span>
+				<span class="s">&#39;privilege&#39;</span><span class="p">:</span> <span class="mi">0</span>
+			<span class="p">}</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="n">command_dict</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">ScalyMUCK 3.0.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../scommands.html" >scommands</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013, Robert MacGregor.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

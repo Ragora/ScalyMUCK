@@ -1,6 +1,4 @@
 """
-	interface.py
-
 	Basically the user interface for ScalyMUCK.
 
 	Copyright (c) 2013 Robert MacGregor
@@ -16,8 +14,11 @@ import inspect
 
 from blinker import signal
 
+import modloader
+import permissions
 from game import exception, settings
 
+logger = logging.getLogger('Mods')
 class Interface:
 	""" Client-Server interface class.
 
@@ -26,14 +27,13 @@ class Interface:
 	the login screen for simplicity and security.
 
 	"""
-	logger = None
 	world = None
 	config = None
 	session = None
 	server = None
-	mods = [ ]
-	commands = { }
+	permissions = None
 	workdir = ''
+	modloader = None
 	
 	pre_message = signal('pre_message_sent')
 	post_message = signal('post_message_sent')
@@ -63,86 +63,9 @@ class Interface:
 		self.config = config
 		self.session = session
 		self.server = server
-
-		# Implement the default commands.
-		self.commands['mods'] = { }
-		self.commands['mods']['command'] = self.command_mods
-		self.commands['mods']['description'] = 'Lists all loaded mods.'
-		self.commands['mods']['usage'] = 'mods'
-		self.commands['mods']['privilege'] = 3
-		self.commands['mods']['modification'] = '<CORE>'
-
-		self.commands['load'] = { }
-		self.commands['load']['command'] = self.command_load
-		self.commands['load']['description'] = 'Loads the specified mod.'
-		self.commands['load']['usage'] = 'load <name>'
-		self.commands['load']['privilege'] = 3
-		self.commands['load']['modification'] = '<CORE>'
-
-		self.commands['unload'] = { }
-		self.commands['unload']['command'] = self.command_unload
-		self.commands['unload']['description'] = 'Unloads the specified mod.'
-		self.commands['unload']['usage'] = 'unload <name>'
-		self.commands['unload']['privilege'] = 3
-		self.commands['unload']['modification'] = '<CORE>'
-
-		# Iterate through our loaded mods and actually load them
-		mods = string.split(config.get_index('LoadedMods', str), ';')
-		for mod in mods:
-			self.load_mod(name=mod)
-		return
-
-	def load_mod(self, name=None):
-		""" Loads the specified modification from the "game" folder.
-
-		Modifications are loaded from the application/game folder of ScalyMUCK,
-		they are basically just normal Python modules that are imported and have
-		a special function call to load the commands. See the URL below for information:
-		http://dx.no-ip.org/doku/doku.php/projects:scalymuck:modapi:examplemod
-
-		The config argument is meant to be an instance of game.Settings so that the interface
-		can load the modification's configuration file and pass in the loading data to the mod's
-		initialize function.
-
-		Keyword arguments:
-			name -- The name of the mod to attempt to load.
-			config -- An instance of Settings that is to be used to load relevant configuration data.
-			connection -- A working connection object that points to the active database.
-
-		"""
-		name = name.lower()
-		for index, group in enumerate(self.mods):
-			mod_name, module, mod_instance = group
-			if (mod_name == name):
-				# Reload the mod in all of its entirety
-				modules = inspect.getmembers(module, inspect.ismodule)
-				for name, sub_module in modules:
-					reload(sub_module)
-				module = reload(module)
-
-				modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session)
-				commands = modification.get_commands()
-				for command in commands:
-					commands[command]['modification'] = mod_name
-				self.commands.update(commands)
-				self.mods[index] = (mod_name, module, modification)
-				return
-
-		try:
-			module = importlib.import_module('game.%s' % (name))
-		except ImportError as e:
-			self.logger.warning(str(e))
-		else:
-			if (self.config is not None):
-				self.config.load('%s/config/%s.cfg' % (self.workdir, name))
-
-			modification = module.Modification(config=self.config, world=self.world, interface=self, session=self.session)
-			self.mods.append((name, module, modification))
-
-			commands = modification.get_commands()
-			for command in commands:
-				commands[command]['modification'] = name
-			self.commands.update(commands)
+		self.permissions = permissions.Permissions(workdir=workdir)
+		self.modloader = modloader.ModLoader(world=world, interface=self, session=session, workdir=workdir, permissions=self.permissions)
+		self.modloader.load(config.get_index('LoadedMods', str))
 
 	def parse_command(self, sender=None, input=None):
 		""" Called internally by the ScalyMUCK server.
@@ -166,10 +89,10 @@ class Interface:
 
 		data = string.split(input, ' ')
 		command = string.lower(data[0])
-
-		if (intercept_input is False and command in self.commands):
+		command_data = self.modloader.find_command(command)
+		if (intercept_input is False and command_data is not None):
 			try:
-				privilege = self.commands[command]['privilege']
+				privilege = command_data['privilege']
 				if (privilege == 1 and sender.is_admin is False):
 					sender.send('You must be an administrator.')
 					return
@@ -181,8 +104,8 @@ class Interface:
 					return
 
 				# You're not trying to do something you shouldn't be? Good.
-				function = self.commands[command]['command']
-				function(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
+				command_func = command_data['command']
+				command_func(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
 				line_one = 'An error has occurred while executing the command: %s' % (command)
 				line_two = 'From modification: %s' % (self.commands[command]['modification'])
@@ -203,40 +126,3 @@ class Interface:
 			sender.send('I do not know what it is to "%s".' % (command))
 
 		self.post_message.send(None, sender=sender, input=input)
-
-	def command_mods(self, **kwargs):
-		""" Internal command to list installed mods. """
-		sender = kwargs['sender']
-		loaded = ''
-		for group in self.mods:
-			mod_name, module, mod_instance = group
-			loaded += mod_name + ', '
-		sender.send(loaded.rstrip(', '))
-
-	def command_load(self, **kwargs):
-		""" Internal command to load mods. """
-		sender = kwargs['sender']
-		input = kwargs['input'].lower()
-		for group in self.mods:
-			mod_name, module, mod_instance = group
-			if (input == mod_name):
-				self.load_mod(input)
-				sender.send('Mod "%s" reloaded.' % (input))
-				return
-		self.load_mod(input)
-		sender.send('Attempted to load mod "%s".' % (input))
-
-	def command_unload(self, **kwargs):
-		""" Internal command to unload mods. """
-		sender = kwargs['sender']
-		input = kwargs['input'].lower()
-		for index, group in enumerate(self.mods):
-			mod_name, module, mod_instance = group
-			if (input == mod_name):
-				self.mods.pop(index)
-				commands = mod_instance.get_commands()
-				for command in commands:
-					self.commands.pop(command)
-				sender.send('Mod "%s" unloaded.' % (input))
-				return
-		sender.send('Unknown mod.')

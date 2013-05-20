@@ -1,6 +1,4 @@
 """
-	main.py
-
 	Main file for ScalyMUCK -- you just run this file!
 
 	Copyright (c) 2013 Robert MacGregor
@@ -39,8 +37,18 @@ class Application:
 		data_path = '%s/.scalyMUCK/' % (home_path)
 
 		config = settings.Settings('%sconfig/settings_server.cfg' % (workdir))
-	
-		# Prepare the logs
+
+		# Make sure the folder exists. (doesn't cause any issues if it already exists)
+		os.system('mkdir %s' % (data_path))
+
+		# Reset any logs
+		if (config.get_index('ClearLogsOnStart', bool) is True):
+			if ('win' in sys.platform):
+				os.system('del %s*.txt' % (data_path))
+			elif ('linux' in sys.platform):
+				os.system('rm %s*.txt' % (data_path))
+			
+		# Prepare the server log
 		# NOTE: This code looks sucky, could it be improved to look better?
 		formatting = logging.Formatter('%(levelname)s (%(asctime)s): %(message)s', '%d/%m/%y at %I:%M:%S %p')
 		console_handle = logging.StreamHandler()
@@ -50,19 +58,6 @@ class Application:
 
 			file_handle = logging.FileHandler('%sconnection_log.txt' % (data_path))
 			file_handle.setLevel(logging.DEBUG)
-			file_handle.setFormatter(formatting)
-
-			logger.info('ScalyMUCK Server Server Start')
-			logger.addHandler(file_handle)
-			if (is_daemon is False):
-				logger.addHandler(console_handle)
-
-		if (config.get_index(index='LogMods', datatype=bool)):
-			logger = logging.getLogger('Mods')
-			logger.setLevel(logging.INFO)
-
-			file_handle = logging.FileHandler('%smod_log.txt' % (data_path))
-			file_handle.setLevel(logging.INFO)
 			file_handle.setFormatter(formatting)
 
 			logger.info('ScalyMUCK Server Server Start')
@@ -83,6 +78,29 @@ class Application:
 				logger.addHandler(console_handle)
 			logger.info('ScalyMUCK Server Server Start')
 
+		# Check for if we're trying to run as root (if we're on linux)
+		if ('linux' in sys.platform):
+			run_as_root = config.get_index(index='I_DONT_KNOW_HOW_TO_SECURITY_LET_ME_RUN_AS_ROOT',datatype=bool)
+			if (os.geteuid() == 0 and run_as_root is False):
+				logger.error('FATAL -- You should not run this application as root!')
+				return
+			elif (os.geteuid() == 0 and run_as_root):
+				logger.warn('WARNING -- It is your death wish running this application as root.')
+
+		# Prepare the other logs
+		if (config.get_index(index='LogMods', datatype=bool)):
+			logger = logging.getLogger('Mods')
+			logger.setLevel(logging.INFO)
+
+			file_handle = logging.FileHandler('%smod_log.txt' % (data_path))
+			file_handle.setLevel(logging.INFO)
+			file_handle.setFormatter(formatting)
+
+			logger.info('ScalyMUCK Server Server Start')
+			logger.addHandler(file_handle)
+			if (is_daemon is False):
+				logger.addHandler(console_handle)
+
 		self.server = Server(config=config, path=data_path, workdir=workdir)
 
 		# Set the signals for asynchronous events
@@ -99,7 +117,6 @@ class Application:
 
 class MUCKDaemon(Daemon):
 	""" Used for daemonising the code. """
-
 	def run(self, **kwargs):
 		""" Called by the Daemonizer code. """
 		Application(kwargs['workdir'], is_daemon=True)

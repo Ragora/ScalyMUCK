@@ -1,5 +1,5 @@
 ===========================================================================================
-	ScalyMUCK	Version 0.0.0
+	ScalyMUCK	Version 2.1.1
 	MUCK server application written for Python 2.7.
 	Copyright (c) 2013 Robert MacGregor
 
@@ -7,4 +7,4 @@
 	Please refer to gpl.txt for more info.
 ===========================================================================================
 
-As of now, please just visit the URL http://dx.no-ip.org/doku/doku.php/projects:scalymuck:main
+As of now, please just visit the URL http://dx.no-ip.org/redmine/projects/scalymuck

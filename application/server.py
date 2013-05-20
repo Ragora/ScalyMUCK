@@ -1,6 +1,4 @@
 """
-	server.py
-
 	This is the main ScalyMUCK server code,
 	it performs the initialisation of various
 	systems and is the binding of everything.
@@ -54,6 +52,14 @@ class Server(daemon.Daemon):
 	post_client_authenticated = signal('post_client_authenticated')
 	world_tick = signal('world_tick')
 
+	auth_low_argc = None
+	auth_invalid_combination = None
+	auth_connected = None
+	auth_replace_Connection = None
+	auth_connection_replaced = None
+	auth_connect_suggestion = None
+	game_client_disconnect = None
+
 	def __init__(self, config=None, path=None, workdir=None):
 		""" The server class is created and managed by the main.py script.
 
@@ -80,6 +86,15 @@ class Server(daemon.Daemon):
 			database_location = path + config.get_index(index='TargetDatabase', datatype=str)
 		else:
 			database_location = config.get_index(index='TargetDatabase', datatype=str)
+
+		# Load server messages
+		self.auth_low_argc = config.get_index('AuthLowArgC', str)
+		self.auth_invalid_combination = config.get_index('AuthInvalidCombination', str)
+		self.auth_connected = config.get_index('AuthConnected', str)
+		self.auth_replace_Connection = config.get_index('AuthReplaceConnection', str)
+		self.auth_connection_replaced = config.get_index('AuthConnectionReplaced', str)
+		self.auth_connect_suggestion = config.get_index('AuthConnectSuggestion', str).replace('\\n','\n')
+		self.game_client_disconnect = config.get_index('GameClientDisconnect', str)
   		
 		# Loading welcome/exit messages
 		with open(workdir + 'config/welcome_message.txt') as f:
@@ -144,7 +159,10 @@ class Server(daemon.Daemon):
 		finishes calling, a single world tick has passed.
 
 		"""
-		self.telnet_server.poll()
+		try:
+			self.telnet_server.poll()
+		except UnicodeDecodeError:
+			return
 		
 		for connection in self.pending_connection_list:
 			if (connection.cmd_ready is True):
@@ -153,14 +171,14 @@ class Server(daemon.Daemon):
 
 				# Try and perform the authentification process
 				if (len(command_data) < 3):
-					connection.send('You did not specify all of the required arguments.\n')
+					connection.send('%s\n' % (self.auth_low_argc))
 				elif (len(command_data) >= 3 and string.lower(command_data[0]) == 'connect'):
 					name = string.lower(command_data[1])
 					password = command_data[2]
 					
 					target_player = self.world.find_player(name=name)
 					if (target_player is None):
-						connection.send('You have specified an invalid username/password combination.\n')
+						connection.send('%s\n' % (self.auth_invalid_combination))
 					else:
 						player_hash = target_player.hash
 						if (player_hash == bcrypt.hashpw(password, player_hash) == player_hash):
@@ -177,15 +195,15 @@ class Server(daemon.Daemon):
 							self.post_client_authenticated.send(None, sender=target_player)
 							for player in target_player.location.players:
 								if (player is not target_player):
-									player.send('%s has connected.' % (target_player.display_name))
+									player.send('%s %s' % (target_player.display_name, self.auth_connected))
 
 							for player in self.established_connection_list:
 								if (player.id == connection.id):
-									player.send('Your connection has been replaced.\n')
+									player.send('%s\n' % (self.auth_replace_connection))
 									player.socket_send()
 									player.deactivate()
 									player.sock.close()
-									connection.send('You boot off an old connection.\n')
+									connection.send('%s\n' % (self.auth_connection_replaced))
 									self.established_connection_list.remove(player)
 									break
 							self.pending_connection_list.remove(connection)	
@@ -193,8 +211,9 @@ class Server(daemon.Daemon):
 						else:
 							connection.send('You have specified an invalid username/password combination.\n')
 				elif (len(command_data) >= 3 and string.lower(command_data[0]) != 'connect'):
-					connection.send('You must use the "connect" command:\n')
-					connection.send('connect <username> <password>\n')
+					connection.send('%s\n' % (self.auth_connect_suggestion))
+					#connection.send('You must use the "connect" command:\n')
+					#connection.send('connect <username> <password>\n')
 
 		# With already connected clients, we'll now deploy the command interface.
 		for connection in self.established_connection_list:
@@ -243,6 +262,6 @@ class Server(daemon.Daemon):
 		elif (client in self.established_connection_list):
 			player = self.world.find_player(id=client.id)
 			room = self.world.find_room(id=player.location_id)
-			room.broadcast('%s has disconnected.' % (player.display_name), player)
+			room.broadcast('%s %s' % (player.display_name, self.game_client_disconnect), player)
 
 			self.established_connection_list.remove(client)
