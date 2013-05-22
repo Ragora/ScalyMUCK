@@ -66,12 +66,13 @@ class ModLoader:
 			mod_name = mod_name.lower()
 			if (mod_name in self.modifications):
 				# Reloads the modification
-				module = self.modifications[mod_name]
+				modification, module = self.modifications[mod_name]
 				modules = inspect.getmembers(module, inspect.ismodule)
 				for name, sub_module in modules:
 					reload(sub_module)
 				module = reload(module)
-				modification = module.Modification(config=self.config, world=self.world, interface=self.interface, session=self.session, permissions=self.permissions, modloader=self)
+				config = settings.Settings('%s/config/%s.cfg' % (self.workdir, mod_name))
+				instance = module.Modification(config=config, world=self.world, interface=self.interface, session=self.session, permissions=self.permissions, modloader=self)
 				self.modifications[mod_name] = (instance, module)
 			else:
 				try:
@@ -84,11 +85,11 @@ class ModLoader:
 
 					modification = module.Modification(config=config, world=self.world, interface=self.interface, session=self.session, permissions=self.permissions, modloader=self)
 					self.modifications.setdefault(mod_name, (modification, module))
-					commands = modification.get_commands()
 				logger.info('Processed modification %s.' % (mod_name))
 
 			# Process aliases first
 			aliases = { }
+			commands = modification.get_commands()
 			for command in commands:
 				for alias in commands[command]['aliases']:
 					aliases.setdefault(alias, commands[command])
