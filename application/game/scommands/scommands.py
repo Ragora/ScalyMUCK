@@ -21,6 +21,7 @@ class Modification:
 	world = None
 	interface = None
 	session = None
+	modloader = None
 
 	pre_user_look = signal('pre_user_look')
 	post_user_look = signal('post_user_look')
@@ -62,6 +63,7 @@ class Modification:
 		self.session = kwargs['session']
 		self.world = kwargs['world']
 		self.permissions = kwargs['permissions']
+		self.modloader = kwargs['modloader']
 
 		signal('post_client_authenticated').connect(self.callback_client_authenticated)
 		signal('pre_message_sent').connect(self.callback_message_sent)
@@ -257,12 +259,12 @@ class Modification:
 		sender = kwargs['sender']
 		input = string.lower(kwargs['input'])
 
-		if (input not in self.interface.commands):
+		if (input not in self.modloader.commands):
 			sender.send('For more information, type: help <command>')
 			sender.send('Command listing: ')
 			out = ''
-			for command in self.interface.commands:
-				privilege = self.interface.commands[command]['privilege']
+			for command in self.modloader.commands:
+				privilege = self.modloader.commands[command]['privilege']
 				if ((privilege == 1 and sender.is_admin is False) or (privilege == 2 and sender.is_sadmin is False) or (privilege == 3 and sender.is_owner is False)):
 					continue
 				out += command + ', '
@@ -270,9 +272,9 @@ class Modification:
 			sender.send(out[:len(out)-2]) 
 			return
 		else:
-			sender.send('From: %s' % (self.interface.commands[input]['modification']))
-			sender.send('Usage: %s' % (self.interface.commands[input]['usage']))
-			sender.send(self.interface.commands[input]['description'])
+			sender.send('From: %s' % (self.modloader.commands[input]['modification']))
+			sender.send('Usage: %s' % (self.modloader.commands[input]['usage']))
+			sender.send(self.modloader.commands[input]['description'])
 
 	def command_quit(self, **kwargs):
 		sender = kwargs['sender']
