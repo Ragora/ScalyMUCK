@@ -46,11 +46,11 @@ class Permissions:
 		else:
 			return False
 
-	def test(self, name=None, player=None):
+	def test(self, name=None, player=None, *arbitrary):
 		""" Tests the permission availability against a player. """
 		if (name in self.permissions):
 			value, evaluator = self.permissions[name]
-			return evaluator(name, player, value)
+			return evaluator(name, player, value, *arbitrary)
 
 	def standard_evaluator(self, name=None, player=None, value=None):
 		""" Tests all standard permissions built into the server. 
