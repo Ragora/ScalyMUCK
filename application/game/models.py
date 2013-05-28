@@ -456,12 +456,18 @@ class Item(Base, ObjectBase):
 		""" Produces a representation of the item, as to be expected. """
 		return "<Item('%s','%s')>" % (self.name, self.description)
 
-	def set_owner(self, owner):
-		""" Sets a new owner for this item. """
+	def set_owner(self, owner, commit=True):
+		""" Sets a new owner for this item. 
+
+		Keyword arguments:
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
 		if (type(owner) is Player):
 			owner = owner.id
 		self.owner_id = owner
-		self.commit()
+		if (commit): self.commit()
 
 class Room(Base, ObjectBase):
 	""" Base room model that ScalyMUCK uses.
@@ -489,6 +495,9 @@ class Room(Base, ObjectBase):
 	""" An array that contains all instances of :class:`Exit` contained in this Room. """
 	owner_id = Column(Integer)
 	""" This is the database number of the :class:`Player` that this Room belongs to. """
+
+	owner=None
+	""" This is the :class:`Player` instance that this Room belongs to. This value is set by the World object when retrieved. """
 
 	def __init__(self, name=None, description='<Unset>', owner=0):
 		""" Initiates an instance of the Room model.
@@ -685,3 +694,20 @@ class Room(Base, ObjectBase):
 					exit = test_exit
 					break
 		return exit
+
+	def set_owner(self, owner=None, commit=True):
+		""" Sets the owner of this Room by either an ID or an instance of :class:`Player`. 
+
+		Keyword arguments:
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		if (owner is None):
+			raise exception.ModelArgumentError('No arguments specified (or were None)')
+
+		if (type(owner) is Player):
+			owner = owner.id
+
+		self.owner_id = owner
+		if (commit): self.commit()

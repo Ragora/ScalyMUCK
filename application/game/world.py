@@ -55,6 +55,22 @@ class World():
 
 		"""
 		target_room = self.session.query(Room).filter_by(**kwargs).first()
+		if (target_room is not None):
+			target_room.owner = self.session.query(Player).filter_by(id=target_room.owner_id).first()
+
+			# Iterate and set all of our other custom attributes not defined by SQLAlchemy
+			for item in target_room.items:
+				item.location = target_room
+				item.owner = self.session.query(Player).filter_by(id=item.owner_id).first()
+
+			# NOTE: The above and below create separate Player instances, which hopefully both shouldn't be used within the same context ...
+			for player in target_room.players:
+				player.location = target_room
+				player.inventory = self.session.query(Room).filter_by(id=player.inventory_id).
+
+			for bot in target_room.bots:
+				bot.location = target_room
+
 		return target_room
 	
 	def create_player(self, name=None, password=None, workfactor=None, location=None, admin=False, sadmin=False, owner=False):
