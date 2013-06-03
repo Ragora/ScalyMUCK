@@ -149,6 +149,20 @@ to every modification.</p>
 <dd><p>A 100 character string that is displayed to the inhabitants of the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> this Exit is located in upon use.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="models.Exit.set_owner">
+<tt class="descname">set_owner</tt><big>(</big><em>owner</em>, <em>commit=True</em><big>)</big><a class="headerlink" href="#models.Exit.set_owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the owner of this Room by either an ID or an instance of <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a>.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd><ul class="first simple">
+<li>commit &#8211; Determines whether or not this data should be commited immediately. It also includes other changes made</li>
+</ul>
+<p class="last">by any previous function calls thay may have set this to false. Default: True</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="models.Exit.target_id">
 <tt class="descname">target_id</tt><a class="headerlink" href="#models.Exit.target_id" title="Permalink to this definition">¶</a></dt>

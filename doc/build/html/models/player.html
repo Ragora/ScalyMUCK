@@ -127,6 +127,12 @@ may be in the room with the user at the time of their disconnect.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="models.Player.inventory">
+<tt class="descname">inventory</tt><em class="property"> = None</em><a class="headerlink" href="#models.Player.inventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable is the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> instance that <cite>inventory_id</cite> corresponds to.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="models.Player.inventory_id">
 <tt class="descname">inventory_id</tt><a class="headerlink" href="#models.Player.inventory_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>This variable is the database id of the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> that represents the Player&#8217;s inventory.</p>
@@ -148,6 +154,12 @@ may be in the room with the user at the time of their disconnect.</p>
 <dt id="models.Player.is_sadmin">
 <tt class="descname">is_sadmin</tt><a class="headerlink" href="#models.Player.is_sadmin" title="Permalink to this definition">¶</a></dt>
 <dd><p>A boolean representing whether or not this Player is a server super administrator.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="models.Player.location">
+<tt class="descname">location</tt><em class="property"> = None</em><a class="headerlink" href="#models.Player.location" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable is the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> instance that <cite>location_id</cite> corresponds to.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -200,6 +212,20 @@ should provide administrator functionalities more akin to what the owner may hav
 may break the server if used improperly. The commit parameter is used if you don&#8217;t want to dump 
 changes to the database yet; if you&#8217;re changing multiple properties at once, it doesn&#8217;t hit the database as 
 often then.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd><ul class="first simple">
+<li>commit &#8211; Determines whether or not this data should be commited immediately. It also includes other changes made</li>
+</ul>
+<p class="last">by any previous function calls thay may have set this to false. Default: True</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.Player.set_location">
+<tt class="descname">set_location</tt><big>(</big><em>room</em>, <em>commit=True</em><big>)</big><a class="headerlink" href="#models.Player.set_location" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the location of this <a class="reference internal" href="#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a> instance.</p>
 <dl class="docutils">
 <dt>Keyword arguments:</dt>
 <dd><ul class="first simple">

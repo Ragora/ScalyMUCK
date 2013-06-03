@@ -66,7 +66,7 @@ class World():
 			# NOTE: The above and below create separate Player instances, which hopefully both shouldn't be used within the same context ...
 			for player in target_room.players:
 				player.location = target_room
-				player.inventory = self.session.query(Room).filter_by(id=player.inventory_id).
+				player.inventory = self.session.query(Room).filter_by(id=player.inventory_id)
 
 			for bot in target_room.bots:
 				bot.location = target_room

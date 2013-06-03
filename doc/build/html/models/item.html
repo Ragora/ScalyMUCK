@@ -99,6 +99,12 @@ such as furniture or they may even be used to represent dead bodies.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="models.Item.location">
+<tt class="descname">location</tt><em class="property"> = None</em><a class="headerlink" href="#models.Item.location" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable is the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> instance that <cite>location_id</cite> corresponds to.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="models.Item.location_id">
 <tt class="descname">location_id</tt><a class="headerlink" href="#models.Item.location_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the database number of the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> that this Item is located in.</p>
@@ -112,15 +118,43 @@ related to a <a class="reference internal" href="player.html#models.Player" titl
 </dd></dl>
 
 <dl class="attribute">
+<dt id="models.Item.owner">
+<tt class="descname">owner</tt><em class="property"> = None</em><a class="headerlink" href="#models.Item.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable is the <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a> instance that <cite>owner_id</cite> corresponds to.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="models.Item.owner_id">
 <tt class="descname">owner_id</tt><a class="headerlink" href="#models.Item.owner_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the database number of the <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a> that this Item belongs to.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="models.Item.set_location">
+<tt class="descname">set_location</tt><big>(</big><em>room</em>, <em>commit=True</em><big>)</big><a class="headerlink" href="#models.Item.set_location" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the location of this <a class="reference internal" href="#models.Item" title="models.Item"><tt class="xref py py-class docutils literal"><span class="pre">Item</span></tt></a> instance.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd><ul class="first simple">
+<li>commit &#8211; Determines whether or not this data should be commited immediately. It also includes other changes made</li>
+</ul>
+<p class="last">by any previous function calls thay may have set this to false. Default: True</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="models.Item.set_owner">
-<tt class="descname">set_owner</tt><big>(</big><em>owner</em><big>)</big><a class="reference internal" href="../_modules/models.html#Item.set_owner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Item.set_owner" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">set_owner</tt><big>(</big><em>owner</em>, <em>commit=True</em><big>)</big><a class="reference internal" href="../_modules/models.html#Item.set_owner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Item.set_owner" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets a new owner for this item.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd><ul class="first simple">
+<li>commit &#8211; Determines whether or not this data should be commited immediately. It also includes other changes made</li>
+</ul>
+<p class="last">by any previous function calls thay may have set this to false. Default: True</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
