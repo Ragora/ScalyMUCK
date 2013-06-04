@@ -9,8 +9,7 @@
 	for more information.
 """
 
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import sessionmaker, Session, scoped_session
 
 from models import Room, Player, Item, Bot
 import exception
@@ -28,6 +27,7 @@ class World():
 	def __init__(self, engine):
 		""" Initializes an instance of the World with an SQLAlchemy engine. """
 		self.engine = engine
+		# Not sure if we need to keep this
 		self.session = scoped_session(sessionmaker(bind=self.engine))
 	      
 	def create_room(self, name, description='<Unset>', owner=0):
@@ -39,9 +39,11 @@ class World():
 
 		"""
 		room = Room(name, description, owner)
-		self.session.add(room)
-		self.session.commit()
-		self.session.refresh(room)
+		session = Session()
+		session.add(room)
+		session.commit()
+		session.refresh(room)
+		room.session = session
 		return room
 	      
 	def find_room(self, **kwargs):
@@ -54,7 +56,8 @@ class World():
 			name -- The name of the requested room to return an instance of.
 
 		"""
-		target_room = self.session.query(Room).filter_by(**kwargs).first()
+		session = Session()
+		target_room = session.query(Room).filter_by(**kwargs).first()
 		return target_room
 	
 	def create_player(self, name=None, password=None, workfactor=None, location=None, admin=False, sadmin=False, owner=False):
@@ -79,19 +82,23 @@ class World():
 		player_inventory = self.create_room('%s\'s Inventory' % (name))				
 		player = Player(name, password, workfactor, location.id, 0, admin=admin, sadmin=sadmin, owner=owner)
 		player.inventory_id = player_inventory.id
-		self.session.add(player)
+		session = Session()
+		session.add(player)
 
 		location.players.append(player)
-		self.session.add(location)
+		session.add(location)
 
-		self.session.add(player_inventory)
-		self.session.commit()
+		session.add(player_inventory)
+		session.commit()
 
-		self.session.refresh(player)
-		self.session.refresh(player_inventory)
+		session.refresh(player)
+		session.refresh(player_inventory)
 		
 		player.location = location
 		player.inventory = player_inventory
+		player.session = session
+		player.location.session = session
+		player.inventory = session
 		return player
 
 	def create_bot(self, name=None, location=None):
@@ -109,12 +116,13 @@ class World():
 			location = self.find_room(id=location)
 			
 		bot = bot(name, '<Unset>', location)
-		self.session.add(bot)
+		session = Session()
+		session.add(bot)
 		location.bots.append(bot)
-		self.session.add(location)
-		self.session.commit()
+		session.add(location)
+		session.commit()
 
-		self.session.refresh(bot)
+		session.refresh(bot)
 		
 		bot.location = location
 		return bot
@@ -131,10 +139,12 @@ class World():
 			name -- The name of the Player to locate.
 		
 		"""
-		target_player = self.session.query(Player).filter_by(**kwargs).first()
+		session = Session()
+		target_player = session.query(Player).filter_by(**kwargs).first()
 		if (target_player is not None):
 			target_player.location = self.find_room(id=target_player.location_id)
 			target_player.inventory = self.find_room(id=target_player.inventory_id)
+			target_player.session = session
 
 		return target_player
 
@@ -149,16 +159,19 @@ class World():
 			id -- The ID of the Bot to locate. This overrides the name if both are specified.
 		
 		"""
-		target_bot = self.session.query(Bot).filter_by(**kwargs).first()
+		session = Session()
+		target_bot = session.query(Bot).filter_by(**kwargs).first()
 		if (target_bot is not None):
 			target_bot.location = self.find_room(id=target_bot.location_id)
+			target_bot.session = session
 
 		return target_bot
 
 	def get_players(self):
 		""" Returns a list of all Players in the ScalyMUCK world. """
 		list = [ ]
-		results = self.session.query(Player).filter_by()
+		session = session()
+		results = session.query(Player).filter_by()
 		for player in results:
 			load_test = self.find_player(id=player.id)
 			if (load_test is None):
@@ -173,9 +186,11 @@ class World():
 		If the ID number does not exist then None is returned.
 
 		"""
-		target_item = self.session.query(Item).filter_by(**kwargs).first()
+		session = Session()
+		target_item = session.query(Item).filter_by(**kwargs).first()
 		if (target_item is not None):
 			target_item.location = self.find_room(id=target_item.location_id)
+			target_item.session = session
 
 		return target_item
 
@@ -199,9 +214,11 @@ class World():
 			item.location = location
 			item.location_id = location.id
 
-		self.session.add(item)
-		self.session.commit()
-		self.session.refresh(item)
+		session = Session()
+		session.add(item)
+		session.commit()
+		session.refresh(item)
+		item.session = session
 		return item
 
 	def get_rooms(self, **kwargs):
@@ -211,5 +228,10 @@ class World():
 			owner -- The owner we are to filter by. If not specified, this filter is not used.
 
 		"""
-		rooms = self.session.query(Room).filter_by(**kwargs)
+		session = Session()
+		list = [ ]
+		rooms = session.query(Room).filter_by(**kwargs)
+		for room in rooms:
+			list.append[self.find_room(id=room.id)]
+
 		return rooms
