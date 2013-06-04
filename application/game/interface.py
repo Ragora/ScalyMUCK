@@ -108,7 +108,22 @@ class Interface:
 				command_func(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
 			except exception.ModApplicationError as e:
 				line_one = 'An error has occurred while executing the command: %s' % (command)
-				line_two = 'From modification: %s' % (self.commands[command]['modification'])
+				line_two = 'From modification: %s' % (self.modloader.commands[command]['modification'])
+				line_three = 'Error Condition: '
+				line_four = str(e)
+
+				self.logger.error(line_one)
+				self.logger.error(line_two)
+				self.logger.error(line_three)
+				self.logger.error(line_four)
+				sender.send(line_one)
+				sender.send(line_two)
+				sender.send(line_three)
+				sender.send(line_four)
+				sender.send('Please report this incident to your server administrator immediately.')
+			except StandardError as e:
+				line_one = 'A critical error has occurred while executing the command: %s' % (command)
+				line_two = 'From modification: %s' % (self.modloader.commands[command]['modification'])
 				line_three = 'Error Condition: '
 				line_four = str(e)
 
