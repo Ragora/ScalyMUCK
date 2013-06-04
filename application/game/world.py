@@ -9,7 +9,8 @@
 	for more information.
 """
 
-from sqlalchemy.orm import sessionmaker, Session, scoped_session
+import sqlalchemy.orm
+from sqlalchemy.orm import sessionmaker, scoped_session
 
 from models import Room, Player, Item, Bot
 import exception
@@ -29,6 +30,7 @@ class World():
 		self.engine = engine
 		# Not sure if we need to keep this
 		self.session = scoped_session(sessionmaker(bind=self.engine))
+		sqlalchemy.orm.Session = self.session
 	      
 	def create_room(self, name, description='<Unset>', owner=0):
 		""" Creates a new Room if the World.
@@ -39,7 +41,7 @@ class World():
 
 		"""
 		room = Room(name, description, owner)
-		session = Session()
+		session = sqlalchemy.orm.Session()
 		session.add(room)
 		session.commit()
 		session.refresh(room)
@@ -56,7 +58,7 @@ class World():
 			name -- The name of the requested room to return an instance of.
 
 		"""
-		session = Session()
+		session = sqlalchemy.orm.Session()
 		target_room = session.query(Room).filter_by(**kwargs).first()
 		return target_room
 	
@@ -82,7 +84,7 @@ class World():
 		player_inventory = self.create_room('%s\'s Inventory' % (name))				
 		player = Player(name, password, workfactor, location.id, 0, admin=admin, sadmin=sadmin, owner=owner)
 		player.inventory_id = player_inventory.id
-		session = Session()
+		session = sqlalchemy.orm.Session()
 		session.add(player)
 
 		location.players.append(player)
@@ -116,7 +118,7 @@ class World():
 			location = self.find_room(id=location)
 			
 		bot = bot(name, '<Unset>', location)
-		session = Session()
+		session = sqlalchemy.orm.Session()
 		session.add(bot)
 		location.bots.append(bot)
 		session.add(location)
@@ -139,7 +141,7 @@ class World():
 			name -- The name of the Player to locate.
 		
 		"""
-		session = Session()
+		session = sqlalchemy.orm.Session()
 		target_player = session.query(Player).filter_by(**kwargs).first()
 		if (target_player is not None):
 			target_player.location = self.find_room(id=target_player.location_id)
@@ -159,7 +161,7 @@ class World():
 			id -- The ID of the Bot to locate. This overrides the name if both are specified.
 		
 		"""
-		session = Session()
+		session = sqlalchemy.orm.Session()
 		target_bot = session.query(Bot).filter_by(**kwargs).first()
 		if (target_bot is not None):
 			target_bot.location = self.find_room(id=target_bot.location_id)
@@ -170,7 +172,7 @@ class World():
 	def get_players(self):
 		""" Returns a list of all Players in the ScalyMUCK world. """
 		list = [ ]
-		session = session()
+		session = sqlalchemy.orm.Session()
 		results = session.query(Player).filter_by()
 		for player in results:
 			load_test = self.find_player(id=player.id)
@@ -186,7 +188,7 @@ class World():
 		If the ID number does not exist then None is returned.
 
 		"""
-		session = Session()
+		session = sqlalchemy.orm.Session()
 		target_item = session.query(Item).filter_by(**kwargs).first()
 		if (target_item is not None):
 			target_item.location = self.find_room(id=target_item.location_id)
@@ -214,7 +216,7 @@ class World():
 			item.location = location
 			item.location_id = location.id
 
-		session = Session()
+		session = sqlalchemy.orm.Session()
 		session.add(item)
 		session.commit()
 		session.refresh(item)
@@ -228,7 +230,7 @@ class World():
 			owner -- The owner we are to filter by. If not specified, this filter is not used.
 
 		"""
-		session = Session()
+		session = sqlalchemy.orm.Session()
 		list = [ ]
 		rooms = session.query(Room).filter_by(**kwargs)
 		for room in rooms:
