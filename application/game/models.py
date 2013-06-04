@@ -393,7 +393,7 @@ class Player(Base, ObjectBase):
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
-		super(ObjectBase, self).set_location(room, commit)
+		super(Player, self).set_location(room, commit)
 
 class Bot(Base, ObjectBase):
 	"""
@@ -448,7 +448,7 @@ class Bot(Base, ObjectBase):
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
-		super(ObjectBase, self).set_location(room, commit)
+		super(Bot, self).set_location(room, commit)
 
 class Item(Base, ObjectBase):
 	""" Base item model that ScalyMUCK uses.
@@ -526,7 +526,7 @@ class Item(Base, ObjectBase):
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
-		super(ObjectBase, self).set_location(room, commit)
+		super(Item, self).set_location(room, commit)
 
 class Room(Base, ObjectBase):
 	""" Base room model that ScalyMUCK uses.
