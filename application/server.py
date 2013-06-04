@@ -134,9 +134,13 @@ class Server(daemon.Daemon):
 			if (root_user is None):
 				database_exists = False
 
+		game.models.server = self
+		game.models.world = self.world
+
 		if (database_exists is False):
 			room = self.world.create_room('Portal Room Main')
 			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room, admin=True, sadmin=True, owner=True)
+			room.set_owner(user)
 			self.logger.info('The database has been successfully initialised.')
 		
 		self.telnet_server = TelnetServer(port=config.get_index(index='ServerPort', datatype=int),
@@ -147,9 +151,6 @@ class Server(daemon.Daemon):
 	
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
-
-		game.models.server = self
-		game.models.world = self.world
 	
 	def update(self):
 		""" The update command is called by the main.py script file.
