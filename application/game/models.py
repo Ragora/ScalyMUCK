@@ -37,8 +37,8 @@ class ObjectBase:
 	""" Base class used for the inheritance of useful member functions that work accross all models. """
 	def delete(self):
 		""" Deletes the object from the world. """
-		world.session.delete(self)
-		world.session.commit()
+		self.session.delete(self)
+		self.session.commit()
 
 	def set_name(self, name, commit=True):
 		""" Sets the name of the object.
@@ -56,8 +56,8 @@ class ObjectBase:
 			self.display_name = name
 
 		if (commit is True):
-			world.session.add(self)
-			world.session.commit()
+			self.session.add(self)
+			self.session.commit()
 
 	def set_location(self, location, commit=True):
 		""" Sets the current location of this object.
@@ -79,7 +79,7 @@ class ObjectBase:
 			self.location_id = location.id
 			if (commit): self.commit()
 		elif (type(location) is int):
-			location = world.session.query(Room).filter_by(id=location).first()
+			location = self.session.query(Room).filter_by(id=location).first()
 			if (location is not None):
 				self.set_location(location, commit=commit)
 
@@ -98,8 +98,8 @@ class ObjectBase:
 
 	def commit(self):
 		""" Commits any changes left in RAM to the database. """
-		world.session.add(self)
-		world.session.commit()
+		self.session.add(self)
+		self.session.commit()
 
 	def delete(self):
 		""" Deletes the object from the world. If it is a :class:`Player` instance, the related
@@ -107,8 +107,8 @@ class ObjectBase:
 		if (type(self) is Player):
 			self.disconnect()
 
-		world.session.delete(self)
-		world.session.commit()
+		self.session.delete(self)
+		self.session.commit()
 
 class Exit(Base, ObjectBase):
 	""" 
@@ -543,9 +543,9 @@ class Room(Base, ObjectBase):
 		elif (type(target) is Room):
 			exit = Exit(name, target, owner)
 			self.exits.append(exit)
-			world.session.add(self)
-			world.session.add(exit)
-			world.session.commit()
+			self.session.add(self)
+			self.session.add(exit)
+			self.session.commit()
 
 	def broadcast(self, message, *exceptions):
 		""" Broadcasts a message to all inhabitants of the Room except those specified.
