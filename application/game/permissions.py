@@ -4,10 +4,8 @@
 	and evaluating permissions with variable terms and
 	exceptions.
 
-	Copyright (c) 2013 Robert MacGregor
-	This software is licensed under the GNU General
-	Public License version 3. Please refer to gpl.txt 
-	for more information.
+	This software is licensed under the MIT license.
+	Please refer to LICENSE.txt for more information.
 """
 
 import logging
@@ -67,6 +65,3 @@ class Permissions:
 			return value
 		elif (name == 'AllowOwnerOverride'):
 			return value
-		else:
-			logger.warn('Attempted to evaluate undefined permission: "%s"!' % (name))
-			return False

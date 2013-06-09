@@ -1,10 +1,8 @@
 """
 	Basically the user interface for ScalyMUCK.
 
-	Copyright (c) 2013 Robert MacGregor
-	This software is licensed under the GNU General
-	Public License version 3. Please refer to gpl.txt 
-	for more information.
+	This software is licensed under the MIT license.
+	Please refer to LICENSE.txt for more information.
 """
 
 import string
@@ -38,7 +36,7 @@ class Interface:
 	pre_message = signal('pre_message_sent')
 	post_message = signal('post_message_sent')
 
-	def __init__(self, config=None, world=None, workdir='', session=None, server=None):
+	def __init__(self, config=None, workdir='', server=None, debug=None):
 		""" Initializes an instance of the ScalyMUCK Client-Server interface class.
 
 		The interface class is created internallu by the ScalyMUCK server.
@@ -55,17 +53,33 @@ class Interface:
 			workdir -- The current working directory of the application. This should be an absolute path to application/.
 			session -- A working session object that points to the active database.
 			server -- The very instance of the ScalyMUCK server.
+			debug -- Whether or not the server is running in debugger mode right now.
 
 		"""
 		self.logger = logging.getLogger('Mods')
-		self.world = world
-		self.workdir = workdir
-		self.config = config
-		self.session = session
-		self.server = server
 		self.permissions = permissions.Permissions(workdir=workdir)
-		self.modloader = modloader.ModLoader(world=world, interface=self, session=session, workdir=workdir, permissions=self.permissions)
+		self.modloader = modloader.ModLoader()
 		self.modloader.load(config.get_index('LoadedMods', str))
+
+	def initialize(self, **kwargs):
+		self.debug = kwargs['debug']
+		self.server = kwargs['server']
+		self.session = kwargs['session']
+		self.config = kwargs['config']
+		self.workdir = kwargs['workdir']
+		self.world = kwargs['world']
+		kwargs['interface'] = self
+		kwargs['permissions'] = self.permissions
+		kwargs['modloader'] = self.modloader
+		self.modloader.initialize(**kwargs)
+
+	def get_online_players(self):
+		""" Returns a list of currently connected players. """
+		result = [] 
+		for connection in self.server.established_connection_list:
+			result.append(self.world.find_player(id=connection.id))
+		return result
+			
 
 	def parse_command(self, sender=None, input=None):
 		""" Called internally by the ScalyMUCK server.
@@ -90,7 +104,7 @@ class Interface:
 		data = string.split(input, ' ')
 		command = string.lower(data[0])
 		command_data = self.modloader.find_command(command)
-		if (intercept_input is False and command_data is not None):
+		if (intercept_input is False and command_data is not None and self.debug is False):
 			try:
 				privilege = command_data['privilege']
 				if (privilege == 1 and sender.is_admin is False):
@@ -122,20 +136,38 @@ class Interface:
 				sender.send(line_four)
 				sender.send('Please report this incident to your server administrator immediately.')
 			except StandardError as e:
-				line_one = 'A critical error has occurred while executing the command: %s' % (command)
-				line_two = 'From modification: %s' % (self.modloader.commands[command]['modification'])
-				line_three = 'Error Condition: '
-				line_four = str(e)
+					line_one = 'A critical error has occurred while executing the command: %s' % (command)
+					line_two = 'From modification: %s' % (self.modloader.commands[command]['modification'])
+					line_three = 'Error Condition: '
+					line_four = str(e)
 
-				self.logger.error(line_one)
-				self.logger.error(line_two)
-				self.logger.error(line_three)
-				self.logger.error(line_four)
-				sender.send(line_one)
-				sender.send(line_two)
-				sender.send(line_three)
-				sender.send(line_four)
-				sender.send('Please report this incident to your server administrator immediately.')
+					self.logger.error(line_one)
+					self.logger.error(line_two)
+					self.logger.error(line_three)
+					self.logger.error(line_four)
+					sender.send(line_one)
+					sender.send(line_two)
+					sender.send(line_three)
+					sender.send(line_four)
+					sender.send('Please report this incident to your server administrator immediately.')
+		elif (intercept_input is False and command_data is not None):
+			privilege = command_data['privilege']
+			if (privilege == 1 and sender.is_admin is False):
+				sender.send('You must be an administrator.')
+				return
+			elif (privilege == 2 and sender.is_sadmin is False):
+				sender.send('You must be a super administrator.')
+				return
+			elif (privilege == 3 and sender.is_owner is False):
+				sender.send('You must be the owner of the server.')
+				return
+
+			# You're not trying to do something you shouldn't be? Good.
+			try:
+				command_func = command_data['command']
+				command_func(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
+			except exception.DatabaseError:
+				self.session.rollback()
 
 		elif (intercept_input is False and command != ''):
 			sender.send('I do not know what it is to "%s".' % (command))

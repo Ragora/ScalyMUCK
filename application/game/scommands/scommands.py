@@ -4,10 +4,8 @@
 	into application/game/ and from there the server host can modify their server_config.cfg file to add the modification
 	to the loaded modification listing.
 
-	Copyright (c) 2013 Robert MacGregor
-	This software is licensed under the GNU General
-	Public License version 3. Please refer to gpl.txt 
-	for more information.
+	This software is licensed under the MIT license.
+	Please refer to LICENSE.txt for more information.
 """
 
 import string
@@ -15,6 +13,7 @@ import string
 from blinker import signal
 
 import game.models
+import game.exception
 
 class Modification:
 	""" Main class object to load and initialize the scommands modification. """
@@ -38,26 +37,30 @@ class Modification:
 	post_exit_room = signal('post_exit_room')
 	pre_show_description = signal('pre_show_description')
 
-	def __init__(self, **kwargs):
+	def initialize(self, **kwargs):
 		""" 
 
 		This initializes an instance of the scommands modification and it will remain loaded in memory
+
 		until the server owner either unloads it or reloads it which therefore will reset
 		any associated data unless the data had been defined on the class definition itself
 		rather than being initialized in this function. 
+
 
 		Keyword arguments:
 			* config -- This is the instance of Settings that contains all loaded configuration settings available for this modification, if the file exists. If the file does not exist, then this will simply be None.
 			* interface -- This is the instance of the user interface used internally by ScalyMUCK. Generally, you won't need access to this for any reason and is currently deprecated for later removal.
 
+
 		Actions such as binding your Blinker signals should be performed here so that events will be
 		received properly when they occur.
 
 		Along with initializing the modification, __init__ acts as a gateway for other important
+
 		data passed in by the modloader under the **kwargs argument.
 
 		"""
-		
+
 		self.config = kwargs['config']
 		self.interface = kwargs['interface']
 		self.session = kwargs['session']
@@ -67,6 +70,10 @@ class Modification:
 
 		signal('post_client_authenticated').connect(self.callback_client_authenticated)
 		signal('pre_message_sent').connect(self.callback_message_sent)
+		
+	def __del__(self):
+		signal('post_client_authenticated').disconnect(self.callback_client_authenticated)
+		signal('pre_message_sent').disconnect(self.callback_message_sent)
 
 	# Commands
 	def command_say(self, **kwargs):
@@ -109,8 +116,6 @@ class Modification:
 			target = sender.location.find_player(name=input)
 			if (target is None):
 				target = sender.location.find_bot(name=input)
-			if (target is None):
-				target = sender.location.find_item(name=input)
 
 			if (target is not None):
 				name = target.display_name
@@ -126,7 +131,6 @@ class Modification:
 				else:
 					sender.send('I do not see that.')
 					return
-
 		sender.send('<' + name + '>')
 
 		if (type(target) is game.models.Room):
@@ -220,9 +224,8 @@ class Modification:
 
 			item.set_location(sender.inventory)
 			self.post_item_pickup.send(None, sender=sender, item=item)
-			return
-
-		sender.send('I do not see that.')
+		else:
+			sender.send('I do not see that.')
 
 	def command_passwd(self, **kwargs):
 		sender = kwargs['sender']
@@ -250,33 +253,70 @@ class Modification:
 				if (result[1] is True):
 					return
 
-			sender.send('You dropped a/an %s.' % (item.name ))
-			sender.location.broadcast('%s drops a/an %s.' % (sender.display_name, item.name) ,sender)
 			item.set_location(sender.location)
+			sender.send('You dropped a/an %s.' % (item.name ))
+			sender.location.broadcast('%s drops a/an %s.' % (sender.display_name, item.name), sender)
 			self.post_item_drop.send(sender=sender, item=item)
 		else:
 			sender.send('I see no such item.')
 
 	def command_help(self, **kwargs):
 		sender = kwargs['sender']
-		input = string.lower(kwargs['input'])
+		input = kwargs['input']
 
-		if (input not in self.modloader.commands):
-			sender.send('For more information, type: help <command>')
-			sender.send('Command listing: ')
-			out = ''
+		sender.send('For more information, type: help <command/category>')
+
+		if (input == ''):
+			sender.send('Available command categories:')
+			categories = []
 			for command in self.modloader.commands:
 				privilege = self.modloader.commands[command]['privilege']
 				if ((privilege == 1 and sender.is_admin is False) or (privilege == 2 and sender.is_sadmin is False) or (privilege == 3 and sender.is_owner is False)):
 					continue
-				out += command + ', '
-			# Cheap trick to strip off the last comma (and space) but eh!
-			sender.send(out[:len(out)-2]) 
-			return
+
+				if ('category' in self.modloader.commands[command]):
+					category = self.modloader.commands[command]['category']
+					if (category not in categories):
+						categories.append(category)
+						sender.send('\t+ ' + category)
+				elif ('Unclassed' not in categories):
+					categories.append('Unclassed')
+					sender.send('\t+ Unclassed')
+
+			
 		else:
-			sender.send('From: %s' % (self.modloader.commands[input]['modification']))
-			sender.send('Usage: %s' % (self.modloader.commands[input]['usage']))
-			sender.send(self.modloader.commands[input]['description'])
+			l_input = input.lower()
+			if (input not in self.modloader.commands):
+				category_contents = [ ]
+
+				for command in self.modloader.commands:
+					privilege = self.modloader.commands[command]['privilege']
+					if ((privilege == 1 and sender.is_admin is False) or (privilege == 2 and sender.is_sadmin is False) or (privilege == 3 and sender.is_owner is False)):
+						continue
+
+					if ('category' in self.modloader.commands[command]):
+						category = self.modloader.commands[command]['category']
+						if (category.lower() == l_input):
+							category_contents.append(command)
+					elif (l_input == 'unclassed'):
+						category_contents.append(command)
+
+				if (len(category_contents) == 0):
+					sender.send('No such command or category: %s' % input)
+				else:
+					sender.send('Available commands in category %s:' % input)
+					for command_name in category_contents:
+						sender.send('\t+ %s - %s' % (command_name, self.modloader.commands[command_name]['description']))
+			else:
+				privilege = self.modloader.commands[l_input]['privilege']
+				if ((privilege == 1 and sender.is_admin is False) or (privilege == 2 and sender.is_sadmin is False) or (privilege == 3 and sender.is_owner is False)):
+					sender.send('No such command or category: %s' % input)
+					return
+
+				sender.send('From: %s' % (self.modloader.commands[input]['modification']))
+				sender.send('Usage: %s' % (self.modloader.commands[input]['usage']))
+				sender.send(self.modloader.commands[input]['description'])
+
 
 	def command_quit(self, **kwargs):
 		sender = kwargs['sender']
@@ -298,12 +338,12 @@ class Modification:
 			elif (target.is_sadmin ==1 or target.is_owner == 1):
 				sender.send('You cannot do that, they are too powerful.')
 				return
-
-			item = self.world.create_item(target.display_name, target.description, sender, sender.inventory)
-			sender.send('User "%s" frogged. Check your inventory.' % (target.display_name))
-			target.send('%s has turned you into a small plastic figurine, never to move again and discreetly places you in their inventory.' % (sender.display_name))
-			sender.location.broadcast('%s has turned %s into a small plastic figurine, never to move again.' % (sender.display_name, target.display_name), sender, target)
-			target.delete()
+			else:
+				sender.send('User "%s" frogged. Check your inventory.' % (target.display_name))
+				sender.location.broadcast('%s has turned %s into a small plastic figurine, never to move again.' % (sender.display_name, target.display_name), sender, target)
+				item = self.world.create_item(target.display_name, target.description, sender, sender.inventory)
+				target.send('%s has turned you into a small plastic figurine, never to move again and discreetly places you in their inventory.' % (sender.display_name))
+				target.delete()
 		else:
 			sender.send('User "%s" does not exist anywhere.' % (name))
 
@@ -325,7 +365,7 @@ class Modification:
 		player = self.world.create_player(name, password, game.models.server.work_factor, sender.location)
 		sender.send('User "%s" created.' % (name))
 		self.post_user_create.send(None, creator=sender, created=player)
-
+		
 	def command_admin(self, **kwargs):
 		sender = kwargs['sender']
 		args = kwargs['arguments']
@@ -354,7 +394,7 @@ class Modification:
 				sender.send('%s is now an administrator.' % (target.display_name))
 				target.send('%s gave you adminship rights.' % (sender.display_name))
 				return
-		sender.send('Unknown user.')
+			sender.send('Unknown user.')
 
 	def command_sadmin(self, **kwargs):
 		sender = kwargs['sender']
@@ -384,7 +424,7 @@ class Modification:
 				sender.send('%s is now a super administrator.' % (target.display_name))
 				target.send('%s gave you super adminship rights.' % (sender.display_name))
 				return
-		sender.send('Unknown user.')
+			sender.send('Unknown user.')
 
 	def command_chown(self, **kwargs):
 		sender = kwargs['sender']
@@ -412,6 +452,28 @@ class Modification:
 
 	def command_ping(self, **kwargs):
 		kwargs['sender'].send('Pong.')
+
+	def command_wwi(self, **kwargs):
+		sender = kwargs['sender']
+
+		listing = self.interface.get_online_players()
+		longest_length = 0
+		for player in listing:
+			length = len(player.display_name)
+			if (length > longest_length):
+				longest_length = length
+
+		spacing = ''
+		for i in range(longest_length+7):
+			spacing += ' '
+
+		sender.send('Name%sLocation' % spacing)
+		for player in listing:
+			spacing = ''
+			for i in range((longest_length+11)-len(player.display_name)):
+				spacing += ' '
+			sender.send('%s%s%s' % (player.display_name, spacing, player.location.name))
+		sender.send('Who/Where/Idle')
 
 	# Callbacks
 	def callback_client_authenticated(self, trigger, sender):
@@ -463,7 +525,8 @@ class Modification:
 				'description': 'Makes you say something. Only visible to the current room you\'re in.',
 				'usage': 'say <arbitrary text> | "<arbitrary text>',
 				'aliases': [ 'speak' ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'pose': 
@@ -472,7 +535,8 @@ class Modification:
 				'description': 'Used to show arbitrary action. Only visible to the current room you\'re in.',
 				'usage': 'pose <arbitrary pose> | :<arbitrary pose>',
 				'aliases': [ ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'look': 
@@ -481,7 +545,8 @@ class Modification:
 				'description': 'Get your bearings. Look around in the local area to see what you can see.',
 				'usage': 'look [room name | item name | player name]',
 				'aliases': [ ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 		
 			'move':
@@ -490,7 +555,8 @@ class Modification:
 				'description': 'Moves to a new location.',
 				'usage': 'move <exit name>',
 				'aliases': [ 'go' ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'inventory':
@@ -499,7 +565,8 @@ class Modification:
 				'description': 'View your inventory.',
 				'usage': 'inventory',
 				'aliases': [ ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'take':
@@ -508,7 +575,8 @@ class Modification:
 				'description': 'Take an item from the current room.',
 				'usage': 'take <item>',
 				'aliases': [ 'get' ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'passwd':
@@ -517,7 +585,8 @@ class Modification:
 				'description': 'Changes your password.',
 				'usage': 'passwd <new password>',
 				'aliases': [ ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'drop':
@@ -526,7 +595,8 @@ class Modification:
 				'description': 'Drops an item from your inventory.',
 				'usage': 'drop <item name>',
 				'aliases': [ ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'help':
@@ -535,7 +605,8 @@ class Modification:
 				'description': 'Displays the help text.',
 				'usage': 'help [command name]',
 				'aliases': [ ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'quit':
@@ -544,16 +615,18 @@ class Modification:
 				'description': 'Drops your connection from the server.',
 				'usage': 'quit',
 				'aliases': [ 'leave' ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'frog':
 			{
 				'command': self.command_froguser,
-				'description': 'Super Admin only: Deletes a user from the world -- making them an item in your inventory to with as you please.',
+				'description': 'Deletes a user from the world -- making them an item in your inventory to with as you please.',
 				'usage': 'frog <player name>',
 				'aliases': [ ],
-				'privilege': 2
+				'privilege': 2,
+				'category': 'Administration'
 			},
 
 			'adduser':
@@ -562,25 +635,28 @@ class Modification:
 				'description': 'Creates a new player in the world.',
 				'usage': 'adduser <name> <password>',
 				'aliases': [ ],
-				'privilege': 2
+				'privilege': 2,
+				'category': 'Administration'
 			},
 
 			'admin':
 			{
 				'command': self.command_admin,
-				'description': 'Admin only: Toggles the admin status of a specified player.',
+				'description': 'Toggles the admin status of a specified player.',
 				'usage': 'admin <name>',
 				'aliases': [ ],
-				'privilege': 1
+				'privilege': 1,
+				'category': 'Administration'
 			},
 
 			'sadmin':
 			{
 				'command': self.command_sadmin,
-				'description': 'Super Admin only: Toggles the super admin status of a specified player.',
+				'description': 'Toggles the super admin status of a specified player.',
 				'usage': 'sadmin <name>',
 				'aliases': [ ],
-				'privilege': 2
+				'privilege': 2,
+				'category': 'Administration'
 			},
 
 			'chown':
@@ -589,7 +665,8 @@ class Modification:
 				'description': 'Transfers ownership of an item in your inventory or in the room to a specified player providied you are the original owner.',
 				'usage': 'chown <item name> <new owner name>',
 				'aliases': [ ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
 			},
 
 			'ping':
@@ -598,7 +675,18 @@ class Modification:
 				'description': 'Ping-Pong.',
 				'usage': 'ping',
 				'aliases': [ ],
-				'privilege': 0
+				'privilege': 0,
+				'category': 'General'
+			},
+
+			'wwi':
+			{
+				'command': self.command_wwi,
+				'description': 'See a list of connected people.',
+				'usage': 'wwi',
+				'aliases': [ ],
+				'privilege': 0,
+				'category': 'General'
 			}
 		}
 		return command_dict

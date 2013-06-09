@@ -2,10 +2,8 @@
 	ScalyMUCK has several base exceptions for the ScalyMUCK core and 
 	ScalyMUCK modifications that may be loaded into the MUCK server.
 
-	Copyright (c) 2013 Robert MacGregor
-	This software is licensed under the GNU General
-	Public License version 3. Please refer to gpl.txt 
-	for more information.
+	This software is licensed under the MIT license.
+	Please refer to LICENSE.txt for more information.
 """
 
 class ModApplicationError(Exception):
@@ -23,3 +21,6 @@ class WorldArgumentError(ModApplicationError):
 
 class ModelArgumentError(ModApplicationError):
 	""" Raised when a model function is used improperly. """
+
+class DatabaseError(ModApplicationError):
+	""" Raised when an error occurs in the database. """
