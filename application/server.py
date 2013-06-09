@@ -16,13 +16,25 @@ import logging
 import bcrypt
 from blinker import signal
 from miniboa import TelnetServer
-from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import create_engine, event
+from sqlalchemy.interfaces import PoolListener
+from sqlalchemy.exc import OperationalError, DisconnectionError
 from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.pool import Pool
 
 import daemon
 import game.models
 from game import interface, world
+
+# Pretty much copy pasta from somewhere since this gave me so much trouble
+from sqlalchemy.interfaces import ConnectionProxy
+class ConnectionTest(ConnectionProxy):
+    def cursor_execute(self, execute, cursor, statement, parameters, context, executemany):
+        try:
+            return execute(cursor, statement, parameters, context)
+        except sqlalchemy.exc.OperationalError:
+            # Handle this exception
+            pass
 
 class Server(daemon.Daemon):
 	""" 
@@ -116,7 +128,7 @@ class Server(daemon.Daemon):
 		else:
 			url = database_type + '://' + user + ':' + password + '@' + database_location + '/' + database
 			try:
-				database_engine = create_engine(url, echo=False)
+				database_engine = create_engine(url, echo=False, proxy=ConnectionTest())
 				connection = database_engine.connect()
 			except OperationalError as e:
 				self.logger.error(str(e))
