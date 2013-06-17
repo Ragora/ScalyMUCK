@@ -20,6 +20,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.interfaces import PoolListener
 from sqlalchemy.exc import OperationalError, DisconnectionError
 from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.orm import Session
 from sqlalchemy.pool import Pool
 
 import daemon
@@ -27,14 +28,21 @@ import game.models
 from game import interface, world
 
 # Pretty much copy pasta from somewhere since this gave me so much trouble
-from sqlalchemy.interfaces import ConnectionProxy
-class ConnectionTest(ConnectionProxy):
-    def cursor_execute(self, execute, cursor, statement, parameters, context, executemany):
-        try:
-            return execute(cursor, statement, parameters, context)
-        except sqlalchemy.exc.OperationalError:
-            # Handle this exception
-            pass
+@event.listens_for(Pool, "checkout")
+def ping_connection(dbapi_connection, connection_record, connection_proxy):
+    print('waaat')
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("SELECT 1")
+    except:
+        # optional - dispose the whole pool
+        # instead of invalidating one at a time
+        connection_proxy._pool.dispose()
+
+        # raise DisconnectionError - pool will try
+        # connecting again up to three times before raising.
+        raise DisconnectionError()
+    cursor.close()
 
 class Server(daemon.Daemon):
 	""" 
@@ -94,6 +102,7 @@ class Server(daemon.Daemon):
 		user = config.get_index(index='DatabaseUser', datatype=str)
 		password = config.get_index(index='DatabasePassword', datatype=str)
 		self.work_factor = config.get_index(index='WorkFactor', datatype=int)
+		debug = config.get_index(index='Debug', datatype=bool)
 		if (database_type == 'sqlite'):
 			database_location = path + config.get_index(index='TargetDatabase', datatype=str)
 		else:
@@ -115,6 +124,7 @@ class Server(daemon.Daemon):
 		with open(workdir + 'config/exit_message.txt') as f:
 			self.exit_message_data = f.read() + '\n'
 
+
 		# Connect/Create our database is required
 		database_exists = True
 		if (database_type == 'sqlite'):
@@ -128,8 +138,7 @@ class Server(daemon.Daemon):
 		else:
 			url = database_type + '://' + user + ':' + password + '@' + database_location + '/' + database
 			try:
-				database_engine = create_engine(url, echo=False, proxy=ConnectionTest())
-				connection = database_engine.connect()
+				database_engine = create_engine(url, echo=False, pool_size=20, max_overflow=0)
 			except OperationalError as e:
 				self.logger.error(str(e))
 				self.logger.error('URL: ' + url)
@@ -137,7 +146,7 @@ class Server(daemon.Daemon):
 				return
 
 		self.world = world.World(database_engine)
-		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, session=self.world.session, server=self)
+		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, session=self.world.session, server=self, debug=debug)
 		game.models.Base.metadata.create_all(database_engine)
 	
 		# Check to see if our root user exists
@@ -164,6 +173,7 @@ class Server(daemon.Daemon):
 	
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
+
 	
 	def update(self):
 		""" The update command is called by the main.py script file.
