@@ -10,96 +10,17 @@
 """
 
 import sqlalchemy.orm
+from blinker import signal
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 import exception
 from models import Room, Player, Item, Bot
 
-# the "key" for our cache will be based on the structure
-# of the Query.   We define a helper that will give us
-# all the "bind" values from a particular Query object.
-
-from sqlalchemy.sql import visitors
-import md5
-
-def _key_from_query(query):
-    """Given a Query, extract all bind parameter values from
-    its structure."""
-
-    v = []
-    def visit_bindparam(bind):
-
-        if bind.key in query._params:
-            value = query._params[bind.key]
-        elif bind.callable:
-            value = bind.callable()
-        else:
-            value = bind.value
-
-        v.append(unicode(value))
-
-    stmt = query.statement
-    visitors.traverse(stmt, {}, {'bindparam':visit_bindparam})
-    return " ".join(
-                [md5.md5(unicode(stmt)).hexdigest()] + v
-            )
-
-# Testing
-from sqlalchemy.orm.query import Query
-
-class CachingQuery(Query):
-    # Create Cache
-    from dogpile.cache.region import make_region
-    regions = {
-    "default":make_region().configure(
-    'dogpile.cache.memory'
-    )
-    }
-
-    def __iter__(self):
-        """override __iter__ to change where data comes from"""
-        if hasattr(self, '_cache_region'):
-            dogpile_region, cache_key = self._get_cache_plus_key()
-            cached_value = dogpile_region.get_or_create(
-                                        cache_key, 
-                                        lambda: list(Query.__iter__(self))
-                                    )
-            return self.merge_result(cached_value, load=False)
-        else:
-            return super(CachingQuery, self).__iter__()
-
-    def _get_cache_plus_key(self):
-        """Return a cache region plus key."""
-        return \
-            self.regions[self._cache_region.region],\
-            _key_from_query(self)
-
-    def invalidate(self):
-	print('Invalidated')
-        """Invalidate the cache value represented by this Query."""
-        dogpile_region, cache_key = self._get_cache_plus_key()
-        dogpile_region.delete(cache_key)
-
-from sqlalchemy.orm.interfaces import MapperOption
-
 class FakeConnection:
+	closed = True
 	def close(self):
 		return
-	def closed(self):
-		return True
-
-class FromCache(MapperOption):
-    """Specifies that a Query should load results from a cache."""
-
-    propagate_to_loaders = False
-
-    def __init__(self, region="default"):
-        self.region = region
-
-    def process_query(self, query):
-        query._cache_region = self
-
 
 class World():
 	"""
@@ -111,12 +32,13 @@ class World():
 	engine = None
 	session = None
 	fake_connection = FakeConnection()
+	database_status = signal('database_status')
 	
-	def __init__(self, engine):
+	def __init__(self, engine=None, server=None):
 		""" Initializes an instance of the World with an SQLAlchemy engine. """
 		self.engine = engine
-		# Not sure if we need to keep this
-		self.session = scoped_session(sessionmaker(bind=self.engine, query_cls=CachingQuery))
+		self.session = scoped_session(sessionmaker(bind=self.engine))
+		self.server = server
 		sqlalchemy.orm.Session = self.session
 	      
 	def create_room(self, name, description='<Unset>', owner=0):
@@ -153,22 +75,22 @@ class World():
 		"""
 		connection = self.connect()
 		try:
-			target_room = self.session.query(Room).options(FromCache()).filter_by(**kwargs).first()
+			target_room = self.session.query(Room).filter_by(**kwargs).first()
 
 			if (target_room is not None):
-				target_room.owner = self.session.query(Player).options(FromCache()).filter_by(id=target_room.owner_id).first()
+				target_room.owner = self.session.query(Player).filter_by(id=target_room.owner_id).first()
 
 				# Iterate and set all of our other custom attributes not defined by SQLAlchemy
 				for item in target_room.items:
 					item.location = target_room
-					item.owner = self.session.query(Player).options(FromCache()).filter_by(id=item.owner_id).first()
+					item.owner = self.session.query(Player).filter_by(id=item.owner_id).first()
 					item.session = self.session
 					item.engine = self.engine
 
 				# NOTE: The above and below create separate Player instances, which hopefully both shouldn't be used within the same context ...
 				for player in target_room.players:
 					player.location = target_room
-					player.inventory = self.session.query(Room).options(FromCache()).filter_by(id=player.inventory_id).first()
+					player.inventory = self.session.query(Room).filter_by(id=player.inventory_id).first()
 					player.session = self.session
 					player.engine = self.engine
 
@@ -281,7 +203,7 @@ class World():
 		"""
 		connection = self.connect()
 		try:
-			target_player = self.session.query(Player).options(FromCache()).filter_by(**kwargs).first()
+			target_player = self.session.query(Player).filter_by(**kwargs).first()
 
 			if (target_player is not None):
 				target_player.location = self.find_room(id=target_player.location_id)
@@ -308,7 +230,7 @@ class World():
 		"""
 		connection = self.connect()
 		try:
-			target_bot = self.session.query(Bot).options(FromCache()).filter_by(**kwargs).first()
+			target_bot = self.session.query(Bot).filter_by(**kwargs).first()
 
 			if (target_bot is not None):
 				target_bot.location = self.find_room(id=target_bot.location_id)
@@ -327,7 +249,7 @@ class World():
 		list = [ ]
 		connection = self.connect()
 		try:
-			results = self.session.query(Player).options(FromCache()).filter_by()
+			results = self.session.query(Player).filter_by()
 			for player in results:
 				load_test = self.find_player(id=player.id)
 				if (load_test is None):
@@ -351,7 +273,7 @@ class World():
 		"""
 		connection = self.connect()
 		try:
-			target_item = self.session.query(Item).options(FromCache()).filter_by(**kwargs).first()
+			target_item = self.session.query(Item).filter_by(**kwargs).first()
 			if (target_item is not None):
 				target_item.location = self.find_room(id=target_item.location_id)
 				target_item.session = self.session
@@ -410,7 +332,7 @@ class World():
 		try:
 			connection = self.connect()
 			list = [ ]
-			rooms = self.session.query(Room).options(FromCache()).filter_by(**kwargs)
+			rooms = self.session.query(Room).filter_by(**kwargs)
 			for room in rooms:
 				list.append[self.find_room(id=room.id)]
 				room.session = self.session
@@ -427,6 +349,7 @@ class World():
 		try:
 			connection = self.engine.connect()
 		except OperationalError:
+			self.database_status.send(sender=self, status=False)
 			return self.fake_connection
 		else:
 			return connection

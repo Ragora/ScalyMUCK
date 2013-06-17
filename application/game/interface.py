@@ -151,8 +151,11 @@ class Interface:
 				return
 
 			# You're not trying to do something you shouldn't be? Good.
-			command_func = command_data['command']
-			command_func(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
+			try:
+				command_func = command_data['command']
+				command_func(sender=sender, input=input[len(command)+1:], arguments=data[1:len(data)])
+			except exception.DatabaseError:
+				self.session.rollback()
 
 		elif (intercept_input is False and command != ''):
 			sender.send('I do not know what it is to "%s".' % (command))

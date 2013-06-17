@@ -248,6 +248,10 @@ class Modification:
 		sender = kwargs['sender']
 		input = kwargs['input']
 
+		if (self.world.connect().closed is True):
+			sender.send('An error has occurred. Please try again later.')
+			return
+
 		if (input == ''):
 			sender.send('Usage: drop <item name>')
 			return
