@@ -179,6 +179,23 @@ class Exit(Base, ObjectBase):
 	def __repr__(self):
 		""" Produces a representation of the exit, as to be expected. """
 		return "<Exit('%s','%u'>" % (self.name, self.target_id)
+
+	def set_owner(self, owner, commit=True):
+		""" Sets the owner of this Room by either an ID or an instance of :class:`Player`. 
+
+		Keyword arguments:
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		if (owner is None):
+			raise exception.ModelArgumentError('No arguments specified (or were None)')
+
+		if (type(owner) is Player):
+			owner = owner.id
+
+		self.owner_id = owner
+		if (commit): self.commit()
 		
 class Player(Base, ObjectBase):
 	""" 
@@ -203,7 +220,6 @@ class Player(Base, ObjectBase):
 	
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 	""" This variable is the database id of the :class:`Room` this Player is located in. """
-	location = None
 	inventory_id = Column(Integer)
 	""" This variable is the database id of the :class:`Room` that represents the Player's inventory. """
 	
@@ -213,6 +229,11 @@ class Player(Base, ObjectBase):
 	""" A boolean representing whether or not this Player is a server super administrator. """
 	is_owner = Column(Boolean)
 	""" A boolean representing whether or not this Player is a server owner. """
+
+	location = None
+	""" This variable is the :class:`Room` instance that `location_id` corresponds to. """
+	inventory = None
+	""" This variable is the :class:`Room` instance that `inventory_id` corresponds to. """
 
 	connection = None
 	world = None
@@ -364,6 +385,16 @@ class Player(Base, ObjectBase):
 		else:
 			return False
 
+	def set_location(self, room, commit=True):
+		""" Sets the location of this :class:`Player` instance.
+
+		Keyword arguments:
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		super(Player, self).set_location(room, commit)
+
 class Bot(Base, ObjectBase):
 	"""
 
@@ -386,6 +417,9 @@ class Bot(Base, ObjectBase):
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 	""" This variable is the database number of the :class:`Room` this Bot is located in. """
 
+	location = None
+	""" This variable is the :class:`Room` instance that `location_id` corresponds to. """
+
 	def __init__(self, name=None, description=None, location=None):
 		"""
 
@@ -405,6 +439,16 @@ class Bot(Base, ObjectBase):
 
 	def send(self, message):
 		""" This is basically 'send' like for players except it does NOTHING. """
+
+	def set_location(self, room, commit=True):
+		""" Sets the location of this :class:`Bot` instance.
+
+		Keyword arguments:
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		super(Bot, self).set_location(room, commit)
 
 class Item(Base, ObjectBase):
 	""" Base item model that ScalyMUCK uses.
@@ -428,6 +472,11 @@ class Item(Base, ObjectBase):
 	""" A 2000 character string representing the description of this Item. """
 	location_id = Column(Integer, ForeignKey('rooms.id'))
 	""" This is the database number of the :class:`Room` that this Item is located in. """
+
+	location = None
+	""" This variable is the :class:`Room` instance that `location_id` corresponds to. """
+	owner = None
+	""" This variable is the :class:`Player` instance that `owner_id` corresponds to. """
 
 	def __init__(self, name=None, description='<Unset>', owner=0):
 		""" Constructor for the base item model.
@@ -456,12 +505,28 @@ class Item(Base, ObjectBase):
 		""" Produces a representation of the item, as to be expected. """
 		return "<Item('%s','%s')>" % (self.name, self.description)
 
-	def set_owner(self, owner):
-		""" Sets a new owner for this item. """
+	def set_owner(self, owner, commit=True):
+		""" Sets a new owner for this item. 
+
+		Keyword arguments:
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
 		if (type(owner) is Player):
 			owner = owner.id
 		self.owner_id = owner
-		self.commit()
+		if (commit): self.commit()
+
+	def set_location(self, room, commit=True):
+		""" Sets the location of this :class:`Item` instance.
+
+		Keyword arguments:
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		super(Item, self).set_location(room, commit)
 
 class Room(Base, ObjectBase):
 	""" Base room model that ScalyMUCK uses.
@@ -489,6 +554,9 @@ class Room(Base, ObjectBase):
 	""" An array that contains all instances of :class:`Exit` contained in this Room. """
 	owner_id = Column(Integer)
 	""" This is the database number of the :class:`Player` that this Room belongs to. """
+
+	owner=None
+	""" This is the :class:`Player` instance that this Room belongs to. """
 
 	def __init__(self, name=None, description='<Unset>', owner=0):
 		""" Initiates an instance of the Room model.
@@ -685,3 +753,20 @@ class Room(Base, ObjectBase):
 					exit = test_exit
 					break
 		return exit
+
+	def set_owner(self, owner=None, commit=True):
+		""" Sets the owner of this Room by either an ID or an instance of :class:`Player`. 
+
+		Keyword arguments:
+			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			by any previous function calls thay may have set this to false. Default: True
+
+		"""
+		if (owner is None):
+			raise exception.ModelArgumentError('No arguments specified (or were None)')
+
+		if (type(owner) is Player):
+			owner = owner.id
+
+		self.owner_id = owner
+		if (commit): self.commit()

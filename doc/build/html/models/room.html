@@ -227,6 +227,12 @@ an instance of <a class="reference internal" href="player.html#models.Player" ti
 </dd></dl>
 
 <dl class="attribute">
+<dt id="models.Room.owner">
+<tt class="descname">owner</tt><em class="property"> = None</em><a class="headerlink" href="#models.Room.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a> instance that this Room belongs to.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="models.Room.owner_id">
 <tt class="descname">owner_id</tt><a class="headerlink" href="#models.Room.owner_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is the database number of the <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a> that this Room belongs to.</p>
@@ -236,6 +242,20 @@ an instance of <a class="reference internal" href="player.html#models.Player" ti
 <dt id="models.Room.players">
 <tt class="descname">players</tt><a class="headerlink" href="#models.Room.players" title="Permalink to this definition">¶</a></dt>
 <dd><p>An array that contains all instances of <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a> contained in this Room.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.Room.set_owner">
+<tt class="descname">set_owner</tt><big>(</big><em>owner=None</em>, <em>commit=True</em><big>)</big><a class="headerlink" href="#models.Room.set_owner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the owner of this Room by either an ID or an instance of <a class="reference internal" href="player.html#models.Player" title="models.Player"><tt class="xref py py-class docutils literal"><span class="pre">Player</span></tt></a>.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd><ul class="first simple">
+<li>commit &#8211; Determines whether or not this data should be commited immediately. It also includes other changes made</li>
+</ul>
+<p class="last">by any previous function calls thay may have set this to false. Default: True</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

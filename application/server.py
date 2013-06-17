@@ -153,6 +153,7 @@ class Server(daemon.Daemon):
 			room = self.world.create_room('Portal Room Main')
 			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room, admin=True, sadmin=True, owner=True)
 			room.set_owner(user)
+
 			self.logger.info('The database has been successfully initialised.')
 		
 		self.telnet_server = TelnetServer(port=config.get_index(index='ServerPort', datatype=int),

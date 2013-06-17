@@ -104,6 +104,12 @@ hash.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="models.Bot.location">
+<tt class="descname">location</tt><em class="property"> = None</em><a class="headerlink" href="#models.Bot.location" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable is the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> instance that <cite>location_id</cite> corresponds to.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="models.Bot.location_id">
 <tt class="descname">location_id</tt><a class="headerlink" href="#models.Bot.location_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>This variable is the database number of the <a class="reference internal" href="room.html#models.Room" title="models.Room"><tt class="xref py py-class docutils literal"><span class="pre">Room</span></tt></a> this Bot is located in.</p>
@@ -119,6 +125,20 @@ hash.</p>
 <dt id="models.Bot.send">
 <tt class="descname">send</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="../_modules/models.html#Bot.send"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#models.Bot.send" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is basically &#8216;send&#8217; like for players except it does NOTHING.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="models.Bot.set_location">
+<tt class="descname">set_location</tt><big>(</big><em>room</em>, <em>commit=True</em><big>)</big><a class="headerlink" href="#models.Bot.set_location" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the location of this <a class="reference internal" href="#models.Bot" title="models.Bot"><tt class="xref py py-class docutils literal"><span class="pre">Bot</span></tt></a> instance.</p>
+<dl class="docutils">
+<dt>Keyword arguments:</dt>
+<dd><ul class="first simple">
+<li>commit &#8211; Determines whether or not this data should be commited immediately. It also includes other changes made</li>
+</ul>
+<p class="last">by any previous function calls thay may have set this to false. Default: True</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

@@ -12,9 +12,9 @@
 
 import string
 
-from blinker import signal
-
 import game.models
+
+from blinker import signal
 
 class Modification:
 	""" Main class object to load and initialize the scommands modification. """
