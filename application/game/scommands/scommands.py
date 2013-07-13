@@ -12,9 +12,10 @@
 
 import string
 
-import game.models
-
 from blinker import signal
+
+import game.models
+import game.exception
 
 class Modification:
 	""" Main class object to load and initialize the scommands modification. """
@@ -124,7 +125,6 @@ class Modification:
 				else:
 					sender.send('I do not see that.')
 					return
-
 		sender.send('<' + name + '>')
 
 		if (type(target) is game.models.Room):
@@ -167,21 +167,24 @@ class Modification:
 			sender.send('Usage: move <name of exit>')
 			return
 
-		exit = sender.location.find_exit(name=input)
-		if (exit is not None):
-			sender.send(exit.user_enter_message)
-			sender.location.broadcast('%s %s' % (sender.display_name, exit.room_enter_message), sender)
-			results = self.pre_exit_room.send(None, sender=sender, target=exit.target_id)
-			for result in results:
-				if (result[1] is True):
-					return
-			sender.set_location(exit.target_id)
-			sender.location.broadcast('%s %s' % (sender.display_name, exit.room_exit_message), sender)
-			sender.send(exit.user_exit_message)
-			self.command_look(sender=sender, input='')
-			self.post_exit_room.send(None, sender=sender, target=sender.location)
-		else:
-			sender.send('I do not see that.')
+		try:
+			exit = sender.location.find_exit(name=input)
+			if (exit is not None):
+				sender.send(exit.user_enter_message)
+				sender.location.broadcast('%s %s' % (sender.display_name, exit.room_enter_message), sender)
+				results = self.pre_exit_room.send(None, sender=sender, target=exit.target_id)
+				for result in results:
+					if (result[1] is True):
+						return
+				sender.set_location(exit.target_id)
+				sender.location.broadcast('%s %s' % (sender.display_name, exit.room_exit_message), sender)
+				sender.send(exit.user_exit_message)
+				self.command_look(sender=sender, input='')
+				self.post_exit_room.send(None, sender=sender, target=sender.location)
+			else:
+				sender.send('I do not see that.')
+		except game.exception.DatabaseError:
+			sender.send('An error has occurred. Please try again later.')
 
 	def command_inventory(self, **kwargs):
 		sender = kwargs['sender']
@@ -216,8 +219,12 @@ class Modification:
 
 			sender.send('Taken.')
 
-			item.set_location(sender.inventory)
-			self.post_item_pickup.send(None, sender=sender, item=item)
+			try:
+				item.set_location(sender.inventory)
+			except game.exception.DatabaseError:
+				sender.send('An error has occurred. Please try again later.')
+			else:
+				self.post_item_pickup.send(None, sender=sender, item=item)
 			return
 
 		sender.send('I do not see that.')
@@ -230,12 +237,20 @@ class Modification:
 			sender.send('Usage: passwd <password>')
 			return
 
-		sender.set_password(input)
-		sender.send('Your password has been changed. Remember it well.')
+		try:
+			sender.set_password(input)
+		except game.exception.DatabaseError:
+			sender.send('An error has occurred. Please try again later.')
+		else:
+			sender.send('Your password has been changed. Remember it well.')
 
 	def command_drop(self, **kwargs):
 		sender = kwargs['sender']
 		input = kwargs['input']
+
+		if (self.world.connect().closed is True):
+			sender.send('An error has occurred. Please try again later.')
+			return
 
 		if (input == ''):
 			sender.send('Usage: drop <item name>')
@@ -248,10 +263,14 @@ class Modification:
 				if (result[1] is True):
 					return
 
-			sender.send('You dropped a/an %s.' % (item.name ))
-			sender.location.broadcast('%s drops a/an %s.' % (sender.display_name, item.name) ,sender)
-			item.set_location(sender.location)
-			self.post_item_drop.send(sender=sender, item=item)
+			try:
+				item.set_location(sender.location)
+				sender.send('You dropped a/an %s.' % (item.name ))
+				sender.location.broadcast('%s drops a/an %s.' % (sender.display_name, item.name), sender)
+			except game.exception.DatabaseError:
+				sender.send('An error has occurred. Please try again later.')
+			else:
+				self.post_item_drop.send(sender=sender, item=item)
 		else:
 			sender.send('I see no such item.')
 
@@ -288,22 +307,26 @@ class Modification:
 			return
 
 		name = args[0]
-		target = self.world.find_player(name=string.lower(name))
-		if (target is not None):
-			if (target is sender):
-				sender.send('That is yourself!')
-				return
-			elif (target.is_sadmin ==1 or target.is_owner == 1):
-				sender.send('You cannot do that, they are too powerful.')
-				return
+		try:
+			target = self.world.find_player(name=string.lower(name))
+			if (target is not None):
+				if (target is sender):
+					sender.send('That is yourself!')
+					return
+				elif (target.is_sadmin ==1 or target.is_owner == 1):
+					sender.send('You cannot do that, they are too powerful.')
+					return
 
-			item = self.world.create_item(target.display_name, target.description, sender, sender.inventory)
-			sender.send('User "%s" frogged. Check your inventory.' % (target.display_name))
-			target.send('%s has turned you into a small plastic figurine, never to move again and discreetly places you in their inventory.' % (sender.display_name))
-			sender.location.broadcast('%s has turned %s into a small plastic figurine, never to move again.' % (sender.display_name, target.display_name), sender, target)
-			target.delete()
-		else:
-			sender.send('User "%s" does not exist anywhere.' % (name))
+					item = self.world.create_item(target.display_name, target.description, sender, sender.inventory)
+					target.send('%s has turned you into a small plastic figurine, never to move again and discreetly places you in their inventory.' % (sender.display_name))
+					target.delete()
+				else:
+					sender.send('User "%s" frogged. Check your inventory.' % (target.display_name))
+					sender.location.broadcast('%s has turned %s into a small plastic figurine, never to move again.' % (sender.display_name, target.display_name), sender, target)
+			else:
+				sender.send('User "%s" does not exist anywhere.' % (name))
+		except game.exception.DatabaseError:
+			sender.send('An error has occurred. Please try again later.')
 
 	def command_adduser(self, **kwargs):
 		sender = kwargs['sender']
@@ -315,15 +338,18 @@ class Modification:
 		name = args[0]
 		password = args[1]
 
-		if (self.world.find_player(name=string.lower(name)) is not None):
-			sender.send('User already exists.')
-			return
+		try:
+			if (self.world.find_player(name=string.lower(name)) is not None):
+				sender.send('User already exists.')
+				return
 
-		# TODO: Make this take server prefs into consideration, and also let this have a default location ...
-		player = self.world.create_player(name, password, game.models.server.work_factor, sender.location)
-		sender.send('User "%s" created.' % (name))
-		self.post_user_create.send(None, creator=sender, created=player)
-
+			# TODO: Make this take server prefs into consideration, and also let this have a default location ...
+			player = self.world.create_player(name, password, game.models.server.work_factor, sender.location)
+			sender.send('User "%s" created.' % (name))
+			self.post_user_create.send(None, creator=sender, created=player)
+		except game.exception.DatabaseError:
+			sender.send('An error has occurred. Please try again later.')
+		
 	def command_admin(self, **kwargs):
 		sender = kwargs['sender']
 		args = kwargs['arguments']
@@ -343,16 +369,20 @@ class Modification:
 				target.send('%s tried to take your administrator privileges away.' % (sender.display_name))
 				return
 
-			target.set_is_admin(target.is_admin is False)
-			if (target.is_admin == 0):
-				sender.send('%s is no longer an administrator.' % (target.display_name))
-				target.send('%s took your adminship.' % (sender.display_name))
-				return
+			try:
+				target.set_is_admin(target.is_admin is False)
+			except game.exception.DatabaseError:
+				sender.send('An error has occurred. Please try again later.')
 			else:
-				sender.send('%s is now an administrator.' % (target.display_name))
-				target.send('%s gave you adminship rights.' % (sender.display_name))
-				return
-		sender.send('Unknown user.')
+				if (target.is_admin == 0):
+					sender.send('%s is no longer an administrator.' % (target.display_name))
+					target.send('%s took your adminship.' % (sender.display_name))
+					return
+				else:
+					sender.send('%s is now an administrator.' % (target.display_name))
+					target.send('%s gave you adminship rights.' % (sender.display_name))
+					return
+				sender.send('Unknown user.')
 
 	def command_sadmin(self, **kwargs):
 		sender = kwargs['sender']
@@ -373,16 +403,20 @@ class Modification:
 				target.send('%s tried to take your super administrator privileges away.' % (sender.display_name))
 				return
 
-			target.set_is_super_admin(target.is_sadmin is False)
-			if (target.is_sadmin is False):
-				sender.send('%s is no longer a super administrator.' % (target.display_name))
-				target.send('%s took your super adminship.' % (sender.display_name))
-				return
+			try:
+				target.set_is_super_admin(target.is_sadmin is False)
+			except game.exception.DatabaseError:
+				sender.send('An error has occurred. Please try again later.')
 			else:
-				sender.send('%s is now a super administrator.' % (target.display_name))
-				target.send('%s gave you super adminship rights.' % (sender.display_name))
-				return
-		sender.send('Unknown user.')
+				if (target.is_sadmin is False):
+					sender.send('%s is no longer a super administrator.' % (target.display_name))
+					target.send('%s took your super adminship.' % (sender.display_name))
+					return
+				else:
+					sender.send('%s is now a super administrator.' % (target.display_name))
+					target.send('%s gave you super adminship rights.' % (sender.display_name))
+					return
+				sender.send('Unknown user.')
 
 	def command_chown(self, **kwargs):
 		sender = kwargs['sender']
@@ -404,9 +438,13 @@ class Modification:
 		if (player is None):
 			sender.send('There is no such player.')
 		else:
-			item.set_owner(player)
-			sender.send('%s now owns that item.' % (player.display_name))
-			player.send('%s has given you a %s.' % (sender.display_name, item.name))
+			try:
+				item.set_owner(player)
+			except game.exception.DatabaseError:
+				sender.send('An error has occurred. Please try again later.')
+			else:
+				sender.send('%s now owns that item.' % (player.display_name))
+				player.send('%s has given you a %s.' % (sender.display_name, item.name))
 
 	def command_ping(self, **kwargs):
 		kwargs['sender'].send('Pong.')

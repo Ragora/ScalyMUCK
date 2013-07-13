@@ -23,7 +23,8 @@ import string
 
 from blinker import signal
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, Session
+from sqlalchemy.exc import OperationalError, InvalidRequestError, StatementError
 from sqlalchemy import Table, Column, Integer, String, Text, Boolean, MetaData, ForeignKey
 import bcrypt
 
@@ -32,13 +33,19 @@ import exception
 server = None
 world = None
 Base = declarative_base()
+database_status = signal('database_status')
 
 class ObjectBase:
 	""" Base class used for the inheritance of useful member functions that work accross all models. """
 	def delete(self):
 		""" Deletes the object from the world. """
-		self.session.delete(self)
-		self.session.commit()
+		connection = self.connect()
+		try:
+			self.session.delete(self)
+			self.session.commit()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def set_name(self, name, commit=True):
 		""" Sets the name of the object.
@@ -55,9 +62,11 @@ class ObjectBase:
 			self.name = name.lower()
 			self.display_name = name
 
-		if (commit is True):
-			self.session.add(self)
-			self.session.commit()
+		try:
+			if (commit is True): self.commit()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def set_location(self, location, commit=True):
 		""" Sets the current location of this object.
@@ -74,14 +83,18 @@ class ObjectBase:
 		if (type(self) is Room):
 			return
 
-		if (type(location) is Room):
-			self.location = location
-			self.location_id = location.id
-			if (commit): self.commit()
-		elif (type(location) is int):
-			location = self.session.query(Room).filter_by(id=location).first()
-			if (location is not None):
-				self.set_location(location, commit=commit)
+		try:
+			if (type(location) is Room):
+				self.location = location
+				self.location_id = location.id
+				if (commit): self.commit()
+			elif (type(location) is int):
+				location = self.session.query(Room).filter_by(id=location).first()
+				if (location is not None):
+					self.set_location(location, commit=commit)
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def set_description(self, description, commit=True):
 		""" Sets the description of this object.
@@ -89,17 +102,27 @@ class ObjectBase:
 		Sets the description of the calling object instance.
 
 		Keyword arguments:
-			* commit -- Determines whether or not this data should be commited immediately. It also includes other changes made
+			* commit -- Determines whether or not this data should be committed immediately. It also includes other changes made
 			by any previous function calls thay may have set this to false. Default: True
 
 		"""
 		self.description = description
-		if (commit): self.commit()
+		try:
+			if (commit): self.commit()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def commit(self):
 		""" Commits any changes left in RAM to the database. """
-		self.session.add(self)
-		self.session.commit()
+		connection = self.connect()
+		try:
+			self.session.add(self)
+			self.session.commit()
+			connection.close()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def delete(self):
 		""" Deletes the object from the world. If it is a :class:`Player` instance, the related
@@ -107,8 +130,18 @@ class ObjectBase:
 		if (type(self) is Player):
 			self.disconnect()
 
-		self.session.delete(self)
-		self.session.commit()
+		connection = self.connect()
+		try:
+			self.session.delete(self)
+			self.session.commit()
+			connection.close()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
+
+	def connect(self):
+		""" Establishes a connection to the database server. """
+		return world.connect()
 
 class Exit(Base, ObjectBase):
 	""" 
@@ -195,7 +228,11 @@ class Exit(Base, ObjectBase):
 			owner = owner.id
 
 		self.owner_id = owner
-		if (commit): self.commit()
+		try:
+			if (commit): self.commit()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 		
 class Player(Base, ObjectBase):
 	""" 
@@ -312,7 +349,11 @@ class Player(Base, ObjectBase):
 
 		"""
 		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(server.work_factor))
-		if (commit is True): self.commit()
+		try:
+			if (commit is True): self.commit()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def disconnect(self):
 		""" Drops the Player's connection from the server.
@@ -345,7 +386,11 @@ class Player(Base, ObjectBase):
 		self.is_admin = status
 		if (self.is_sadmin is True and status is False):
 			self.is_sadmin = False
-		if (commit): self.commit()
+		try:
+			if (commit): self.commit()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def set_is_super_admin(self, status, commit=True):
 		""" Sets the super administrator status of this Player.
@@ -365,7 +410,11 @@ class Player(Base, ObjectBase):
 		self.is_sadmin = status
 		if (self.is_admin is False and status is True):
 			self.is_admin = True
-		if (commit): self.commit()
+		try:
+			if (commit): self.commit()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def check_admin_trump(self, target):
 		""" Checks whether or not this Player trumps the target Player administratively.
@@ -516,7 +565,11 @@ class Item(Base, ObjectBase):
 		if (type(owner) is Player):
 			owner = owner.id
 		self.owner_id = owner
-		if (commit): self.commit()
+		try:
+			if (commit): self.commit()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def set_location(self, room, commit=True):
 		""" Sets the location of this :class:`Item` instance.
@@ -604,16 +657,22 @@ class Room(Base, ObjectBase):
 		elif (target is None):
 			raise exception.ModelArgumentError('The target room was not specified. (or it was None)')
 
-		if (type(target) is int):
-			target = world.find_room(id=target)
-			if (target is not None):
-				self.add_exit(name, target)
-		elif (type(target) is Room):
-			exit = Exit(name, target, owner)
-			self.exits.append(exit)
-			self.session.add(self)
-			self.session.add(exit)
-			self.session.commit()
+		try:
+			if (type(target) is int):
+				target = world.find_room(id=target)
+				if (target is not None):
+					self.add_exit(name, target)
+			elif (type(target) is Room):
+				exit = Exit(name, target, owner)
+				self.exits.append(exit)
+				connection = self.engine.connect()
+				self.session.add(self)
+				self.session.add(exit)
+				self.session.commit()
+				connection.close()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def broadcast(self, message, *exceptions):
 		""" Broadcasts a message to all inhabitants of the Room except those specified.
@@ -769,4 +828,8 @@ class Room(Base, ObjectBase):
 			owner = owner.id
 
 		self.owner_id = owner
-		if (commit): self.commit()
+		try:
+			if (commit): self.commit()
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
