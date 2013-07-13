@@ -12,12 +12,14 @@
 import sys
 import string
 import logging
+import apscheduler
 
 import bcrypt
 from blinker import signal
 from miniboa import TelnetServer
 from sqlalchemy import create_engine, event
 from sqlalchemy.interfaces import PoolListener
+from apscheduler.scheduler import Scheduler
 from sqlalchemy.exc import OperationalError, DisconnectionError
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.orm import Session
@@ -26,18 +28,6 @@ from sqlalchemy.pool import Pool
 import daemon
 import game.models
 from game import interface, world
-
-# Pretty much copy pasta from somewhere since this gave me so much trouble
-@event.listens_for(Pool, "checkout")
-def ping_connection(dbapi_connection, connection_record, connection_proxy):
-    print('waaat')
-    cursor = dbapi_connection.cursor()
-    try:
-        cursor.execute("SELECT 1")
-    except:
-        connection_proxy._pool.dispose()
-        raise DisconnectionError()
-    cursor.close()
 
 class Server(daemon.Daemon):
 	""" 
@@ -68,6 +58,7 @@ class Server(daemon.Daemon):
 	post_client_authenticated = signal('post_client_authenticated')
 	database_status = signal('database_status')
 	world_tick = signal('world_tick')
+	scheduler = Scheduler()
 
 	auth_low_argc = None
 	auth_invalid_combination = None
@@ -98,6 +89,7 @@ class Server(daemon.Daemon):
 		database = config.get_index(index='DatabaseName', datatype=str)
 		user = config.get_index(index='DatabaseUser', datatype=str)
 		password = config.get_index(index='DatabasePassword', datatype=str)
+		self.reconnect_time = config.get_index(index='ReconnectTime', datatype=int)
 		self.work_factor = config.get_index(index='WorkFactor', datatype=int)
 		debug = config.get_index(index='Debug', datatype=bool)
 		if (database_type == 'sqlite'):
@@ -177,17 +169,27 @@ class Server(daemon.Daemon):
 		self.db_connection = status
 		if (status is False):
 			for connection in self.established_connection_list:
-				connection.send('A critical error has occurred. Please reconnect later.\n')
+				connection.send('A critical database error has occurred. Please reconnect later.\n')
 				connection.socket_send()
 				connection.deactivate()
 				connection.sock.close()
 			for connection in self.pending_connection_list:
-				connection.send('A critical error has occurred. Please reconnect later.\n')
+				connection.send('A critical database error has occurred. Please reconnect later.\n')
 				connection.socket_send()
 				connection.deactivate()
 				connection.sock.close()
 			self.established_connection_list = [ ]
 			self.pending_connection_list = [ ]
+
+			self.scheduler.start()
+			self.scheduler.add_interval_job(self.remote_db_ping, seconds=2)
+		else:
+			self.scheduler.stop()
+
+	def remote_db_ping(self):
+		player = self.world.session.query(game.models.Player).filter_by(id=1).first()
+		self.database_status.send(sender=self, status=True)
+		self.world.session.rollback()
 		return
 	
 	def update(self):
@@ -268,8 +270,9 @@ class Server(daemon.Daemon):
 					connection.deactivate()
 					connection.sock.close()
 				else:
-					sending_player.connection = connection
-					self.interface.parse_command(sender=sending_player, input=input)
+					if (sending_player is not None):
+						sending_player.connection = connection
+						self.interface.parse_command(sender=sending_player, input=input)
 
 		self.world_tick.send(None)
 
@@ -296,7 +299,7 @@ class Server(daemon.Daemon):
 		""" This is merely a callback for Miniboa to refer to when receiving a client connection from somewhere. """
 		self.connection_logger.info('Received client connection from %s:%u' % (client.address, client.port))
 		if (self.db_connection is False):
-			client.send('A critical error has occurred. Please reconnect later.')
+			client.send('A critical database error has occurred. Please reconnect later.\n')
 			client.socket_send()
 			client.deactivate()
 			client.sock.close()

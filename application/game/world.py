@@ -61,7 +61,7 @@ class World():
 			return room
 		except OperationalError:
 			self.session.rollback()
-			raise exception.DatabaseError('Connection to the database server failed.')
+			self.database_status.send(sender=self, status=False)
 	      
 	def find_room(self, **kwargs):
 		""" Locates the specified Room in the ScalyMUCK world.
@@ -102,7 +102,8 @@ class World():
 			connection.close()
 			return target_room
 		except OperationalError:
-			raise exception.DatabaseError('Connection to the database server failed.')
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 	
 	def create_player(self, name=None, password=None, workfactor=None, location=None, admin=False, sadmin=False, owner=False):
 		""" Creates a new instance of a Player.
@@ -153,7 +154,7 @@ class World():
 			return player
 		except exception.DatabaseError:
 			self.session.rollback()
-			raise
+			self.database_status.send(sender=self, status=False)
 
 	def create_bot(self, name=None, location=None):
 		""" Creates a new instance of a Bot.
@@ -184,10 +185,7 @@ class World():
 			return bot
 		except OperationalError:
 			self.session.rollback()
-			raise exception.DatabaseError('Connection to the database server failed.')
-		except exception.DatabaseError:
-			self.session.rollback()
-			raise
+			self.database_status.send(sender=self, status=False)
 
 	def find_player(self, **kwargs):
 		""" Locates a Player inside of the ScalyMUCK world.
@@ -212,10 +210,9 @@ class World():
 				target_player.engine = self.engine
 			connection.close()
 			return target_player
-		except exception.DatabaseError:
-			raise
 		except OperationalError:
-			raise exception.DatabaseError('Connection to the database server failed.')
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def find_bot(self, **kwargs):
 		""" Locates a Bot inside of the ScalyMUCK world.
@@ -240,9 +237,8 @@ class World():
 
 			return target_bot
 		except OperationalError:
-			raise exception.DatabaseError('Connection to the database server failed.')
-		except exception.DatabaseError:
-			raise
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def get_players(self):
 		""" Returns a list of all Players in the ScalyMUCK world. """
@@ -259,9 +255,8 @@ class World():
 					load_test.engine = self.engine
 			connection.close()
 		except OperationalError:
-			raise exception.DatabaseError('Connection to the database server failed.')
-		except exception.DatabaseError:
-			raise
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 		return list
 
@@ -282,9 +277,8 @@ class World():
 
 			return target_item
 		except OperationalError:
-			raise exception.DatabaseError('Connection to the database server failed.')
-		except exception.DatabaseError:
-			raise
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def create_item(self, name=None, description='<Unset>', owner=0, location=None):
 		""" Creates a new item in the ScalyMUCK world.
@@ -317,10 +311,7 @@ class World():
 			return item
 		except OperationalError:
 			self.session.rollback()
-			raise exception.DatabaseError('Connection to the database server failed.')
-		except exception.DatabaseError:
-			self.session.rollback()
-			raise
+			self.database_status.send(sender=self, status=False)
 
 	def get_rooms(self, **kwargs):
 		""" Returns all rooms in the database that meet the specified criterion.
@@ -340,9 +331,8 @@ class World():
 			connection.close()
 			return rooms
 		except OperationalError:
-			raise exception.DatabaseError('Connection to the database server failed.')
-		except exception.DatabaseError:
-			raise
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def connect(self):
 		""" Establishes a connection to the database server. """

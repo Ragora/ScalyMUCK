@@ -33,6 +33,7 @@ import exception
 server = None
 world = None
 Base = declarative_base()
+database_status = signal('database_status')
 
 class ObjectBase:
 	""" Base class used for the inheritance of useful member functions that work accross all models. """
@@ -44,7 +45,7 @@ class ObjectBase:
 			self.session.commit()
 		except OperationalError:
 			self.session.rollback()
-			raise exception.DatabaseError('Connection to the database server failed.')
+			self.database_status.send(sender=self, status=False)
 
 	def set_name(self, name, commit=True):
 		""" Sets the name of the object.
@@ -63,9 +64,9 @@ class ObjectBase:
 
 		try:
 			if (commit is True): self.commit()
-		except exception.DatabaseError:
+		except OperationalError:
 			self.session.rollback()
-			raise
+			self.database_status.send(sender=self, status=False)
 
 	def set_location(self, location, commit=True):
 		""" Sets the current location of this object.
@@ -93,10 +94,7 @@ class ObjectBase:
 					self.set_location(location, commit=commit)
 		except OperationalError:
 			self.session.rollback()
-			raise exception.DatabaseError('Connection to the database server failed.')
-		except exception.DatabaseError:
-			self.session.rollback()
-			raise
+			self.database_status.send(sender=self, status=False)
 
 	def set_description(self, description, commit=True):
 		""" Sets the description of this object.
@@ -111,9 +109,9 @@ class ObjectBase:
 		self.description = description
 		try:
 			if (commit): self.commit()
-		except exception.DatabaseError:
+		except OperationalError:
 			self.session.rollback()
-			raise
+			self.database_status.send(sender=self, status=False)
 
 	def commit(self):
 		""" Commits any changes left in RAM to the database. """
@@ -124,7 +122,7 @@ class ObjectBase:
 			connection.close()
 		except OperationalError:
 			self.session.rollback()
-			raise exception.DatabaseError('Connection to the database server failed.')
+			self.database_status.send(sender=self, status=False)
 
 	def delete(self):
 		""" Deletes the object from the world. If it is a :class:`Player` instance, the related
@@ -139,7 +137,7 @@ class ObjectBase:
 			connection.close()
 		except OperationalError:
 			self.session.rollback()
-			raise exception.DatabaseError('Connection to the database server failed.')
+			self.database_status.send(sender=self, status=False)
 
 	def connect(self):
 		""" Establishes a connection to the database server. """
@@ -232,8 +230,9 @@ class Exit(Base, ObjectBase):
 		self.owner_id = owner
 		try:
 			if (commit): self.commit()
-		except exception.DatabaseError:
-			raise
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 		
 class Player(Base, ObjectBase):
 	""" 
@@ -352,8 +351,9 @@ class Player(Base, ObjectBase):
 		self.hash = bcrypt.hashpw(password, bcrypt.gensalt(server.work_factor))
 		try:
 			if (commit is True): self.commit()
-		except exception.DatabaseError:
-			raise
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def disconnect(self):
 		""" Drops the Player's connection from the server.
@@ -388,8 +388,9 @@ class Player(Base, ObjectBase):
 			self.is_sadmin = False
 		try:
 			if (commit): self.commit()
-		except exception.DatabaseError:
-			raise
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def set_is_super_admin(self, status, commit=True):
 		""" Sets the super administrator status of this Player.
@@ -411,8 +412,9 @@ class Player(Base, ObjectBase):
 			self.is_admin = True
 		try:
 			if (commit): self.commit()
-		except exception.DatabaseError:
-			raise
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def check_admin_trump(self, target):
 		""" Checks whether or not this Player trumps the target Player administratively.
@@ -565,8 +567,9 @@ class Item(Base, ObjectBase):
 		self.owner_id = owner
 		try:
 			if (commit): self.commit()
-		except exception.DatabaseError:
-			raise
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def set_location(self, room, commit=True):
 		""" Sets the location of this :class:`Item` instance.
@@ -668,9 +671,8 @@ class Room(Base, ObjectBase):
 				self.session.commit()
 				connection.close()
 		except OperationalError:
-			raise exception.DatabaseError('Connection to the database server failed.')
-		except exception.DatabaseError:
-			raise
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
 
 	def broadcast(self, message, *exceptions):
 		""" Broadcasts a message to all inhabitants of the Room except those specified.
@@ -828,5 +830,6 @@ class Room(Base, ObjectBase):
 		self.owner_id = owner
 		try:
 			if (commit): self.commit()
-		except exception.DatabaseError:
-			raise
+		except OperationalError:
+			self.session.rollback()
+			self.database_status.send(sender=self, status=False)
