@@ -78,7 +78,7 @@ class ModLoader:
 				try:
 					module = importlib.import_module('game.%s' % (mod_name))
 				except ImportError as e:
-					self.logger.warning(str(e))
+					logger.warning(str(e))
 					return False
 				else:
 					config = settings.Settings('%s/config/%s.cfg' % (self.workdir, mod_name))
