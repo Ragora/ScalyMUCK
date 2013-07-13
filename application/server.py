@@ -89,7 +89,6 @@ class Server(daemon.Daemon):
 		database = config.get_index(index='DatabaseName', datatype=str)
 		user = config.get_index(index='DatabaseUser', datatype=str)
 		password = config.get_index(index='DatabasePassword', datatype=str)
-		self.reconnect_time = config.get_index(index='ReconnectTime', datatype=int)
 		self.work_factor = config.get_index(index='WorkFactor', datatype=int)
 		debug = config.get_index(index='Debug', datatype=bool)
 		if (database_type == 'sqlite'):
@@ -182,6 +181,7 @@ class Server(daemon.Daemon):
 			self.pending_connection_list = [ ]
 
 			self.scheduler.start()
+			# Actually apparently we don't need the scheduler it appears ...
 			self.scheduler.add_interval_job(self.remote_db_ping, seconds=2)
 		else:
 			self.scheduler.stop()
