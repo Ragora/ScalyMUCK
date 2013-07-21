@@ -205,7 +205,9 @@ class World():
 
 			if (target_player is not None):
 				target_player.location = self.find_room(id=target_player.location_id)
+				target_player.location.session = self.session
 				target_player.inventory = self.find_room(id=target_player.inventory_id)
+				target_player.inventory.session = self.session
 				target_player.session = self.session
 				target_player.engine = self.engine
 			connection.close()
