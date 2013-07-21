@@ -206,8 +206,12 @@ class World():
 			if (target_player is not None):
 				target_player.location = self.find_room(id=target_player.location_id)
 				target_player.location.session = self.session
+				target_player.location.engine = self.engine
+
 				target_player.inventory = self.find_room(id=target_player.inventory_id)
 				target_player.inventory.session = self.session
+				target_player.inventory.engine = self.engine
+
 				target_player.session = self.session
 				target_player.engine = self.engine
 			connection.close()
@@ -324,10 +328,8 @@ class World():
 		"""
 		try:
 			connection = self.connect()
-			list = [ ]
 			rooms = self.session.query(Room).filter_by(**kwargs)
 			for room in rooms:
-				list.append[self.find_room(id=room.id)]
 				room.session = self.session
 				room.engine = self.engine
 			connection.close()
