@@ -79,6 +79,8 @@ class World():
 
 			if (target_room is not None):
 				target_room.owner = self.session.query(Player).filter_by(id=target_room.owner_id).first()
+				target_room.session = self.session
+				target_room.engine = self.engine
 
 				# Iterate and set all of our other custom attributes not defined by SQLAlchemy
 				for item in target_room.items:
@@ -90,7 +92,10 @@ class World():
 				# NOTE: The above and below create separate Player instances, which hopefully both shouldn't be used within the same context ...
 				for player in target_room.players:
 					player.location = target_room
+
 					player.inventory = self.session.query(Room).filter_by(id=player.inventory_id).first()
+					player.inventory.session = self.session
+					player.inventory.engine = self.engine
 					player.session = self.session
 					player.engine = self.engine
 
@@ -98,6 +103,10 @@ class World():
 					bot.location = target_room
 					bot.session = self.session
 					bot.engine = self.engine
+
+				for exit in target_room.exits:
+					exit.session = self.session
+					exit.engine = self.engine
 
 			connection.close()
 			return target_room
@@ -279,6 +288,8 @@ class World():
 				target_item.location = self.find_room(id=target_item.location_id)
 				target_item.session = self.session
 				target_item.engine = self.engine
+				target_item.location.session = self.session
+				target_item.location.engine = self.engine
 			connection.close()
 
 			return target_item
@@ -332,6 +343,31 @@ class World():
 			for room in rooms:
 				room.session = self.session
 				room.engine = self.engine
+
+				for item in room.items:
+					item.location = target_room
+					item.owner = self.session.query(Player).filter_by(id=item.owner_id).first()
+					item.session = self.session
+					item.engine = self.engine
+
+				for player in room.players:
+					player.location = target_room
+
+					player.inventory = self.session.query(Room).filter_by(id=player.inventory_id).first()
+					player.inventory.session = self.session
+					player.inventory.engine = self.engine
+					player.session = self.session
+					player.engine = self.engine
+
+				for bot in room.bots:
+					bot.location = target_room
+					bot.session = self.session
+					bot.engine = self.engine
+
+				for exit in room.exits:
+					exit.session = self.session
+					exit.engine = self.engine
+
 			connection.close()
 			return rooms
 		except OperationalError:
