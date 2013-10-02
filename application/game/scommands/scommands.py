@@ -68,6 +68,10 @@ class Modification:
 
 		signal('post_client_authenticated').connect(self.callback_client_authenticated)
 		signal('pre_message_sent').connect(self.callback_message_sent)
+		
+	def __del__(self):
+		signal('post_client_authenticated').disconnect(self.callback_client_authenticated)
+		signal('pre_message_sent').disconnect(self.callback_message_sent)
 
 	# Commands
 	def command_say(self, **kwargs):
