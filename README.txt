@@ -1,5 +1,5 @@
 ===========================================================================================
-	ScalyMUCK	Version 3.2.1
+	ScalyMUCK	Version 3.3.1
 	MUCK server application written for Python 2.7.
 	Copyright (c) 2013 Robert MacGregor
 
