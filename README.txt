@@ -19,6 +19,9 @@ Table of Contents:
 
 I. FOREWORD
 
+ScalyMUCK was originally designed to attempt to take the place of older, out of date MUCK server software and to attempt to ease 
+the process of switching as much as possible with the soon to come conversion tool.
+
 II. INSTALLATION ON UBUNTU x86 AND x64
 	Seeing that ScalyMUCK is written in Python, it is very easy to get up and running in pretty much any Linux distribution 
 	but this quickstart guide covers Ubuntu based systems (should also work for Debian as well).
