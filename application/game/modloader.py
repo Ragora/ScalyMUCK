@@ -78,7 +78,7 @@ class ModLoader:
 				try:
 					module = importlib.import_module('game.%s' % (mod_name))
 				except ImportError as e:
-					self.logger.warning(str(e))
+					logger.warning(str(e))
 					return False
 				else:
 					config = settings.Settings('%s/config/%s.cfg' % (self.workdir, mod_name))
@@ -118,6 +118,7 @@ class ModLoader:
 		self.commands['mods']['usage'] = 'mods'
 		self.commands['mods']['privilege'] = 3
 		self.commands['mods']['modification'] = '<CORE>'
+		self.commands['mods']['category'] = 'Core'
 
 		self.commands['load'] = { }
 		self.commands['load']['command'] = self.command_load
@@ -125,6 +126,7 @@ class ModLoader:
 		self.commands['load']['usage'] = 'load <name>'
 		self.commands['load']['privilege'] = 3
 		self.commands['load']['modification'] = '<CORE>'
+		self.commands['load']['category'] = 'Core'
 
 		self.commands['unload'] = { }
 		self.commands['unload']['command'] = self.command_unload
@@ -132,6 +134,7 @@ class ModLoader:
 		self.commands['unload']['usage'] = 'unload <name>'
 		self.commands['unload']['privilege'] = 3
 		self.commands['unload']['modification'] = '<CORE>'
+		self.commands['unload']['category'] = 'Core'
 
 	def find_command(self, name):
 		""" Returns a command by name. """

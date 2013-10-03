@@ -67,6 +67,3 @@ class Permissions:
 			return value
 		elif (name == 'AllowOwnerOverride'):
 			return value
-		else:
-			logger.warn('Attempted to evaluate undefined permission: "%s"!' % (name))
-			return False

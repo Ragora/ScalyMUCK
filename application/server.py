@@ -12,13 +12,18 @@
 import sys
 import string
 import logging
+import apscheduler
 
 import bcrypt
 from blinker import signal
 from miniboa import TelnetServer
-from sqlalchemy import create_engine
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import create_engine, event
+from sqlalchemy.interfaces import PoolListener
+from apscheduler.scheduler import Scheduler
+from sqlalchemy.exc import OperationalError, DisconnectionError
 from sqlalchemy.engine.reflection import Inspector
+from sqlalchemy.orm import Session
+from sqlalchemy.pool import Pool
 
 import daemon
 import game.models
@@ -40,6 +45,7 @@ class Server(daemon.Daemon):
 	world = None
 	interface = None
 	work_factor = 10
+	db_connection = True
 
 	welcome_message_data = 'Unable to load welcome message!\n'
 	exit_message_data = 'Unable to load exit message!\n'
@@ -50,7 +56,9 @@ class Server(daemon.Daemon):
 	post_client_connect = signal('post_client_connect')
 	pre_client_disconnect = signal('pre_client_disconnect')
 	post_client_authenticated = signal('post_client_authenticated')
+	database_status = signal('database_status')
 	world_tick = signal('world_tick')
+	scheduler = Scheduler()
 
 	auth_low_argc = None
 	auth_invalid_combination = None
@@ -82,6 +90,7 @@ class Server(daemon.Daemon):
 		user = config.get_index(index='DatabaseUser', datatype=str)
 		password = config.get_index(index='DatabasePassword', datatype=str)
 		self.work_factor = config.get_index(index='WorkFactor', datatype=int)
+		debug = config.get_index(index='Debug', datatype=bool)
 		if (database_type == 'sqlite'):
 			database_location = path + config.get_index(index='TargetDatabase', datatype=str)
 		else:
@@ -103,6 +112,7 @@ class Server(daemon.Daemon):
 		with open(workdir + 'config/exit_message.txt') as f:
 			self.exit_message_data = f.read() + '\n'
 
+
 		# Connect/Create our database is required
 		database_exists = True
 		if (database_type == 'sqlite'):
@@ -116,16 +126,15 @@ class Server(daemon.Daemon):
 		else:
 			url = database_type + '://' + user + ':' + password + '@' + database_location + '/' + database
 			try:
-				database_engine = create_engine(url, echo=False)
-				connection = database_engine.connect()
+				database_engine = create_engine(url, echo=False, pool_size=20, max_overflow=0)
 			except OperationalError as e:
 				self.logger.error(str(e))
 				self.logger.error('URL: ' + url)
 				self.is_running = False
 				return
 
-		self.world = world.World(database_engine)
-		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, session=self.world.session, server=self)
+		self.world = world.World(engine=database_engine, server=self)
+		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, session=self.world.session, server=self, debug=debug)
 		game.models.Base.metadata.create_all(database_engine)
 	
 		# Check to see if our root user exists
@@ -141,6 +150,7 @@ class Server(daemon.Daemon):
 			room = self.world.create_room('Portal Room Main')
 			user = self.world.create_player(name='RaptorJesus', password='ChangeThisPasswordNowPlox', workfactor=self.work_factor, location=room, admin=True, sadmin=True, owner=True)
 			room.set_owner(user)
+
 			self.logger.info('The database has been successfully initialised.')
 		
 		self.telnet_server = TelnetServer(port=config.get_index(index='ServerPort', datatype=int),
@@ -148,9 +158,39 @@ class Server(daemon.Daemon):
 					        on_connect = self.on_client_connect,
 					        on_disconnect = self.on_client_disconnect,
 					        timeout = 0.05)
+
+		self.database_status.connect(self.callback_database_status)
 	
 		self.logger.info('ScalyMUCK successfully initialised.')
 		self.is_running = True
+
+	def callback_database_status(self, trigger, sender, status):
+		self.db_connection = status
+		if (status is False):
+			for connection in self.established_connection_list:
+				connection.send('A critical database error has occurred. Please reconnect later.\n')
+				connection.socket_send()
+				connection.deactivate()
+				connection.sock.close()
+			for connection in self.pending_connection_list:
+				connection.send('A critical database error has occurred. Please reconnect later.\n')
+				connection.socket_send()
+				connection.deactivate()
+				connection.sock.close()
+			self.established_connection_list = [ ]
+			self.pending_connection_list = [ ]
+
+			self.scheduler.start()
+			# Actually apparently we don't need the scheduler it appears ...
+			self.scheduler.add_interval_job(self.remote_db_ping, seconds=2)
+		else:
+			self.scheduler.stop()
+
+	def remote_db_ping(self):
+		player = self.world.session.query(game.models.Player).filter_by(id=1).first()
+		self.database_status.send(sender=self, status=True)
+		self.world.session.rollback()
+		return
 	
 	def update(self):
 		""" The update command is called by the main.py script file.
@@ -219,12 +259,20 @@ class Server(daemon.Daemon):
 					#connection.send('connect <username> <password>\n')
 
 		# With already connected clients, we'll now deploy the command interface.
-		for connection in self.established_connection_list:
+		for index, connection in enumerate(self.established_connection_list):
 			if (connection.cmd_ready):
 				input = "".join(filter(lambda x: ord(x)<127 and ord(x)>31, connection.get_command()))
-				sending_player = self.world.find_player(id=connection.id)
-				sending_player.connection = connection
-				self.interface.parse_command(sender=sending_player, input=input)
+				try:
+					sending_player = self.world.find_player(id=connection.id)
+				except game.exception.DatabaseError:
+					connection.send('A critical error has occurred. Please reconnect later.\n')
+					connection.socket_send()
+					connection.deactivate()
+					connection.sock.close()
+				else:
+					if (sending_player is not None):
+						sending_player.connection = connection
+						self.interface.parse_command(sender=sending_player, input=input)
 
 		self.world_tick.send(None)
 
@@ -250,6 +298,12 @@ class Server(daemon.Daemon):
 	def on_client_connect(self, client):
 		""" This is merely a callback for Miniboa to refer to when receiving a client connection from somewhere. """
 		self.connection_logger.info('Received client connection from %s:%u' % (client.address, client.port))
+		if (self.db_connection is False):
+			client.send('A critical database error has occurred. Please reconnect later.\n')
+			client.socket_send()
+			client.deactivate()
+			client.sock.close()
+			return
 		client.send(self.welcome_message_data)
 		self.pending_connection_list.append(client)
 		self.post_client_connect.send(sender=client)

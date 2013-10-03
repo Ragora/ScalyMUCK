@@ -23,3 +23,6 @@ class WorldArgumentError(ModApplicationError):
 
 class ModelArgumentError(ModApplicationError):
 	""" Raised when a model function is used improperly. """
+
+class DatabaseError(ModApplicationError):
+	""" Raised when an error occurs in the database. """

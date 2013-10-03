@@ -3,6 +3,7 @@
 *.cfg~
 *.txt~
 *.rst~
-doc/build/doctrees
+doc/build
 application/game/fuzzball
 application/game/construction
+application/game/scmsa
