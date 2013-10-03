@@ -69,6 +69,14 @@ class Interface:
 		self.modloader.load(config.get_index('LoadedMods', str))
 		self.debug = debug
 
+	def get_online_players(self):
+		""" Returns a list of currently connected players. """
+		result = [] 
+		for connection in self.server.established_connection_list:
+			result.append(self.world.find_player(id=connection.id))
+		return result
+			
+
 	def parse_command(self, sender=None, input=None):
 		""" Called internally by the ScalyMUCK server.
 

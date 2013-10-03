@@ -68,6 +68,10 @@ class Modification:
 
 		signal('post_client_authenticated').connect(self.callback_client_authenticated)
 		signal('pre_message_sent').connect(self.callback_message_sent)
+		
+	def __del__(self):
+		signal('post_client_authenticated').disconnect(self.callback_client_authenticated)
+		signal('pre_message_sent').disconnect(self.callback_message_sent)
 
 	# Commands
 	def command_say(self, **kwargs):
@@ -447,6 +451,28 @@ class Modification:
 	def command_ping(self, **kwargs):
 		kwargs['sender'].send('Pong.')
 
+	def command_wwi(self, **kwargs):
+		sender = kwargs['sender']
+
+		listing = self.interface.get_online_players()
+		longest_length = 0
+		for player in listing:
+			length = len(player.display_name)
+			if (length > longest_length):
+				longest_length = length
+
+		spacing = ''
+		for i in range(longest_length+7):
+			spacing += ' '
+
+		sender.send('Name%sLocation' % spacing)
+		for player in listing:
+			spacing = ''
+			for i in range((longest_length+11)-len(player.display_name)):
+				spacing += ' '
+			sender.send('%s%s%s' % (player.display_name, spacing, player.location.name))
+		sender.send('Who/Where/Idle')
+
 	# Callbacks
 	def callback_client_authenticated(self, trigger, sender):
 		""" Callback that is bound to the "post_client_authenticated" event.
@@ -646,6 +672,16 @@ class Modification:
 				'command': self.command_ping,
 				'description': 'Ping-Pong.',
 				'usage': 'ping',
+				'aliases': [ ],
+				'privilege': 0,
+				'category': 'General'
+			},
+
+			'wwi':
+			{
+				'command': self.command_wwi,
+				'description': 'See a list of connected people.',
+				'usage': 'wwi',
 				'aliases': [ ],
 				'privilege': 0,
 				'category': 'General'
