@@ -37,7 +37,9 @@ class Settings:
 
 			if (len(preference_data) == 2):
 				data = preference_data[1]
-				self._settings_entries[preference_data[0]] = data[:len(data)].replace('\n','')
+				entry_data = data[:len(data)].replace('\n','')
+				entry_data = entry_data.replace("\r", "")
+				self._settings_entries[preference_data[0]] = entry_data
 			# TODO: Make this actually do some work to make post-fix comments work ...
 			elif(line_data.find('#') and line_data != ''):
 				continue

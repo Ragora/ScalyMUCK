@@ -23,6 +23,7 @@ class ModLoader:
 	interface = None
 	session = None
 	permissions = None
+	initialized = False
 	commands = { }
 	""" A dictionary of all loaded commands. The keys are the actual name a command is referred to by and said keys point to
 	Python functions to be called upon use. """
@@ -30,23 +31,19 @@ class ModLoader:
 	""" A dictionary of all loaded modifications. The keys are the internal name of the mod and each key refers to a tuple
 	with the following format: (instance, module). """
 
-	def __init__(self, world=None, interface=None, session=None, workdir=None, permissions=None):
-		""" Initializes an instance of the ScalyMUCK mod loader. 
-
-		There are several keyword arguments that should be used with this __init__ command:
-			* world -- An instance of the game.World object to be used with this ModLoader.
-			* interface -- An instance of the game.Interface object to be used with this ModLoader.
-			* session -- An active database session from SQLAlchemy to be used with this ModLoader.
-			* workdir -- The work directory of the current running application.
-			* permissions -- An instance of the game.Permissions object to be used with this ModLoader.
-
-		"""
-		self.workdir = workdir
-		self.world = world
-		self.interface = interface
-		self.session = session
-		self.permissions = permissions
+	def initialize(self, **kwargs):
+		self.workdir = kwargs['workdir']
+		self.world = kwargs['world']
+		self.interface = kwargs['interface']
+		self.session = kwargs['session']
+		self.permissions = kwargs['permissions']
 		self.set_defaults()
+
+		for modification_name in self.modifications.keys():
+			modification_instance, module = self.modifications[modification_name]
+			modification_instance.initialize(**kwargs)
+
+		self.initialized = True
 
 	def load(self, modifications):
 		""" Loads a semicolon deliminated list of modifications from application/game.
@@ -72,7 +69,7 @@ class ModLoader:
 					reload(sub_module)
 				module = reload(module)
 				config = settings.Settings('%s/config/%s.cfg' % (self.workdir, mod_name))
-				instance = module.Modification(config=config, world=self.world, interface=self.interface, session=self.session, permissions=self.permissions, modloader=self)
+				instance = module.Modification()
 				self.modifications[mod_name] = (instance, module)
 			else:
 				try:
@@ -83,8 +80,11 @@ class ModLoader:
 				else:
 					config = settings.Settings('%s/config/%s.cfg' % (self.workdir, mod_name))
 
-					modification = module.Modification(config=config, world=self.world, interface=self.interface, session=self.session, permissions=self.permissions, modloader=self)
+					modification = module.Modification()
+					if (self.initialized):
+						modification.initialize(world=self.world, config=config, session=self.session, permissions=self.permissions, interface=self.interface, modloader=self)
 					self.modifications.setdefault(mod_name, (modification, module))
+
 				logger.info('Processed modification %s.' % (mod_name))
 
 			# Process aliases first

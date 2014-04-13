@@ -112,6 +112,7 @@ class Server(daemon.Daemon):
 		with open(workdir + 'config/exit_message.txt') as f:
 			self.exit_message_data = f.read() + '\n'
 
+		self.interface = interface.Interface(config=config, workdir=workdir, server=self, debug=debug)
 
 		# Connect/Create our database is required
 		database_exists = True
@@ -122,7 +123,7 @@ class Server(daemon.Daemon):
 				self.logger.info('This appears to be your first time running the ScalyMUCK server. We must initialise your database ...')
 				database_exists = False
 
-			database_engine = create_engine('sqlite:////%s' % (database_location), echo=False)
+			database_engine = create_engine('sqlite:///%s' % (database_location), echo=False)
 		else:
 			url = database_type + '://' + user + ':' + password + '@' + database_location + '/' + database
 			try:
@@ -134,9 +135,8 @@ class Server(daemon.Daemon):
 				return
 
 		self.world = world.World(engine=database_engine, server=self)
-		self.interface = interface.Interface(config=config, world=self.world, workdir=workdir, session=self.world.session, server=self, debug=debug)
 		game.models.Base.metadata.create_all(database_engine)
-	
+
 		# Check to see if our root user exists
 		if (database_type != 'sqlite'):
 			root_user = self.world.find_player(name='RaptorJesus')
@@ -152,7 +152,9 @@ class Server(daemon.Daemon):
 			room.set_owner(user)
 
 			self.logger.info('The database has been successfully initialised.')
-		
+
+		self.interface.initialize(config=config, world=self.world, session=self.world.session, engine=database_engine, workdir=workdir, server=self, debug=debug)
+	
 		self.telnet_server = TelnetServer(port=config.get_index(index='ServerPort', datatype=int),
 						address=config.get_index(index='ServerAddress', datatype=str),
 					        on_connect = self.on_client_connect,

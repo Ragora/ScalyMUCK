@@ -38,7 +38,7 @@ class Interface:
 	pre_message = signal('pre_message_sent')
 	post_message = signal('post_message_sent')
 
-	def __init__(self, config=None, world=None, workdir='', session=None, server=None, debug=None):
+	def __init__(self, config=None, workdir='', server=None, debug=None):
 		""" Initializes an instance of the ScalyMUCK Client-Server interface class.
 
 		The interface class is created internallu by the ScalyMUCK server.
@@ -59,15 +59,21 @@ class Interface:
 
 		"""
 		self.logger = logging.getLogger('Mods')
-		self.world = world
-		self.workdir = workdir
-		self.config = config
-		self.session = session
-		self.server = server
 		self.permissions = permissions.Permissions(workdir=workdir)
-		self.modloader = modloader.ModLoader(world=world, interface=self, session=session, workdir=workdir, permissions=self.permissions)
+		self.modloader = modloader.ModLoader()
 		self.modloader.load(config.get_index('LoadedMods', str))
-		self.debug = debug
+
+	def initialize(self, **kwargs):
+		self.debug = kwargs['debug']
+		self.server = kwargs['server']
+		self.session = kwargs['session']
+		self.config = kwargs['config']
+		self.workdir = kwargs['workdir']
+		self.world = kwargs['world']
+		kwargs['interface'] = self
+		kwargs['permissions'] = self.permissions
+		kwargs['modloader'] = self.modloader
+		self.modloader.initialize(**kwargs)
 
 	def get_online_players(self):
 		""" Returns a list of currently connected players. """

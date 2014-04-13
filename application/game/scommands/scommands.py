@@ -39,26 +39,30 @@ class Modification:
 	post_exit_room = signal('post_exit_room')
 	pre_show_description = signal('pre_show_description')
 
-	def __init__(self, **kwargs):
+	def initialize(self, **kwargs):
 		""" 
 
 		This initializes an instance of the scommands modification and it will remain loaded in memory
+
 		until the server owner either unloads it or reloads it which therefore will reset
 		any associated data unless the data had been defined on the class definition itself
 		rather than being initialized in this function. 
+
 
 		Keyword arguments:
 			* config -- This is the instance of Settings that contains all loaded configuration settings available for this modification, if the file exists. If the file does not exist, then this will simply be None.
 			* interface -- This is the instance of the user interface used internally by ScalyMUCK. Generally, you won't need access to this for any reason and is currently deprecated for later removal.
 
+
 		Actions such as binding your Blinker signals should be performed here so that events will be
 		received properly when they occur.
 
 		Along with initializing the modification, __init__ acts as a gateway for other important
+
 		data passed in by the modloader under the **kwargs argument.
 
 		"""
-		
+
 		self.config = kwargs['config']
 		self.interface = kwargs['interface']
 		self.session = kwargs['session']
