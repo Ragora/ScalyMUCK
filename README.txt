@@ -3,8 +3,8 @@
 	MUCK server application written for Python 2.7.
 	Copyright (c) 2013 Robert MacGregor
 
-	This software is licensed under the GNU General Public License v3. 
-	Please refer to gpl.txt for more info.
+	This software is licensed under the MIT license. Please refer to LICENSE.txt for
+	more information.
 ===========================================================================================
 
 ScalyMUCK BitBucket Wiki: https://bitbucket.org/Ragora/scalymuck/wiki/Home

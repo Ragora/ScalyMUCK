@@ -1,10 +1,8 @@
 """
 	Basically the user interface for ScalyMUCK.
 
-	Copyright (c) 2013 Robert MacGregor
-	This software is licensed under the GNU General
-	Public License version 3. Please refer to gpl.txt 
-	for more information.
+	This software is licensed under the MIT license.
+	Please refer to LICENSE.txt for more information.
 """
 
 import string
