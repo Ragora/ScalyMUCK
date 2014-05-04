@@ -7,7 +7,7 @@
 	more information.
 ===========================================================================================
 
-ScalyMUCK BitBucket Wiki: https://bitbucket.org/Ragora/scalymuck/wiki/Home
+ScalyMUCK BitBucket Wiki: https://github.com/Ragora/ScalyMUCK/wiki
 
 Table of Contents:
 	I. Foreword
