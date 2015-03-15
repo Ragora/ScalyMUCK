@@ -1,0 +1,9 @@
+*.pyc
+*.py~
+*.cfg~
+*.txt~
+*.rst~
+doc/build
+application/game/fuzzball
+application/game/construction
+application/game/scmsa

@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>exception &mdash; ScalyMUCK 3.5.0 MIT documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '3.5.0 MIT',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="ScalyMUCK 3.5.0 MIT documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">ScalyMUCK 3.5.0 MIT documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for exception</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	ScalyMUCK has several base exceptions for the ScalyMUCK core and </span>
+<span class="sd">	ScalyMUCK modifications that may be loaded into the MUCK server.</span>
+
+<span class="sd">	This software is licensed under the MIT license.</span>
+<span class="sd">	Please refer to LICENSE.txt for more information.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ModApplicationError"><a class="viewcode-back" href="../exceptions/modapplicationerror.html#exception.ModApplicationError">[docs]</a><span class="k">class</span> <span class="nc">ModApplicationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Generic exception for ScalyMUCK modifications to subclass in order</span>
+<span class="sd">	to report errors to the error reporting mechanism.</span>
+
+<span class="sd">	NOTE:</span>
+<span class="sd">		This should never be explictely raised by any code. This</span>
+<span class="sd">		is designed to be subclassed for proper exception support.</span>
+
+<span class="sd">	&quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="WorldArgumentError"><a class="viewcode-back" href="../exceptions/worldargumenterror.html#exception.WorldArgumentError">[docs]</a><span class="k">class</span> <span class="nc">WorldArgumentError</span><span class="p">(</span><span class="n">ModApplicationError</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Raised when using the world API and an invalid argument is specified. &quot;&quot;&quot;</span>
+</div>
+<div class="viewcode-block" id="ModelArgumentError"><a class="viewcode-back" href="../exceptions/modelargumenterror.html#exception.ModelArgumentError">[docs]</a><span class="k">class</span> <span class="nc">ModelArgumentError</span><span class="p">(</span><span class="n">ModApplicationError</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Raised when a model function is used improperly. &quot;&quot;&quot;</span>
+</div>
+<span class="k">class</span> <span class="nc">DatabaseError</span><span class="p">(</span><span class="n">ModApplicationError</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Raised when an error occurs in the database. &quot;&quot;&quot;</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">ScalyMUCK 3.5.0 MIT documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Robert MacGregor.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.
+    </div>
+  </body>
+</html>
