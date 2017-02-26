@@ -223,7 +223,7 @@ class Server(daemon.Daemon):
 						connection.send('%s\n' % self.auth_invalid_combination)
 					else:
 						player_hash = target_player.hash
-						if (player_hash == bcrypt.hashpw(password, player_hash) == player_hash):
+						if (player_hash == bcrypt.hashpw(password.encode("UTF_8"), player_hash.encode("UTF_8")) == player_hash):
 							connection.id = target_player.id
 							target_player.connection = connection
 
