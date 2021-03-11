@@ -1,11 +1,11 @@
 """
-	ScalyMUCK Normal Commands
+        ScalyMUCK Normal Commands
 
-	This mod code is simply ScalyMUCK's
-	default user commands.
+        This mod code is simply ScalyMUCK's
+        default user commands.
 
-	This software is licensed under the MIT license.
-	Please refer to LICENSE.txt for more information.
+        This software is licensed under the MIT license.
+        Please refer to LICENSE.txt for more information.
 """
 
 server_version_major = 1
@@ -20,4 +20,4 @@ description = 'This modification implements various normal MU* commands into Sca
 copyright = 'Copyright (c) 2013 Liukcairo'
 author = 'Liukcairo'
 
-from scommands import Modification
+from . scommands import Modification
